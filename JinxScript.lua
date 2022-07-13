@@ -103,6 +103,15 @@ local weapon_stuff = {
     {"Smoke Gun", "weapon_smokegrenade"},
 }
 
+local cleanse = {
+    "Clear Peds",
+    "Clear Vehicles",
+    "Clear Objects",
+    "Clear Pickups",
+    "Clear Ropes",
+    "Clear Projectiles"
+}
+
 local proofs = {
     bullet = {name="Bullets",on=false},
     fire = {name="Fire",on=false},
@@ -281,7 +290,6 @@ local function player(pid)
         end
     end)
 
-
     local veh_options = menu.list(trolling, "Vehicle Options", {}, "")
     menu.action(veh_options, "Launch Vehicle Up", {}, "", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid) 
@@ -296,13 +304,13 @@ local function player(pid)
                 veh = PED.GET_VEHICLE_PED_IS_IN(ped, false)
             end
         end
-        local ctr = 0
-        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr < 100 do
+        local count = 0
+        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count < 100 do
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(veh)
-            ctr = ctr + 1
+            count = count + 1
             util.yield(10)
         end
-        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr >= 100 then
+        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count >= 100 then
             util.toast("Failed to get control of the vehicle. :/")
             return
         end
@@ -321,13 +329,13 @@ local function player(pid)
                 veh = PED.GET_VEHICLE_PED_IS_IN(ped, false)
             end
         end
-        local ctr = 0
-        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr < 100 do
+        local count = 0
+        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count < 100 do
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(veh)
-            ctr = ctr + 1
+            count = count + 1
             util.yield(10)
         end
-        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr >= 100 then
+        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count >= 100 then
             util.toast("Failed to get control of the vehicle. :/")
             return
         end
@@ -347,13 +355,13 @@ local function player(pid)
                 veh = PED.GET_VEHICLE_PED_IS_IN(ped, false)
             end
         end
-        local ctr = 0
-        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr < 100 do
+        local count = 0
+        while not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count < 100 do
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(veh)
-            ctr = ctr + 1
+            count = count + 1
             util.yield(10)
         end
-        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and ctr >= 100 then
+        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(veh) and count >= 100 then
             util.toast("Failed to get control of the vehicle. :/")
             return
         end
@@ -387,7 +395,7 @@ local function player(pid)
             	if not PED.IS_PED_A_PLAYER(ped) and PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             		PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
             		WEAPON.GIVE_WEAPON_TO_PED(ped, weaponHash, 9999, true, true)
-            		TASK.TASK_DRIVE_BY(ped, player, 0, 0, 0, 0, 100, 10, false, 0xC6EE6B4C)
+            		TASK.TASK_DRIVE_BY(ped, player, 0, 0, 0, 0, -1, 10, false, 0xC6EE6B4C)
                 end
             end
         else
@@ -719,12 +727,12 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
         return end
 
         local jesus = util.joaat("u_m_m_jesus_01")
+        STREAMING.REQUEST_MODEL(jesus)
         while not STREAMING.HAS_MODEL_LOADED(jesus) do
-            STREAMING.REQUEST_MODEL(jesus)
             util.yield()
         end
         
-        local jesus_ped = entities.create_ped(26, jesus, playerpos, 0)
+        jesus_ped = entities.create_ped(26, jesus, playerpos, 0)
         ENTITY.SET_ENTITY_PROOFS(jesus_ped, true, true, true, true, true, 0, true)
         PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jesus_ped, true)
         PED.SET_PED_INTO_VEHICLE(player, player_veh, -2)
@@ -738,6 +746,7 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
             TASK.TASK_VEHICLE_DRIVE_WANDER(jesus_ped, player_veh, 9999, 262668)
             util.toast("Please place a waypoint for jesus to drive to. Until then, Jesus will be your uber driver.")
         end
+    else
         if jesus_ped ~= nil then 
             entities.delete_by_handle(jesus_ped)
         end
@@ -824,101 +833,93 @@ menu.action(lobby, "Players", {}, "", function()
 end)
 
 local areacleanse = menu.list(menu.my_root(), "Area Clearing", {}, "")
-local ctr = 0
-menu.action(areacleanse, "Clear All Peds", {"cleansepeds"}, "", function()
-    for _, ped in pairs(entities.get_all_peds_as_handles()) do
-        if not PED.IS_PED_A_PLAYER(ped) then
-            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
-            entities.delete_by_handle(ped)
-            ctr += 1
+local entitycount = 0
+menu.action_slider(areacleanse, "Cleanse Area", {}, "", cleanse, function(index, value)
+    if value == "Clear Peds" then
+        for _, ped in pairs(entities.get_all_peds_as_handles()) do
+            if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(ped) then
+                entities.delete_by_handle(ped)
+                entitycount += 1
+            end
         end
+        util.toast("Cleared " .. entitycount .. " Peds")
+    elseif value == "Clear Vehicles" then
+        for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
+            if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) and not entities.get_vehicle_has_been_owned_by_player(entities.handle_to_pointer(veh)) then
+                entities.delete_by_handle(veh)
+                util.yield()
+                entitycount += 1
+            end
+        end
+    util.toast("Cleared ".. entitycount .." Vehicles")
+    elseif value == "Clear Objects" then
+        for _, object in pairs(entities.get_all_objects_as_handles()) do
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
+            entities.delete_by_handle(object)
+            util.yield()
+            entitycount += 1
+        end
+        util.toast("Cleared " .. entitycount .. " Objects")
+    elseif value == "Clear Pickups" then
+        for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
+            entities.delete_by_handle(pickup)
+            util.yield()
+            entitycount += 1
+        end
+        util.toast("Cleared " .. entitycount .. " Pickups")
+    elseif value == "Clear Ropes" then
+        util.toast("Cleansing You Of Skidded Ropes")
+        local temp = memory.alloc(4)
+        for i = 1, 100 do
+            memory.write_int(temp, i)
+            PHYSICS.DELETE_ROPE(temp)
+            util.yield()
+        end
+        util.toast("Cleared All Ropes")
+    elseif value == "Clear Projectiles" then
+        local coords = ENTITY.GET_ENTITY_COORDS(players.user_ped())
+        MISC.CLEAR_AREA_OF_PROJECTILES(coords.x, coords.y, coords.z, 400, 0)
+        util.toast("Cleared All Projectiles")
     end
-    util.toast("Cleared " .. ctr .. " Peds")
 end)
-
-menu.action(areacleanse, "Clear All Vehicles", {"cleansevehicles"}, "", function()
-    for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
-        entities.delete_by_handle(veh)
-        util.yield()
-        ctr += 1
-    end
-    util.toast("Cleared ".. ctr .." Vehicles")
-end)
-
-menu.action(areacleanse, "Clear All Objects", {"cleanseobjects"}, "", function()
-    for _, object in pairs(entities.get_all_objects_as_handles()) do
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
-        entities.delete_by_handle(object)
-        util.yield()
-        ctr += 1
-    end
-    util.toast("Cleared " .. ctr .. " Objects")
-end)
-
-menu.action(areacleanse, "Clear All Pickups", {"cleanspickups"}, "", function()
-    for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
-        entities.delete_by_handle(pickup)
-        ctr += 1
-    end
-    util.toast("Cleared " .. ctr .. " Pickups")
-end)
-
-menu.action(areacleanse, "Clear All Ropes", {"clearropes"}, "", function()
-    util.toast("Cleansing You Of Skidded Ropes")
-    local temp = memory.alloc(4)
-    for i = 1, 100 do
-        memory.write_int(temp, i)
-        PHYSICS.DELETE_ROPE(temp)
-        util.yield()
-    end
-    util.toast("Cleared All Ropes")
-end)
-
-menu.action(areacleanse, "Clear All Projectiles", {"clearprojectiles"}, "", function()
-    local coords = ENTITY.GET_ENTITY_COORDS(players.user_ped())
-    MISC.CLEAR_AREA_OF_PROJECTILES(coords.x, coords.y, coords.z, 400, 0)
-    util.toast("Cleared All Projectiles")
-end)
-
 
 menu.action(areacleanse, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Cleaning Area...")
     util.yield(500)
-    local ctr = 0
+    local entitycount = 0
     for _, ped in pairs(entities.get_all_peds_as_handles()) do
-        if not PED.IS_PED_A_PLAYER(ped) then
-            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
+        if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(ped) then
             entities.delete_by_handle(ped)
-            util.yield()
-            ctr += 1
+            entitycount += 1
         end
     end
-    util.toast("Cleared " .. ctr .. " Peds")
+    util.toast("Cleared " .. entitycount .. " Peds")
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
-       entities.delete_by_handle(veh)
-       util.yield()
-       ctr += 1
+        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) and not entities.get_vehicle_has_been_owned_by_player(entities.handle_to_pointer(veh)) then
+            entities.delete_by_handle(veh)
+            util.yield()
+            entitycount += 1
+        end
     end
-    util.toast("Cleared ".. ctr .." Vehicles")
+    util.toast("Cleared ".. entitycount .." Vehicles")
     for _, object in pairs(entities.get_all_objects_as_handles()) do
         ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
         entities.delete_by_handle(object)
         util.yield()
-        ctr += 1
+        entitycount += 1
     end
-    util.toast("Cleared " .. ctr .. " Objects")
+    util.toast("Cleared " .. entitycount .. " Objects")
     for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
         ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
         entities.delete_by_handle(pickup)
-        ctr += 1
+        util.yield()
+        entitycount += 1
     end
-    util.toast("Cleared " .. ctr .. " Pickups")
+    util.toast("Cleared " .. entitycount .. " Pickups")
     util.toast("Cleansing You Of Skidded Ropes")
+    local temp = memory.alloc(4)
     for i = 1, 100 do
-        local temp = memory.alloc(4)
         memory.write_int(temp, i)
         PHYSICS.DELETE_ROPE(temp)
         util.yield()

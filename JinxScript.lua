@@ -148,7 +148,8 @@ local function player(pid)
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
 
     local trolling = menu.list(bozo, "Trolling", {}, "")
-    player_toggle_loop(trolling, pid, "Glitch Player", {}, "", function()
+    local glitch_player = menu.list(trolling, "Glitch Player", {}, "")
+    player_toggle_loop(glitch_player, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
         local glitch_hash = util.joaat("prop_shuttering03")
@@ -168,7 +169,7 @@ local function player(pid)
 
     local glitchVeh = false
     local glitchveh_toggle
-    glitchveh_toggle = menu.toggle(trolling, "Glitch Vehicle", {}, "", function(toggled)
+    glitchveh_toggle = menu.toggle(glitch_player, "Glitch Vehicle", {}, "", function(toggled)
         glitchVeh = toggled
 
         local glitch_hash = util.joaat("p_spinning_anus_s")
@@ -199,7 +200,7 @@ local function player(pid)
 
     local glitchForcefield = false
     local glitchforcefield_toggle
-    glitchforcefield_toggle = menu.toggle(trolling, "Glitched Forcefield", {}, "", function(toggled)
+    glitchforcefield_toggle = menu.toggle(trolling, "Scuffed Forcefield", {}, "", function(toggled)
         glitchForcefield = toggled
 
         local glitch_hash = util.joaat("p_spinning_anus_s")
@@ -238,41 +239,45 @@ local function player(pid)
     end)
 
     menu.action(trolling, "Transaction Error", {}, "Pretty inconsistent but whatever", function()
-        if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 then
-            util.request_script_host("freemode")
-            while players.get_script_host() ~= players.user() do util.yield_once() end
-            local sscript = menu.ref_by_path("Online>Session>Session Scripts>Run Script>Removed Freemode Activities>Destroy Vehicle")
-            menu.trigger_command(sscript)
-            while SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 do
+        if menu.get_edition ~= 3 then
+            if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 then
+                util.request_script_host("freemode")
+                while players.get_script_host() ~= players.user() do util.yield_once() end
+                local sscript = menu.ref_by_path("Online>Session>Session Scripts>Run Script>Removed Freemode Activities>Destroy Vehicle")
+                menu.trigger_command(sscript)
+                while SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 do
+                    util.yield(1000)
+                end
+            end
+            local blip = HUD.GET_FIRST_BLIP_INFO_ID(225) == 0 and 348 or 225
+            local coords = get_blip_coords(blip)
+            local explodeTargetVeh = function()
+                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
+                local handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
+                local oldPos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
+                ENTITY.SET_ENTITY_COORDS(handle, coords.x, coords.y + 20, coords.z, false, false, false, false)
                 util.yield(1000)
-            end
-        end
-        local blip = HUD.GET_FIRST_BLIP_INFO_ID(225) == 0 and 348 or 225
-        local coords = get_blip_coords(blip)
-        local explodeTargetVeh = function()
-            ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
-            local handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
-            local oldPos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
-            ENTITY.SET_ENTITY_COORDS(handle, coords.x, coords.y + 20, coords.z, false, false, false, false)
-            util.yield(1000)
-            coords = get_blip_coords(blip)
-            FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 4, 50, false, true, 0.0)
-            handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
-            util.yield(1000)
-            ENTITY.SET_ENTITY_COORDS(handle, oldPos.x, oldPos.y, oldPos.z, false, false, false, false)
-            ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
-            FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 4, 50, false, true, 0.0)
-        end
-        if coords.x ~= 0 and coords.y ~= 0 and coords.z ~= 0 then
-            explodeTargetVeh()
-        else
-            util.yield(2500)
-            coords = get_blip_coords(blip)
-            while coords.x == 0 do
                 coords = get_blip_coords(blip)
-                util.yield_once()
+                FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 4, 50, false, true, 0.0)
+                handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
+                util.yield(1000)
+                ENTITY.SET_ENTITY_COORDS(handle, oldPos.x, oldPos.y, oldPos.z, false, false, false, false)
+                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 4, 50, false, true, 0.0)
             end
-            explodeTargetVeh()
+            if coords.x ~= 0 and coords.y ~= 0 and coords.z ~= 0 then
+                explodeTargetVeh()
+            else
+                util.yield(2500)
+                coords = get_blip_coords(blip)
+                while coords.x == 0 do
+                    coords = get_blip_coords(blip)
+                    util.yield_once()
+                end
+                explodeTargetVeh()
+            end
+        else
+            util.toast("Sorry, this only works on ultimate edition.")
         end
     end)
 
@@ -373,7 +378,24 @@ local function player(pid)
         util.yield(1000)
         entities.delete_by_handle(ramp)
     end)
-    
+
+    menu.toggle(trolling, "Peds Driveby Player", {}, "", function(toggled) 
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+	    local weaponHash = util.joaat("WEAPON_MACHINEPISTOL")
+        if toggled then
+            for _, ped in pairs(entities.get_all_peds_as_handles()) do
+            	if not PED.IS_PED_A_PLAYER(ped) and PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
+            		PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
+            		WEAPON.GIVE_WEAPON_TO_PED(ped, weaponHash, 9999, true, true)
+            		TASK.TASK_DRIVE_BY(ped, player, 0, 0, 0, 0, 100, 10, false, 0xC6EE6B4C)
+                end
+            end
+        else
+            for _, ped in pairs(entities.get_all_peds_as_handles()) do
+                WEAPON.REMOVE_WEAPON_FROM_PED(ped, weaponHash)
+            end
+        end
+    end)
 
     local griefing = menu.list(bozo, "Griefing", {}, "")
     menu.action(griefing, "Kill Player Inside Casino", {}, "", function()
@@ -409,6 +431,7 @@ local function player(pid)
     		util.yield()
     	end
         local ramp = OBJECT.CREATE_OBJECT(ramp_hash, pos.x, pos.y, pos.z, true, false, true)
+        NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ramp)
         ENTITY.SET_ENTITY_VISIBLE(ramp, false)
         ENTITY.SET_ENTITY_ROTATION(ramp, rot.x, rot.y, rot.z, 0, true)
     end)
@@ -465,15 +488,15 @@ local function player(pid)
 
     local antimodder = menu.list(bozo, "Anti-Modder", {}, "")
     menu.action(antimodder, "Kill Godmode Player", {"killgodmode"}, "Squishes The Fuck Out Of Them Til' They Die. Works On Most Menus", function()
-        local id = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local playerpos = ENTITY.GET_ENTITY_COORDS(id)
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local playerpos = ENTITY.GET_ENTITY_COORDS(player)
         playerpos.z = playerpos.z + 3
         local khanjali = util.joaat("khanjali")
         STREAMING.REQUEST_MODEL(khanjali)
         while not STREAMING.HAS_MODEL_LOADED(khanjali) do
             util.yield()
         end
-        local vehicle1 = entities.create_vehicle(khanjali, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), 0, 2, 3), ENTITY.GET_ENTITY_HEADING(id))
+        local vehicle1 = entities.create_vehicle(khanjali, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), 0, 2, 3), ENTITY.GET_ENTITY_HEADING(player))
         local vehicle2 = entities.create_vehicle(khanjali, playerpos, 0)
         local vehicle3 = entities.create_vehicle(khanjali, playerpos, 0)
         local vehicle4 = entities.create_vehicle(khanjali, playerpos, 0)
@@ -701,7 +724,7 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
             util.yield()
         end
         
-        jesus_ped = entities.create_ped(26, jesus, playerpos, 0)
+        local jesus_ped = entities.create_ped(26, jesus, playerpos, 0)
         ENTITY.SET_ENTITY_PROOFS(jesus_ped, true, true, true, true, true, 0, true)
         PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jesus_ped, true)
         PED.SET_PED_INTO_VEHICLE(player, player_veh, -2)
@@ -710,13 +733,14 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
 
         if HUD.IS_WAYPOINT_ACTIVE() then
 	    	local coords = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
-            TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(jesus_ped, player_veh, coords.x, coords.y, coords.z, 9999, 262144, 0)
+            TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(jesus_ped, player_veh, coords.x, coords.y, coords.z, 9999, 6, 0)
         else
-            TASK.TASK_VEHICLE_DRIVE_WANDER(jesus_ped, player_veh, 9999, 1074528293)
+            TASK.TASK_VEHICLE_DRIVE_WANDER(jesus_ped, player_veh, 9999, 262668)
             util.toast("Please place a waypoint for jesus to drive to. Until then, Jesus will be your uber driver.")
         end
-    else
-        entities.delete_by_handle(jesus_ped)
+        if jesus_ped ~= nil then 
+            entities.delete_by_handle(jesus_ped)
+        end
     end
 end)
 
@@ -800,10 +824,11 @@ menu.action(lobby, "Players", {}, "", function()
 end)
 
 local areacleanse = menu.list(menu.my_root(), "Area Clearing", {}, "")
+local ctr = 0
 menu.action(areacleanse, "Clear All Peds", {"cleansepeds"}, "", function()
-    local ctr = 0
     for _, ped in pairs(entities.get_all_peds_as_handles()) do
         if not PED.IS_PED_A_PLAYER(ped) then
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
             entities.delete_by_handle(ped)
             ctr += 1
         end
@@ -812,8 +837,8 @@ menu.action(areacleanse, "Clear All Peds", {"cleansepeds"}, "", function()
 end)
 
 menu.action(areacleanse, "Clear All Vehicles", {"cleansevehicles"}, "", function()
-    local ctr = 0
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
         entities.delete_by_handle(veh)
         util.yield()
         ctr += 1
@@ -822,13 +847,22 @@ menu.action(areacleanse, "Clear All Vehicles", {"cleansevehicles"}, "", function
 end)
 
 menu.action(areacleanse, "Clear All Objects", {"cleanseobjects"}, "", function()
-    local ctr = 0
     for _, object in pairs(entities.get_all_objects_as_handles()) do
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
         entities.delete_by_handle(object)
         util.yield()
         ctr += 1
     end
     util.toast("Cleared " .. ctr .. " Objects")
+end)
+
+menu.action(areacleanse, "Clear All Pickups", {"cleanspickups"}, "", function()
+    for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
+        entities.delete_by_handle(pickup)
+        ctr += 1
+    end
+    util.toast("Cleared " .. ctr .. " Pickups")
 end)
 
 menu.action(areacleanse, "Clear All Ropes", {"clearropes"}, "", function()
@@ -855,26 +889,33 @@ menu.action(areacleanse, "Clear Everything", {"cleanse"}, "", function()
     local ctr = 0
     for _, ped in pairs(entities.get_all_peds_as_handles()) do
         if not PED.IS_PED_A_PLAYER(ped) then
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
             entities.delete_by_handle(ped)
             util.yield()
             ctr += 1
         end
     end
     util.toast("Cleared " .. ctr .. " Peds")
-    local ctr = 0
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
+    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
        entities.delete_by_handle(veh)
        util.yield()
        ctr += 1
     end
     util.toast("Cleared ".. ctr .." Vehicles")
-    local ctr = 0
     for _, object in pairs(entities.get_all_objects_as_handles()) do
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
         entities.delete_by_handle(object)
         util.yield()
         ctr += 1
     end
     util.toast("Cleared " .. ctr .. " Objects")
+    for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
+        entities.delete_by_handle(pickup)
+        ctr += 1
+    end
+    util.toast("Cleared " .. ctr .. " Pickups")
     util.toast("Cleansing You Of Skidded Ropes")
     for i = 1, 100 do
         local temp = memory.alloc(4)

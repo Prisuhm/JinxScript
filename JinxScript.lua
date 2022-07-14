@@ -839,7 +839,7 @@ menu.toggle_loop(lobby, "Godmode Check", {""}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         ENTITY._GET_ENTITY_PROOFS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
         if players.is_godmode(pid) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) and bulletProof then
-            util.log(players.get_name(pid) .. " Is In Godmode")
+            util.draw_debug_text(players.get_name(pid) .. " Is In Godmode")
         end
     end
 end)
@@ -849,7 +849,7 @@ menu.toggle_loop(lobby, "Vehicle Godmode Check", {""}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         ENTITY._GET_ENTITY_PROOFS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
         if PED.IS_PED_IN_ANY_VEHICLE(player) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) and explosionProof then
-            util.log(players.get_name(pid) .. " Is In Vehicle Godmode")
+            util.draw_debug_text(players.get_name(pid) .. " Is In Vehicle Godmode")
         end
     end
 end)

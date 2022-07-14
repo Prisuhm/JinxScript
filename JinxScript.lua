@@ -18,8 +18,20 @@ local function get_interior_player_is_in(pid)
 end
 
 local function is_player_in_interior(pid)
-    return (memory.read_int(memory.script_global(2689224 + 1 + (pid * 451) + 242 )) == 0)
+    return (memory.read_int(memory.script_global(2689224 + 1 + (pid * 451) + 242 )) ~= 0)
 end
+
+local function is_player_moving(pid)
+    local moving = false
+    local pc1 = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(i))
+    util.yield(10)
+    local pc2 = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(i))
+    if pc1.x ~= pc2.x and pc1.y ~= pc2.y and pc1.z ~= pc2.z then
+        moving = true
+    end
+    return moving
+end
+
 
 local function get_blip_coords(blipId)
     local blip = HUD.GET_FIRST_BLIP_INFO_ID(blipId)
@@ -181,7 +193,7 @@ local function player(pid)
     glitchveh_toggle = menu.toggle(glitch_player, "Glitch Vehicle", {}, "", function(toggled)
         glitchVeh = toggled
 
-        local glitch_hash = util.joaat("p_spinning_anus_s")
+        local glitch_hash = util.joaat("prop_ld_farm_rail01")
         STREAMING.REQUEST_MODEL(glitch_hash)
         while not STREAMING.HAS_MODEL_LOADED(glitch_hash) do
             util.yield()
@@ -793,6 +805,10 @@ for id, data in pairs(weapon_stuff) do
         while a do
             local weapon = util.joaat(weapon_name)
             projectile = weapon
+            while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
+                WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
+                util.yield(10)
+            end
             local inst = v3.new()
             if PED.IS_PED_SHOOTING(PLAYER.PLAYER_PED_ID()) then
                 if not WEAPON.GET_PED_LAST_WEAPON_IMPACT_COORD(PLAYER.PLAYER_PED_ID(), inst) then
@@ -817,18 +833,28 @@ for id, data in pairs(weapon_stuff) do
 end
 
 local lobby = menu.list(menu.my_root(), "Lobby", {}, "")
+bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof = memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int()
 menu.toggle_loop(lobby, "Godmode Check", {""}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
-        local pc1 = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
-        local bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof = memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int()
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         ENTITY._GET_ENTITY_PROOFS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
-        if (players.is_godmode(pid) and not is_player_in_interior(pid)) and bulletProof then
-            util.toast(players.get_name(pid) .. " Is In Godmode")
+        if players.is_godmode(pid) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) and bulletProof then
+            util.log(players.get_name(pid) .. " Is In Godmode")
         end
     end
 end)
 
-menu.action(lobby, "Players", {}, "", function()
+menu.toggle_loop(lobby, "Vehicle Godmode Check", {""}, "", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        ENTITY._GET_ENTITY_PROOFS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
+        if PED.IS_PED_IN_ANY_VEHICLE(player) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) and explosionProof then
+            util.log(players.get_name(pid) .. " Is In Vehicle Godmode")
+        end
+    end
+end)
+
+menu.action(lobby, "Players List", {}, "", function()
     menu.trigger_commands("players")
 end)
 
@@ -845,7 +871,7 @@ menu.action_slider(areacleanse, "Cleanse Area", {}, "", cleanse, function(index,
         util.toast("Cleared " .. entitycount .. " Peds")
     elseif value == "Clear Vehicles" then
         for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-            if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) and not entities.get_vehicle_has_been_owned_by_player(entities.handle_to_pointer(veh)) then
+            if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) then
                 entities.delete_by_handle(veh)
                 util.yield()
                 entitycount += 1
@@ -896,7 +922,7 @@ menu.action(areacleanse, "Clear Everything", {"cleanse"}, "", function()
     end
     util.toast("Cleared " .. entitycount .. " Peds")
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) and not entities.get_vehicle_has_been_owned_by_player(entities.handle_to_pointer(veh)) then
+        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(veh) then
             entities.delete_by_handle(veh)
             util.yield()
             entitycount += 1
@@ -935,10 +961,7 @@ end)
 menu.divider(menu.my_root(), "Miscellaneous")
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
-local jinx_socials = menu.list(menu.my_root(), "Follow Jinx", {}, "")
+local jinx_socials = menu.list(menu.my_root(), "Jinx Cat", {}, "")
 menu.hyperlink(jinx_socials, "Tiktok", "https://www.tiktok.com/@bigfootjinx")
 menu.hyperlink(jinx_socials, "Twitter", "https://twitter.com/bigfootjinx")
-menu.hyperlink(jinx_socials, "Instagram", "https://www.instagram.com/bigfootjinx")
-menu.hyperlink(jinx_socials, "Youtube", "https://www.youtube.com/channel/UC-nkxad5MRDuyz7xstc-wHQ?sub_confirmation=1")
-
 util.keep_running()

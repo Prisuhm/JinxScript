@@ -21,17 +21,9 @@ local function is_player_in_interior(pid)
     return (memory.read_int(memory.script_global(2689224 + 1 + (pid * 451) + 242 )) ~= 0)
 end
 
-local function is_player_moving(pid)
-    local moving = false
-    local pc1 = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(i))
-    util.yield(10)
-    local pc2 = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(i))
-    if pc1.x ~= pc2.x and pc1.y ~= pc2.y and pc1.z ~= pc2.z then
-        moving = true
-    end
-    return moving
+local function get_entity_owner(addr)
+    return memory.read_byte(memory.read_long(addr + 0xD0) + 0x49)
 end
-
 
 local function get_blip_coords(blipId)
     local blip = HUD.GET_FIRST_BLIP_INFO_ID(blipId)
@@ -134,9 +126,71 @@ local proofs = {
     drown = {name="Drowning",on=false},
 }
 
+local driving_styles = {
+    "Perfect",
+    "Normal",
+    "Semi-Rushed",
+    "Reverse",
+    "Ignore Lights",
+    "Avoid Traffic",
+    "Avoid Traffic Extremely",
+    "Sometimes Overtake Traffic"
+}
+
+local cage_objects = {
+    "prop_gold_cont_01",
+    "prop_gold_cont_01b",
+    "prop_rub_cage01a",
+    "prop_fnclink_03e",
+    "prop_fnclink_04m",
+    "prop_fnclink_10d_ld",
+    "prop_fnclink_10b",
+    "prop_snow_fnclink_03crnr2",
+    "prop_snow_fnclink_03i",
+    "prop_snow_fnclink_03h"
+}
+
+local stunt_tubes = {
+    "stt_prop_stunt_tube_crn_5d",
+    "stt_prop_stunt_tube_cross",
+    "stt_prop_stunt_tube_end",
+    "stt_prop_stunt_tube_ent",
+    "stt_prop_stunt_tube_fn_01",
+    "stt_prop_stunt_tube_fn_02",
+    "stt_prop_stunt_tube_fn_03",
+    "stt_prop_stunt_tube_fn_04",
+    "stt_prop_stunt_tube_fn_05",
+    "stt_prop_stunt_tube_fork",
+    "stt_prop_stunt_tube_gap_01",
+    "stt_prop_stunt_tube_gap_02",
+    "stt_prop_stunt_tube_hg",
+    "stt_prop_stunt_tube_jmp",
+    "stt_prop_stunt_tube_jmp2",
+    "stt_prop_stunt_tube_l",
+    "stt_prop_stunt_tube_m",
+    "stt_prop_stunt_tube_qg",
+    "stt_prop_stunt_tube_s",
+    "stt_prop_stunt_tube_speed",
+    "stt_prop_stunt_tube_speeda",
+    "stt_prop_stunt_tube_speedb",
+    "stt_prop_stunt_tube_xs",
+    "stt_prop_stunt_tube_xxs",
+    "stt_prop_track_tube_01",
+    "stt_prop_track_tube_02"
+}
+
+local big_vehicles = {
+    "cargoplane",
+    "tug",
+    "jet",
+    "skylift",
+    "titan",
+    "kosatka",
+}
+
 local function player(pid)   
-    if players.get_rockstar_id(pid) == 195651974 then
-        util.toast(players.get_name(pid) .. " triggered a detection (JinxScript Dev) and is now classified as Gamer\n (They might be a sussy imposter! watch out!)")
+    if players.get_rockstar_id(pid) == 213034124 then
+        util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n (They might be a sussy imposter! watch out!)")
     end
 
     menu.divider(menu.player_root(pid), "Jinx Script")
@@ -168,9 +222,38 @@ local function player(pid)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
 
+    local jinx_army = {}
+    local army_player = menu.list(funfeatures_player, "Jinx Army", {}, "")
+    menu.click_slider(army_player, "Spawn Jinx Army", {}, "", 1, 255, 1, 1, function(val)
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
+        playerpos.y = playerpos.y - 5
+        playerpos.z = playerpos.z + 1
+        local jinx = util.joaat("a_c_cat_01")
+        while not STREAMING.HAS_MODEL_LOADED(jinx) do
+            STREAMING.REQUEST_MODEL(jinx)
+            util.yield()
+        end
+         for i = 1, val do
+             jinx_army[i] = entities.create_ped(28, jinx, playerpos, 0)
+             ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
+             PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
+             TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+             util.yield()
+         end 
+    end)
+
+    menu.action(army_player, "Clear Jinxs", {}, "", function()
+        for i = 1, #jinx_army do
+            entities.delete_by_handle(jinx_army[i])
+            jinx_army[i] = nil
+            util.yield()
+        end
+    end)
+
+
     local trolling = menu.list(bozo, "Trolling", {}, "")
-    local glitch_player = menu.list(trolling, "Glitch Player", {}, "")
-    player_toggle_loop(glitch_player, pid, "Buggy Movement", {}, "", function()
+    player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
         local glitch_hash = util.joaat("prop_shuttering03")
@@ -190,7 +273,7 @@ local function player(pid)
 
     local glitchVeh = false
     local glitchveh_toggle
-    glitchveh_toggle = menu.toggle(glitch_player, "Glitch Vehicle", {}, "", function(toggled)
+    glitchveh_toggle = menu.toggle(trolling, "Glitch Vehicle", {}, "", function(toggled)
         glitchVeh = toggled
 
         local glitch_hash = util.joaat("prop_ld_farm_rail01")
@@ -248,7 +331,50 @@ local function player(pid)
         end
     end)
 
+    local forceground = false
+    local forceground_toggle
+    forceground_toggle = menu.toggle(trolling, "Force Player Into Ground", {}, "", function(toggled)
+        forceground = toggled
 
+        local glitch_hash = util.joaat("stt_prop_stunt_landing_zone_01")
+        STREAMING.REQUEST_MODEL(glitch_hash)
+        while not STREAMING.HAS_MODEL_LOADED(glitch_hash) do
+            util.yield()
+        end
+
+        while forceground do
+            local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
+
+            if PED.IS_PED_IN_ANY_VEHICLE(player, false) then 
+                util.toast("Player is in a vehicle. :/")
+                menu.set_value(forceground_toggle, false);break end
+
+            local glitched_object = entities.create_object(glitch_hash, playerpos)
+            ENTITY.SET_ENTITY_VISIBLE(glitched_object, false)
+            ENTITY.SET_ENTITY_INVINCIBLE(glitched_object, true)
+            ENTITY.SET_ENTITY_COLLISION(glitched_object, true, true)
+            util.yield()
+            entities.delete_by_handle(glitched_object)
+            util.yield()    
+        end
+    end)
+
+    menu.action(trolling, "Look For Who Asked", {}, "", function(toggled)
+        local radar = util.joaat("prop_air_bigradar")
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local playerpos = ENTITY.GET_ENTITY_COORDS(player)
+        STREAMING.REQUEST_MODEL(radar)
+        while not STREAMING.HAS_MODEL_LOADED(radar) do
+            util.yield()
+        end
+
+        local radar_dish = entities.create_object(radar, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 20, 0), ENTITY.GET_ENTITY_HEADING(player))
+        menu.trigger_commands("say using nasa satellites to find who asked")
+        util.yield(10000)
+        entities.delete_by_handle(radar_dish)
+    end)
+    
     menu.click_slider(trolling, "Give Wanted Level", {}, "", 1, 5, 5, 1, function(val)
         local playerInfo = memory.read_long(entities.handle_to_pointer(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)) + 0x10C8)
         while memory.read_uint(playerInfo + 0x0888) < val do
@@ -259,8 +385,8 @@ local function player(pid)
         end
     end)
 
-    menu.action(trolling, "Transaction Error", {}, "Pretty inconsistent but whatever", function()
-        if menu.get_edition ~= 3 then
+    if menu.get_edition() == 3 then
+        menu.action(trolling, "Transaction Error", {}, "Pretty inconsistent but whatever", function()
             if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 then
                 util.request_script_host("freemode")
                 while players.get_script_host() ~= players.user() do util.yield_once() end
@@ -297,10 +423,8 @@ local function player(pid)
                 end
                 explodeTargetVeh()
             end
-        else
-            util.toast("Sorry, this only works on ultimate edition.")
-        end
-    end)
+        end)
+    end
 
     local veh_options = menu.list(trolling, "Vehicle Options", {}, "")
     menu.action(veh_options, "Launch Vehicle Up", {}, "", function()
@@ -466,9 +590,9 @@ local function player(pid)
         local id = PLAYER.PLAYER_PED_ID()
         local coords = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
 
-        for i = 1, 70 do
+        for i = 1, 60 do
             WEAPON.GIVE_WEAPON_TO_PED(id, baseball, 1, false, false)
-            MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS_IGNORE_ENTITY(coords.x, coords.y, coords.z + 5, coords.x, coords.y, coords.z + 5, 0, true, util.joaat("WEAPON_BALL"), PLAYER.PLAYER_PED_ID(), false, true, 0, ped, 0)
+            MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS_IGNORE_ENTITY(coords.x, coords.y, coords.z, coords.x, coords.y, coords.z + 5, 0, true, util.joaat("WEAPON_BALL"), PLAYER.PLAYER_PED_ID(), false, true, 0, ped, 0)
         end
         util.yield(500)
         MISC.CLEAR_AREA_OF_PROJECTILES(coords.x, coords.y, coords.z, 400, 0)
@@ -534,6 +658,13 @@ local function player(pid)
         end
     end) 
 
+    player_toggle_loop(antimodder, pid, "Troll Godmode Users", {}, "", function()
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = ENTITY.GET_ENTITY_COORDS(player)
+        MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z - 0.3, pos.x, pos.y, pos.z, 0, true, util.joaat("weapon_raypistol"), players.user_ped(), false, true, 1.0)
+        util.yield(250)
+    end)
+    
     player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function()
         util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
     end)
@@ -550,7 +681,7 @@ local function player(pid)
     player_toggle_loop(antimodder, pid, "Remove Vehicle Godmode", {"removevgm"}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if PED.IS_PED_IN_ANY_VEHICLE(player, false) and not PED.IS_PED_DEAD_OR_DYING(player) then
-            local veh = PED.GET_VEHICLE_player_IS_IN(player, false)
+            local veh = PED.GET_VEHICLE_PLAYER_IS_IN(player, false)
             ENTITY.SET_ENTITY_CAN_BE_DAMAGED(veh, true)
             ENTITY.SET_ENTITY_INVINCIBLE(veh, false)
         end
@@ -595,8 +726,12 @@ local function player(pid)
     end)
 
     local player_removals = menu.list(bozo, "Player Removals", {}, "")
-    menu.action(player_removals, "Remove From Session", {""}, "", function()
+    menu.action(player_removals, "Finger Of God", {""}, "", function()
         NETWORK.NETWORK_BAIL(28, 0, 0)
+    end)
+
+    menu.action(player_removals, "Jinx Crash", {}, "", function()
+        ENTITY.ATTACH_ENTITY_TO_ENTITY(players.user(), players.user(), 0, 0, 0, 0, 0, 0, 0, 0, false, true, false, 0, true)
     end)
 
     menu.action(player_removals, "Teleport To Desktop", {""}, "", function()
@@ -647,7 +782,7 @@ local useful = menu.list(menu.my_root(), "Useful", {}, "")
 local function bitTest(addr, offset)
     return (memory.read_int(addr) & (1 << offset)) ~= 0
 end
-menu.action(useful, "Claim All Destroyed Vehicles", {"claimveh"}, "Claims all vehicles from Mors Mutual Insurance.\nSadly doesn't save across sessions.", function()
+menu.action(useful, "Claim All Destroyed Vehicles", {}, "Claims all vehicles from Mors Mutual Insurance.\nSadly doesn't save across sessions.", function()
     local count = memory.read_int(memory.script_global(1585853))
     for i = 0, count do
         local canFix = ( bitTest(memory.script_global(1585853 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585853 + 1 + (i * 142) + 103), 2))
@@ -690,7 +825,8 @@ do
 end
 
 local jinx_army = {}
-menu.toggle(funfeatures, "Spawn Jinx Army", {}, "", function(toggled)
+local army = menu.list(funfeatures, "Jinx Army", {}, "")
+menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 255, 1, 1, function(val)
     local player = players.user_ped()
     local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
     playerpos.y = playerpos.y - 5
@@ -700,20 +836,20 @@ menu.toggle(funfeatures, "Spawn Jinx Army", {}, "", function(toggled)
         STREAMING.REQUEST_MODEL(jinx)
         util.yield()
     end
+     for i = 1, val do
+         jinx_army[i] = entities.create_ped(28, jinx, playerpos, 0)
+         ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
+         PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
+         TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+         util.yield()
+     end 
+end)
 
-    if toggled then
-        for i = 1, 30 do
-            jinx_army[i] = entities.create_ped(28, jinx, playerpos, 0)
-            PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
-            util.yield()
-        end
-    else
-        for i = 1, #jinx_army do
-            entities.delete_by_handle(jinx_army[i])
-            jinx_army[i] = nil
-            util.yield()
-        end
+menu.action(army, "Clear Jinxs", {}, "", function()
+    for i = 1, #jinx_army do
+        entities.delete_by_handle(jinx_army[i])
+        jinx_army[i] = nil
+        util.yield()
     end
 end)
 
@@ -727,8 +863,27 @@ menu.action(funfeatures, "Custom Fake Banner", {"banner"}, "", function(on_click
     custom_alert(text)
 end)
 
-
-menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
+local jesus_main = menu.list(funfeatures, "Jesus Take The Wheel", {}, "")
+menu.slider_text(jesus_main, "Driving Style", {}, "Click to select a style", driving_styles, function(index, value)
+    if value == "Normal" then
+        style = 786603
+    elseif value == "Rushed" then
+        style = 1074528293
+    elseif value == "Semi-Rushed" then
+        style = 8388614
+    elseif value == "Reverse" then
+        style = 1076
+    elseif value == "Ignore Lights" then
+        style = 2883621
+    elseif value == "Avoid Traffic" then
+        style = 786603
+    elseif value == "Avoid Traffic Extremely" then
+        style = 6
+    elseif value == "Sometimes Overtake Traffic" then
+        style = 5
+    end
+end)
+jesus_toggle = menu.toggle(jesus_main, "Take The Wheel", {}, "", function(toggled)
     if toggled then
         local player = players.user_ped()
         local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
@@ -745,7 +900,7 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
         end
         
         jesus_ped = entities.create_ped(26, jesus, playerpos, 0)
-        ENTITY.SET_ENTITY_PROOFS(jesus_ped, true, true, true, true, true, 0, true)
+        ENTITY.SET_ENTITY_INVINCIBLE(jesus_ped, true)
         PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jesus_ped, true)
         PED.SET_PED_INTO_VEHICLE(player, player_veh, -2)
         PED.SET_PED_INTO_VEHICLE(jesus_ped, player_veh, -1)
@@ -753,16 +908,19 @@ menu.toggle(funfeatures, "Jesus Take The Wheel", {}, "", function(toggled)
 
         if HUD.IS_WAYPOINT_ACTIVE() then
 	    	local coords = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
-            TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(jesus_ped, player_veh, coords.x, coords.y, coords.z, 9999, 6, 0)
+            TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(jesus_ped, player_veh, coords.x, coords.y, coords.z, 9999, style, 0)
         else
-            TASK.TASK_VEHICLE_DRIVE_WANDER(jesus_ped, player_veh, 9999, 262668)
-            util.toast("Please place a waypoint for jesus to drive to. Until then, Jesus will be your uber driver.")
+            util.toast("Waypoint not found. :/")
+                menu.set_value(jesus_toggle, false)
         end
     else
         if jesus_ped ~= nil then 
             entities.delete_by_handle(jesus_ped)
         end
     end
+end)
+
+menu.toggle(funfeatures, "Auto-Crash SweetPlumbus", {}, "", function()
 end)
 
 local weapon_options = menu.list(menu.my_root(), "Weapon Options", {}, "")
@@ -838,7 +996,7 @@ menu.toggle_loop(lobby, "Godmode Check", {""}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         ENTITY._GET_ENTITY_PROOFS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof)
-        if players.is_godmode(pid) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) and bulletProof then
+        if players.is_godmode(pid) and not TASK.IS_PED_STILL(player) and not is_player_in_interior(pid) then
             util.draw_debug_text(players.get_name(pid) .. " Is In Godmode")
         end
     end
@@ -858,9 +1016,48 @@ menu.action(lobby, "Players List", {}, "", function()
     menu.trigger_commands("players")
 end)
 
-local areacleanse = menu.list(menu.my_root(), "Area Clearing", {}, "")
+local protections = menu.list(menu.my_root(), "Protections", {}, "")
+menu.toggle_loop(protections, "Block Cages", {}, "", function()
+    for i, object in ipairs(entities.get_all_objects_as_pointers()) do
+        for i, name in ipairs(cage_objects) do
+            if entities.get_model_hash(object) == util.joaat(name) then
+                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
+                entities.delete_by_pointer(object)
+                util.toast("Blocked object sync with model: " .. name)
+                break
+            end
+        end
+    end
+end)
+
+menu.toggle_loop(protections, "Block All Stunt Tubes", {}, "(Note: disable when entering a stunt race)", function()
+    for i, object in ipairs(entities.get_all_objects_as_pointers()) do
+        for i, name in ipairs(stunt_tubes) do
+            if entities.get_model_hash(object) == util.joaat(name) then
+                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
+                entities.delete_by_pointer(object)
+                util.toast("Blocked bad object spawn with model: " .. name)
+                break
+            end
+        end
+    end
+end)
+
+menu.toggle_loop(protections, "Block Big Vehicles", {}, "", function()
+    for i, object in ipairs(entities.get_all_objects_as_pointers()) do
+        for i, name in ipairs(big_vehicles) do
+            if entities.get_model_hash(object) == util.joaat(name) then
+                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
+                util.toast("Blocked bad object spawn with model: " .. name)
+                entities.delete_by_pointer(object)
+                break
+            end
+        end
+    end
+end)
+
 local entitycount = 0
-menu.action_slider(areacleanse, "Cleanse Area", {}, "", cleanse, function(index, value)
+menu.action_slider(protections, "Cleanse Area", {}, "", cleanse, function(index, value)
     if value == "Clear Peds" then
         for _, ped in pairs(entities.get_all_peds_as_handles()) do
             if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(ped) then
@@ -910,7 +1107,7 @@ menu.action_slider(areacleanse, "Cleanse Area", {}, "", cleanse, function(index,
     end
 end)
 
-menu.action(areacleanse, "Clear Everything", {"cleanse"}, "", function()
+menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Cleaning Area...")
     util.yield(500)
     local entitycount = 0
@@ -961,7 +1158,10 @@ end)
 menu.divider(menu.my_root(), "Miscellaneous")
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
-local jinx_socials = menu.list(menu.my_root(), "Jinx Cat", {}, "")
-menu.hyperlink(jinx_socials, "Tiktok", "https://www.tiktok.com/@bigfootjinx")
-menu.hyperlink(jinx_socials, "Twitter", "https://twitter.com/bigfootjinx")
+local credits = menu.list(menu.my_root(), "Credits", {}, "")
+local jinx = menu.list(credits, "Jinx", {}, "")
+menu.hyperlink(jinx, "Tiktok", "https://www.tiktok.com/@bigfootjinx")
+menu.hyperlink(jinx, "Twitter", "https://twitter.com/bigfootjinx")
+menu.hyperlink(jinx, "Instagram", "https://www.instagram.com/bigfootjinx")
+menu.hyperlink(jinx, "Youtube", "https://www.youtube.com/channel/UC-nkxad5MRDuyz7xstc-wHQ?sub_confirmation=1")
 util.keep_running()

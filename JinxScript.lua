@@ -193,6 +193,10 @@ local function player(pid)
         util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n (They might be a sussy imposter! watch out!)")
     end
 
+    if players.get_rockstar_id(pid) == 115772212 then
+        util.toast(players.get_name(pid) .. " triggered a detection: Based Gigachad\n (They are very based! Proceed with caution!)")
+    end
+    
     menu.divider(menu.player_root(pid), "Jinx Script")
     local bozo = menu.list(menu.player_root(pid), "Jinx Script", {"JinxScript"}, "")
 
@@ -726,16 +730,15 @@ local function player(pid)
     end)
 
     local player_removals = menu.list(bozo, "Player Removals", {}, "")
-    menu.action(player_removals, "Finger Of God", {""}, "", function()
-        NETWORK.NETWORK_BAIL(28, 0, 0)
+    menu.action(player_removals, "Nasa Kick", {}, "", function()
+        util.trigger_script_event(1 << pid, {844746317, pid, -210634234})
     end)
 
-    menu.action(player_removals, "Jinx Crash", {}, "", function()
-        ENTITY.ATTACH_ENTITY_TO_ENTITY(players.user(), players.user(), 0, 0, 0, 0, 0, 0, 0, 0, false, true, false, 0, true)
-    end)
-
-    menu.action(player_removals, "Teleport To Desktop", {""}, "", function()
-        ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+    menu.action(player_removals, "Quandale Dingle", {""}, "", function()
+        for i = 1, 150 do
+            util.trigger_script_event(1 << pid, {677240627, pid, -1774405356, math.random(0, 4), math.random(0, 1), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647),
+            math.random(-2147483647, 2147483647), pid, math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647)})
+        end
     end)
 end
 
@@ -929,7 +932,10 @@ for id, data in pairs(weapon_stuff) do
     local name = data[1]
     local weapon_name = data[2]
     local projectile = util.joaat(weapon_name)
-    local toggled
+    while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
+        WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
+        util.yield(10)
+    end
     menu.toggle(finger_thing, name, {}, "", function(state)
         toggled = state
         while toggled do

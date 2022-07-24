@@ -1,3 +1,4 @@
+util.yield()
 util.require_natives(1640181023)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 local function player_toggle_loop(root, pid, menu_name, command_names, help_text, callback)
@@ -252,7 +253,7 @@ local launch_vehicle = {
 }
 
 local function player(pid)   
-    if players.get_rockstar_id(pid) == 213034124 then
+    if players.get_rockstar_id(pid) == 213034124 and not players.user() then
         util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n (They might be a sussy imposter! watch out!)")
     end
 
@@ -709,13 +710,6 @@ local function player(pid)
     local player_removals = menu.list(bozo, "Player Removals", {}, "")
     menu.action(player_removals, "Nasa Kick", {}, "", function()
         util.trigger_script_event(1 << pid, {844746317, pid, -210634234})
-    end)
-
-    menu.action(player_removals, "Quandale Dingle", {""}, "", function()
-        for i = 1, 150 do
-            util.trigger_script_event(1 << pid, {677240627, pid, -1774405356, math.random(0, 4), math.random(0, 1), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647),
-            math.random(-2147483647, 2147483647), pid, math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647), math.random(-2147483647, 2147483647)})
-        end
     end)
 end
 

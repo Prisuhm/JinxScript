@@ -1,4 +1,3 @@
-util.yield()
 util.require_natives(1640181023)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 local function player_toggle_loop(root, pid, menu_name, command_names, help_text, callback)

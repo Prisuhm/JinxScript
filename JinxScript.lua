@@ -258,6 +258,65 @@ local launch_vehicle = {
     "Slingshot",
 }
 
+local interiors = {
+    {"Safe Space", {x=-74.710754, y=-818.1799, z=311.88455}},
+    {"Torture Room", {x=147.170, y=-2201.804, z=4.688}},
+    {"Mining Tunnels", {x=-595.48505, y=2086.4502, z=131.38136}},
+    {"Omegas Garage", {x=2330.2573, y=2572.3005, z=46.679367}},
+    {"Server Farm", {x=2155.077, y=2920.9417, z=-81.075455}},
+    {"Character Creation", {x=402.91586, y=-998.5701, z=-99.004074}},
+    {"Life Invader Building", {x=-1082.8595, y=-254.774, z=37.763317}},
+    {"Mission End Garage", {x=405.9228, y=-954.1149, z=-99.6627}},
+    {"Destroyed Hospital", {x=304.03894, y=-590.3037, z=43.291893}},
+    {"Stadium", {x=-256.92334, y=-2024.9717, z=30.145584}},
+    {"Comedy Club", {x=-430.00974, y=261.3437, z=83.00648}},
+    {"Bahama Mamas Nightclub", {x=-1394.8816, y=-599.7526, z=30.319544}},
+    {"Janitors House", {x=-110.20285, y=-8.6156025, z=70.51957}},
+    {"Martin Madrazos House", {x=1395.2512, y=1141.6833, z=114.63437}},
+    {"Floyds Apartment", {x=-1156.5099, y=-1519.0894, z=10.632717}},
+    {"Michaels House", {x=-813.8814, y=179.07889, z=72.15914}},
+    {"Franklins House (Old)", {x=-14.239959, y=-1439.6913, z=31.101551}},
+    {"Franklins House (New)", {x=7.3125067, y=537.3615, z=176.02803}},
+    {"Trevors House", {x=1974.1617, y=3819.032, z=33.436287}},
+    {"Lesters House", {x=1273.898, y=-1719.304, z=54.771}},
+    {"Lesters Warehouse", {x=713.5684, y=-963.64795, z=30.39534}},
+    {"Lesters Office", {x=707.2138, y=-965.5549, z=30.412853}},
+    {"Trevors Meth Lab", {x=1391.773, y=3608.716, z=38.942}},
+    {"Humane Labs", {x=3625.743, y=3743.653, z=28.69009}},
+    {"Motel Room", {x=152.2605, y=-1004.471, z=-99.024}},
+    {"Bank Vault", {x=-44.895756, y=-1096.882, z=26.700174}},
+    {"Tequi-La-La Bar", {x=-564.4645, y=275.5777, z=83.074585}},
+    {"Scrapyard Body Shop", {x=485.46396, y=-1315.0614, z=29.2141}},
+    {"The Lost MC Clubhouse", {x=980.8098, y=-101.96038, z=74.84504}},
+    {"Vangelico Jewlery Store", {x=-629.9367, y=-236.41296, z=38.057056}},
+    {"Airport Lounge", {x=-913.8656, y=-2527.106, z=36.331566}},
+    {"Morgue", {x=240.94368, y=-1379.0645, z=33.74177}},
+    {"Union Depository", {x=1.298771, y=-700.96967, z=16.131021}},
+    {"Fort Zancudo Tower", {x=-2357.9187, y=3249.689, z=101.45073}},
+    {"Avenger Interior", {x=518.6444, y=4750.4644, z=-69.3235}},
+    {"Terrobyte Interior", {x=-1421.015, y=-3012.587, z=-80.000}},
+    {"Bunker Interior", {x=899.5518,y=-3246.038, z=-98.04907}},
+    {"IAA Office", {x=128.20, y=-617.39, z=206.04}},
+    {"FIB Top Floor", {x=135.94359, y=-749.4102, z=258.152}},
+    {"FIB Floor 47", {x=134.5835, y=-766.486, z=234.152}},
+    {"FIB Floor 49", {x=134.635, y=-765.831, z=242.152}},
+    {"Big Fat White Cock", {x=-31.007448, y=6317.047, z=40.04039}},
+    {"Marijuana Shop", {x=-1170.3048, y=-1570.8246, z=4.663622}},
+    {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
+}
+
+local self = menu.list(menu.my_root(), "Self", {}, "")
+local visuals = menu.list(menu.my_root(), "Visuals", {}, "")
+local funfeatures = menu.list(menu.my_root(), "Fun Features", {}, "")
+local teleport = menu.list(menu.my_root(), "Teleport", {}, "")
+local weapon_options = menu.list(menu.my_root(), "Weapon Options", {}, "")
+local detection = menu.list(menu.my_root(), "Modder Detections", {}, "")
+local bailOnAdminJoin = false
+local protections = menu.list(menu.my_root(), "Protections", {}, "")
+menu.toggle(protections, "Bail On Admin Join", {}, "", function(on)
+    bailOnAdminJoin = on
+end)
+
 local function player(pid)   
     if players.get_rockstar_id(pid) == 213034124 and not players.user() then
         util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n (They might be a sussy imposter! watch out!)")
@@ -322,7 +381,7 @@ local function player(pid)
     end)
 
 
-    local trolling = menu.list(bozo, "Trolling", {}, "")
+    local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
     player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
@@ -682,7 +741,7 @@ local function player(pid)
     player_toggle_loop(antimodder, pid, "Explode Godmode Player", {}, "Blocked By Most Menus", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local coords = ENTITY.GET_ENTITY_COORDS(player)
-        if not PLAYER.IS_PLAYER_DEAD(player) then
+        if not PED.IS_PED_DEAD_OR_DYING(player) then
             util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
             FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), coords.x, coords.y, coords.z, 2, 50, true, false, 0.0)
         end
@@ -752,12 +811,24 @@ local function player(pid)
     menu.action(player_removals, "Nasa Kick", {}, "", function()
         util.trigger_script_event(1 << pid, {844746317, pid, -210634234})
     end)
+
+    if bailOnAdminJoin then
+        for i, rid in ipairs(stinky_admins) do
+            if not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == rid then
+                util.toast(players.get_name(pid) .. " Is A Known Rockstar Admin. Quitting To Story Mode. Stay There Until They Get Off To Prevent A Possible Ban")
+                menu.trigger_commands("quickbail")
+                util.yield(1000)
+                menu.trigger_commands("quit")
+                return
+            end
+            util.yield()
+        end
+    end
 end
 
 players.on_join(player)
 players.dispatch_on_join()
 
-local self = menu.list(menu.my_root(), "Self", {}, "")
 local proofsList = menu.list(self, "Invulnerabilities", {}, "Custom Godmode")
 local immortalityCmd = menu.ref_by_path("Self>Immortality")
 for _,data in pairs(proofs) do
@@ -812,7 +883,6 @@ menu.action(self, "Claim All Destroyed Vehicles", {}, "Claims all vehicles from 
     util.toast("All Destroyed Vehicles Have Been Claimed")
 end)
 
-local visuals = menu.list(menu.my_root(), "Visuals", {}, "")
 menu.click_slider(visuals, "Drunk Mode", {}, "", 0, 5, 1, 1, function(val)
     if val > 0 then
         CAM.SHAKE_GAMEPLAY_CAM("DRUNK_SHAKE", val)
@@ -862,7 +932,6 @@ for id, data in pairs(drugged_effects) do
     end)
 end
 
-local funfeatures = menu.list(menu.my_root(), "Fun Features", {}, "")
 do
     local toggled
     menu.toggle(funfeatures, "Personal Pet Jinx", {}, "", function(tgl)
@@ -997,57 +1066,6 @@ end)
 menu.toggle(funfeatures, "Auto-Crash SweetPlumbus", {}, "", function()
 end)
 
-
-local teleport = menu.list(menu.my_root(), "Teleport", {}, "")
-
-local interiors = {
-    {"Safe Space", {x=-74.710754, y=-818.1799, z=311.88455}},
-    {"Torture Room", {x=147.170, y=-2201.804, z=4.688}},
-    {"Mining Tunnels", {x=-595.48505, y=2086.4502, z=131.38136}},
-    {"Omegas Garage", {x=2330.2573, y=2572.3005, z=46.679367}},
-    {"Server Farm", {x=2155.077, y=2920.9417, z=-81.075455}},
-    {"Character Creation", {x=402.91586, y=-998.5701, z=-99.004074}},
-    {"Life Invader Building", {x=-1082.8595, y=-254.774, z=37.763317}},
-    {"Mission End Garage", {x=405.9228, y=-954.1149, z=-99.6627}},
-    {"Destroyed Hospital", {x=304.03894, y=-590.3037, z=43.291893}},
-    {"Stadium", {x=-256.92334, y=-2024.9717, z=30.145584}},
-    {"Comedy Club", {x=-430.00974, y=261.3437, z=83.00648}},
-    {"Bahama Mamas Nightclub", {x=-1394.8816, y=-599.7526, z=30.319544}},
-    {"Janitors House", {x=-110.20285, y=-8.6156025, z=70.51957}},
-    {"Martin Madrazos House", {x=1395.2512, y=1141.6833, z=114.63437}},
-    {"Floyds Apartment", {x=-1156.5099, y=-1519.0894, z=10.632717}},
-    {"Michaels House", {x=-813.8814, y=179.07889, z=72.15914}},
-    {"Franklins House (Old)", {x=-14.239959, y=-1439.6913, z=31.101551}},
-    {"Franklins House (New)", {x=7.3125067, y=537.3615, z=176.02803}},
-    {"Trevors House", {x=1974.1617, y=3819.032, z=33.436287}},
-    {"Lesters House", {x=1273.898, y=-1719.304, z=54.771}},
-    {"Lesters Warehouse", {x=713.5684, y=-963.64795, z=30.39534}},
-    {"Lesters Office", {x=707.2138, y=-965.5549, z=30.412853}},
-    {"Trevors Meth Lab", {x=1391.773, y=3608.716, z=38.942}},
-    {"Humane Labs", {x=3625.743, y=3743.653, z=28.69009}},
-    {"Motel Room", {x=152.2605, y=-1004.471, z=-99.024}},
-    {"Bank Vault", {x=-44.895756, y=-1096.882, z=26.700174}},
-    {"Tequi-La-La Bar", {x=-564.4645, y=275.5777, z=83.074585}},
-    {"Scrapyard Body Shop", {x=485.46396, y=-1315.0614, z=29.2141}},
-    {"The Lost MC Clubhouse", {x=980.8098, y=-101.96038, z=74.84504}},
-    {"Vangelico Jewlery Store", {x=-629.9367, y=-236.41296, z=38.057056}},
-    {"Airport Lounge", {x=-913.8656, y=-2527.106, z=36.331566}},
-    {"Morgue", {x=240.94368, y=-1379.0645, z=33.74177}},
-    {"Union Depository", {x=1.298771, y=-700.96967, z=16.131021}},
-    {"Fort Zancudo Tower", {x=-2357.9187, y=3249.689, z=101.45073}},
-    {"Avenger Interior", {x=518.6444, y=4750.4644, z=-69.3235}},
-    {"Terrobyte Interior", {x=-1421.015, y=-3012.587, z=-80.000}},
-    {"Bunker Interior", {x=899.5518,y=-3246.038, z=-98.04907}},
-    {"IAA Office", {x=128.20, y=-617.39, z=206.04}},
-    {"FIB Top Floor", {x=135.94359, y=-749.4102, z=258.152}},
-    {"FIB Floor 47", {x=134.5835, y=-766.486, z=234.152}},
-    {"FIB Floor 49", {x=134.635, y=-765.831, z=242.152}},
-    {"Big Fat White Cock", {x=-31.007448, y=6317.047, z=40.04039}},
-    {"Marijuana Shop", {x=-1170.3048, y=-1570.8246, z=4.663622}},
-    {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
-}
-
-
 for index, data in pairs(interiors) do
     local location_name = data[1]
     local location_coords = data[2]
@@ -1058,7 +1076,6 @@ for index, data in pairs(interiors) do
 end
 
 
-local weapon_options = menu.list(menu.my_root(), "Weapon Options", {}, "")
 local finger_thing = menu.list(weapon_options, "Finger Gun", {}, "")
 for id, data in pairs(weapon_stuff) do
     local name = data[1]
@@ -1128,7 +1145,6 @@ for id, data in pairs(weapon_stuff) do
     end)
 end
 
-local detection = menu.list(menu.my_root(), "Modder Detections", {}, "")
 bulletProof, fireProof, explosionProof, collisionProof, meleeProof, steamProof, p7, drownProof = memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int(), memory.alloc_int()
 menu.toggle_loop(detection, "Lobby Godmode Check", {}, "Players in godmode will show up as debug text.", function()
     for _, pid in ipairs(players.list(false, true, true)) do
@@ -1149,21 +1165,6 @@ end)
         end
     end
 end)]]
-
-local protections = menu.list(menu.my_root(), "Protections", {}, "")
-menu.toggle_loop(protections, "Bail On Known Admin Join", {}, "", function()
-    players.on_join(function(pid)
-        for _, pid in ipairs(players.list(false, true, true)) do
-            for i, rid in ipairs(stinky_admins) do
-                if not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == rid then
-                    util.toast(players.get_name(pid) .. " Is A Well Known Rockstar Admin. Quitting To Story Mode. Stay There Until They Get Off To Prevent A Possible Ban")
-                    menu.trigger_commands("quit")
-                end
-            end
-        end
-    end)
-end)
-players.dispatch_on_join()
 
 menu.toggle_loop(protections, "Block Common Cages", {}, "", function()
     for i, object in ipairs(entities.get_all_objects_as_pointers()) do
@@ -1324,8 +1325,6 @@ end)
 
 
 menu.divider(menu.my_root(), "Miscellaneous")
-menu.action(menu.my_root(), "Check For Updates", {}, "", function()
-end)
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")

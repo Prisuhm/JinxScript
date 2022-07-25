@@ -6,6 +6,7 @@ local function player_toggle_loop(root, pid, menu_name, command_names, help_text
         callback()
     end)
 end
+local spawned_objects = {}
 
 local function get_interior_player_is_in(pid)
     return memory.read_int(memory.script_global(((2689224 + 1) + (pid * 451)) + 242)) 
@@ -57,6 +58,13 @@ local function request_model(hash)
     end
 end
 
+local stinky_admins = {
+    99453882,
+    174754789,
+    56778561,
+    104041189,
+    25695975,
+}
 local All_business_properties = {
     -- Clubhouses
     "1334 Roy Lowenstein Blvd",
@@ -184,7 +192,6 @@ local big_vehicles = {
     "jet",
     "skylift",
     "titan",
-    "kosatka",
     "towtruck",
     "towtruck2",
     "tug"
@@ -322,11 +329,11 @@ local function player(pid)
         local glitch_hash = util.joaat("prop_shuttering03")
         request_model(glitch_hash)
 
-        local glitched_object = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 0.5, 0))
-        ENTITY.SET_ENTITY_VISIBLE(glitched_object, false)
-        ENTITY.SET_ENTITY_INVINCIBLE(glitched_object, true)
+        local dumb_object = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 0.5, 0))
+        ENTITY.SET_ENTITY_VISIBLE(dumb_object, false)
+        ENTITY.SET_ENTITY_INVINCIBLE(dumb_object, true)
         util.yield()
-        entities.delete_by_handle(glitched_object)
+        entities.delete_by_handle(dumb_object)
         util.yield()    
     end)
 
@@ -342,12 +349,12 @@ local function player(pid)
             local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
 
-            local glitched_object = entities.create_object(glitch_hash, playerpos)
-            ENTITY.SET_ENTITY_VISIBLE(glitched_object, false)
-            ENTITY.SET_ENTITY_INVINCIBLE(glitched_object, true)
-            ENTITY.SET_ENTITY_COLLISION(glitched_object, true, true)
+            local stupid_object = entities.create_object(glitch_hash, playerpos)
+            ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
+            ENTITY.SET_ENTITY_INVINCIBLE(stupid_object, true)
+            ENTITY.SET_ENTITY_COLLISION(stupid_object, true, true)
             util.yield()
-            entities.delete_by_handle(glitched_object)
+            entities.delete_by_handle(stupid_object)
             util.yield()    
         end
     end)
@@ -401,10 +408,8 @@ local function player(pid)
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
 
-        for i = 1, 3 do
-            --util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
-            MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 1000, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
-        end
+        util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+        MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 1000, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
     end)
 
     player_toggle_loop(trolling, pid, "Taser Loop", {}, "", function()
@@ -437,18 +442,21 @@ local function player(pid)
                 menu.set_value(electrocute_toggle, false) 
             break end;
             
-            local elec_box1 = OBJECT.CREATE_OBJECT(elec_box, pos.x, pos.y, pos.z + 2.41, true, false, true)
-            ENTITY.SET_ENTITY_ROTATION(elec_box1, 180, 0, 0, 2, true)
-            ENTITY.FREEZE_ENTITY_POSITION(elec_box1, true)
-            ENTITY.SET_ENTITY_VISIBLE(elec_box1, false)
+            local elecbox = OBJECT.CREATE_OBJECT(elec_box, pos.x, pos.y, pos.z + 2.41, true, false, true)
+            ENTITY.SET_ENTITY_ROTATION(elecbox, 180, 0, 0, 2, true)
+            ENTITY.FREEZE_ENTITY_POSITION(elecbox, true)
+            ENTITY.SET_ENTITY_VISIBLE(elecbox, false)
             util.yield()
-            entities.delete_by_handle(elec_box1)
+            entities.delete_by_handle(elecbox)
         end
     end)
 
 
-    menu.action(trolling, "Electric Cage", {"electriccage"}, "", function(cl)
-        local number_of_cages = 13
+    local cage = menu.list(trolling, "Cage Player", {}, "")
+    visibility = menu.toggle(cage, "Make Cages Visible", {}, "", function(toggled)
+    end)
+    menu.action(cage, "Electric Cage", {"electriccage"}, "", function(cl)
+        local number_of_cages = 10
         local elec_box = util.joaat("prop_elecbox_12")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_pos = ENTITY.GET_ENTITY_COORDS(ped)
@@ -465,30 +473,55 @@ local function player(pid)
             local angle = (i / number_of_cages) * 360
             temp_v3.z = angle
             local obj_pos = temp_v3:toDir()
-            obj_pos:mul(3)
+            obj_pos:mul(2.8)
             obj_pos:add(ped_pos)
             for offs_z = 1, 5 do
-                local obj = entities.create_object(elec_box, obj_pos)
-                ENTITY.SET_ENTITY_ROTATION(obj, 90, 0, angle, 2, 0)
+                local electric_cage = entities.create_object(elec_box, obj_pos)
+                spawned_objects[#spawned_objects + 1] = electric_cage
+                ENTITY.SET_ENTITY_ROTATION(electric_cage, 90, 0, angle, 2, 0)
                 obj_pos.z += 0.75
-                ENTITY.FREEZE_ENTITY_POSITION(obj, true)
+                ENTITY.FREEZE_ENTITY_POSITION(electric_cage, true)
             end
         end
     end)
 
-    player_toggle_loop(trolling, pid, "Cage Player", {}, "", function()
+    menu.action(cage, "Basic Cage", {}, "", function()
         local ramp_hash = util.joaat("prop_jetski_ramp_01")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0, 0, 0)
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = ENTITY.GET_ENTITY_COORDS(player)
         local rot = ENTITY.GET_ENTITY_ROTATION(ped, 2)
         request_model(ramp_hash)
 
-        local ramp = OBJECT.CREATE_OBJECT(ramp_hash, pos.x, pos.y, pos.z, true, false, true)
-        NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ramp)
-        ENTITY.SET_ENTITY_VISIBLE(ramp, false)
-        ENTITY.SET_ENTITY_ROTATION(ramp, rot.x, rot.y, rot.z, 0, true)
-        util.yield(1000)
-        entities.delete_by_handle(ramp)
+        local ramp_cage = OBJECT.CREATE_OBJECT(ramp_hash, pos.x, pos.y, pos.z, true, false, true)
+        spawned_objects[#spawned_objects + 1] = ramp_cage
+        NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ramp_cage)
+        ENTITY.SET_ENTITY_VISIBLE(ramp_cage, menu.get_value(visibility))
+    end)
+
+    menu.action(cage, "Shipping Container", {}, "", function()
+        local container_hash = util.joaat("prop_container_05a")
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0, 0, -1)
+        local rot = ENTITY.GET_ENTITY_ROTATION(ped, 2)
+        request_model(container_hash)
+
+        local container = OBJECT.CREATE_OBJECT(container_hash, pos.x, pos.y, pos.z, true, false, true)
+        spawned_objects[#spawned_objects + 1] = container
+
+        NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(container)
+        ENTITY.FREEZE_ENTITY_POSITION(container, true)
+    end)
+
+    menu.action(cage, "Delete Cages", {"clearcages"}, "", function()
+        local entitycount = 0
+        for i, object in ipairs(spawned_objects) do
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
+            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(object)
+            entities.delete_by_handle(object)
+            spawned_objects[i] = nil
+            entitycount += 1
+        end
+        util.toast("Cleared " .. entitycount .. " Spawned Objects")
     end)
 
     menu.action_slider(trolling, "Launch Player Vehicle", {}, "", launch_vehicle, function(index, value)
@@ -645,6 +678,15 @@ local function player(pid)
             entities.delete_by_handle(spawned_vehs[i])
         end
     end) 
+
+    player_toggle_loop(antimodder, pid, "Explode Godmode Player", {}, "Blocked By Most Menus", function()
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local coords = ENTITY.GET_ENTITY_COORDS(player)
+        if not PLAYER.IS_PLAYER_DEAD(player) then
+            util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+            FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), coords.x, coords.y, coords.z, 2, 50, true, false, 0.0)
+        end
+    end)
 
     player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function()
         util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
@@ -1109,13 +1151,26 @@ end)
 end)]]
 
 local protections = menu.list(menu.my_root(), "Protections", {}, "")
-menu.toggle_loop(protections, "Block Cages", {}, "", function()
+menu.toggle_loop(protections, "Bail On Known Admin Join", {}, "", function()
+    players.on_join(function(pid)
+        for _, pid in ipairs(players.list(false, true, true)) do
+            for i, rid in ipairs(stinky_admins) do
+                if not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == rid then
+                    util.toast(players.get_name(pid) .. " Is A Well Known Rockstar Admin. Quitting To Story Mode. Stay There Until They Get Off To Prevent A Possible Ban")
+                    menu.trigger_commands("quit")
+                end
+            end
+        end
+    end)
+end)
+players.dispatch_on_join()
+
+menu.toggle_loop(protections, "Block Common Cages", {}, "", function()
     for i, object in ipairs(entities.get_all_objects_as_pointers()) do
         for i, name in ipairs(cage_objects) do
             if entities.get_model_hash(object) == util.joaat(name) then
                 NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
                 entities.delete_by_pointer(object)
-                util.toast("Blocked object sync with model: " .. name)
                 break
             end
         end
@@ -1128,7 +1183,7 @@ menu.toggle_loop(protections, "Block All Stunt Tubes", {}, "(Note: disable when 
             if entities.get_model_hash(object) == util.joaat(name) then
                 NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
                 entities.delete_by_pointer(object)
-                util.toast("Blocked bad object spawn with model: " .. name)
+                util.toast("[JinxScript] Blocked bad object spawn with model: " .. name)
                 break
             end
         end
@@ -1140,7 +1195,7 @@ menu.toggle_loop(protections, "Block Unwanted Vehicles", {}, "", function()
         for i, name in ipairs(big_vehicles) do
             if entities.get_model_hash(vehicle) == util.joaat(name) then
                 NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
-                util.toast("Blocked vehicle sync with model: " .. name)
+                util.toast("[JinxScript] Blocked vehicle sync with model: " .. name)
                 entities.delete_by_pointer(vehicle)
                 break
             end
@@ -1267,7 +1322,10 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Area Has Been Cleaned!")
 end)
 
+
 menu.divider(menu.my_root(), "Miscellaneous")
+menu.action(menu.my_root(), "Check For Updates", {}, "", function()
+end)
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")

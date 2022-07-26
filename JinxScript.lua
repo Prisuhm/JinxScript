@@ -1,4 +1,4 @@
-util.require_natives(1640181023)
+util.require_natives(1651208000)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 
 local localVer = 1.4
@@ -339,7 +339,7 @@ menu.toggle(protections, "Bail On Admin Join", {}, "", function(on)
 end)
 
 local function player(pid)   
-    if players.get_rockstar_id(pid) == 213034124 and not players.user() then
+    if players.get_rockstar_id(pid) == 213034124 then
         util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n (They might be a sussy imposter! watch out!)")
     end
 
@@ -353,7 +353,7 @@ local function player(pid)
     local funfeatures_player = menu.list(bozo, "Fun Features", {}, "")
     menu.action(funfeatures_player, "Custom Notification", {"customnotify"}, "See Discord For Example", function(cl)
         menu.show_command_box_click_based(cl, "customnotify "..players.get_name(pid):lower().." ") end, function(input)
-            local event_data = {-1525161016, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+            local event_data = {-1908874529 -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
             input = input:sub(1, 127)
             for i = 0, #input -1 do
                 local slot = i // 8
@@ -364,7 +364,7 @@ local function player(pid)
         end)
 
     menu.action(funfeatures_player, "Custom Label", {"label"}, "", function() menu.show_command_box("label "..players.get_name(pid).." ") end, function(label)
-        local event_data = {-1702264142, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        local event_data = {-791892894, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         local out = label:sub(1, 127)
         for i = 0, #out -1 do
             local slot = i // 8
@@ -440,7 +440,7 @@ local function player(pid)
     end)
 
     player_toggle_loop(trolling, pid, "Freeze", {}, "", function()
-        util.trigger_script_event(1 << pid, {1463943751, pid, 0, 0, 0, 0, 0})
+        util.trigger_script_event(1 << pid, {1214823473, pid, 0, 0, 0, 0, 0})
         util.yield(500)
     end)
 
@@ -452,34 +452,37 @@ local function player(pid)
             while SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 do
                 util.yield(500)
             end
-            if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) ~= 0 then
+
+            util.yield(1000)
+            local blip = HUD.GET_FIRST_BLIP_INFO_ID(225) == 0 and 348 or 225
+            local coords = get_blip_coords(blip)
+            local explodeTargetVeh = function()
+                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
+                local handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
+                local oldPos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
+                ENTITY.SET_ENTITY_COORDS(handle, coords.x, coords.y + 15, coords.z, false, false, false, false)
                 util.yield(1000)
-                local blip = HUD.GET_FIRST_BLIP_INFO_ID(225) == 0 and 348 or 225
-                local coords = get_blip_coords(blip)
-                local explodeTargetVeh = function()
-                    ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
-                    local handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
-                    local oldPos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
-                    ENTITY.SET_ENTITY_COORDS(handle, coords.x, coords.y + 15, coords.z, false, false, false, false)
-                    util.yield(1000)
-                    FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 2, 50, false, true, 0.0)
-                    handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
-                    util.yield(1000)
-                    ENTITY.SET_ENTITY_COORDS(handle, oldPos.x, oldPos.y, oldPos.z, false, false, false, false)
-                    ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                for i = 1, 10 do
                     FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 2, 50, false, true, 0.0)
                 end
-                if coords.x ~= 0 and coords.y ~= 0 and coords.z ~= 0 then
-                    explodeTargetVeh()
-                else
-                    util.yield(2000)
+                handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
+                util.yield(1000)
+                ENTITY.SET_ENTITY_COORDS(handle, oldPos.x, oldPos.y, oldPos.z, false, false, false, false)
+                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                for i = 1, 10 do
+                    FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), coords.x, coords.y, coords.z, 2, 50, false, true, 0.0)
+                end
+            end
+            if coords.x ~= 0 and coords.y ~= 0 and coords.z ~= 0 then
+                explodeTargetVeh()
+            else
+                util.yield(2000)
+                coords = get_blip_coords(blip)
+                while coords.x == 0 do
                     coords = get_blip_coords(blip)
-                    while coords.x == 0 do
-                        coords = get_blip_coords(blip)
-                        util.yield_once()
-                    end
-                    explodeTargetVeh()
+                    util.yield_once()
                 end
+                explodeTargetVeh()
             end
         end)
     end
@@ -488,7 +491,7 @@ local function player(pid)
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
 
-        util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+        util.trigger_script_event(1 << pid, {-1388926377, pid, -1762807505, math.random(0, 9999)})
         MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 1000, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
     end)
 
@@ -533,8 +536,6 @@ local function player(pid)
 
 
     local cage = menu.list(trolling, "Cage Player", {}, "")
-    visibility = menu.toggle(cage, "Make Cages Visible", {}, "", function(toggled)
-    end)
     menu.action(cage, "Electric Cage", {"electriccage"}, "", function(cl)
         local number_of_cages = 10
         local elec_box = util.joaat("prop_elecbox_12")
@@ -575,7 +576,6 @@ local function player(pid)
         local ramp_cage = OBJECT.CREATE_OBJECT(ramp_hash, pos.x, pos.y, pos.z, true, false, true)
         spawned_objects[#spawned_objects + 1] = ramp_cage
         NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ramp_cage)
-        ENTITY.SET_ENTITY_VISIBLE(ramp_cage, menu.get_value(visibility))
     end)
 
     menu.action(cage, "Shipping Container", {}, "", function()
@@ -592,7 +592,7 @@ local function player(pid)
         ENTITY.FREEZE_ENTITY_POSITION(container, true)
     end)
 
-    menu.action(cage, "Delete Cages", {"clearcages"}, "", function()
+    menu.action(cage, "Delete Spawned Cages", {"clearcages"}, "", function()
         local entitycount = 0
         for i, object in ipairs(spawned_objects) do
             ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
@@ -638,29 +638,29 @@ local function player(pid)
 
     local soundspam = menu.list(trolling, "Sound Spam", {}, "")
     player_toggle_loop(soundspam, pid, "SMS Spam", {}, "", function()
-        util.trigger_script_event(1 << pid, {1903866949, pid, math.random(-2147483647, 2147483647)})
+        util.trigger_script_event(1 << pid, {1670832796, pid, math.random(-2147483647, 2147483647)})
     end)
 
     player_toggle_loop(soundspam, pid, "Invite Notification", {}, "", function()
-        util.trigger_script_event(1 << pid, {1132878564, pid, math.random(1, 6)})
+        util.trigger_script_event(1 << pid, {1111927333, pid, math.random(1, 6)})
     end)
 
     player_toggle_loop(soundspam, pid, "Invite Notification v2", {}, "", function()
-        util.trigger_script_event(1 << pid, {150518680, pid, math.random(1, 150), -1, -1})
+        util.trigger_script_event(1 << pid, {-668341698, pid, math.random(1, 150), -1, -1})
         util.yield(25)
     end)
 
     player_toggle_loop(soundspam, pid, "Checkpoint Notification", {}, "", function()
-        util.trigger_script_event(1 << pid, {677240627, pid, -1774405356, 0, 0, 0, 0, 0, 0, 0, pid, 0, 0, 0})
+        util.trigger_script_event(1 << pid, {-1529596656, pid, -547323955, 0, 0, 0, 0, 0, 0, 0, pid, 0, 0, 0})
         util.yield(25)
     end)
 
     player_toggle_loop(soundspam, pid, "Character Notification", {}, "", function()
-        util.trigger_script_event(1 << pid, {922450413, pid, math.random(0, 178), 0, 0, 0})
+        util.trigger_script_event(1 << pid, {-634789188, pid, math.random(0, 178), 0, 0, 0})
     end)
 
     player_toggle_loop(soundspam, pid, "Error Label", {}, "", function()
-        util.trigger_script_event(1 << pid, {-1675759720, pid, math.random(-2147483647, 2147483647)})
+        util.trigger_script_event(1 << pid, {-1251171789, pid, math.random(-2147483647, 2147483647)})
     end)    
 
     menu.action(trolling, "Spawn Ramp In Front Of Player", {}, "", function() 
@@ -691,7 +691,7 @@ local function player(pid)
 
     menu.action(trolling, "Force Interior State", {}, "Can Be Undone By Rejoining. Player Must Be In An Apartment", function(s)
         if is_player_in_interior(pid) then
-            util.trigger_script_event(1 << pid, {1695663635, pid, pid, pid, pid, math.random(-2147483647, 2147483647), pid})
+            util.trigger_script_event(1 << pid, {-1338917610, pid, pid, pid, pid, math.random(-2147483647, 2147483647), pid})
         else
             util.toast("Player isn't in an apartment. :/")
         end
@@ -763,20 +763,20 @@ local function player(pid)
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local coords = ENTITY.GET_ENTITY_COORDS(player)
         if not PED.IS_PED_DEAD_OR_DYING(player) then
-            util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+            util.trigger_script_event(1 << pid, {-1388926377, pid, -1762807505, math.random(0, 9999)})
             FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), coords.x, coords.y, coords.z, 2, 50, true, false, 0.0)
         end
     end)
 
     player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function()
-        util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+        util.trigger_script_event(1 << pid, {-1388926377, pid, -1762807505, math.random(0, 9999)})
     end)
 
     menu.toggle_loop(antimodder, "Remove Godmode Gun", {}, "", function()
         for _, pid in ipairs (players.list(true, true, true)) do
             local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             if PLAYER.IS_PLAYER_FREE_AIMING_AT_ENTITY(players.user(), player) and players.is_godmode(pid) then
-                util.trigger_script_event(1 << pid, {801199324, pid, 869796886, math.random(0, 9999)})
+                util.trigger_script_event(1 << pid, {-1388926377, pid, -1762807505, math.random(0, 9999)})
             end
         end
     end)
@@ -799,38 +799,38 @@ local function player(pid)
     for id, name in pairs(All_business_properties) do
         if id <= 12 then
             menu.action(clubhouse, name, {}, "", function()
-                util.trigger_script_event(1 << pid, {962740265, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, math.random(1, 10)})
+                util.trigger_script_event(1 << pid, {-555356783, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, math.random(1, 10)})
             end)
         elseif id > 12 and id <= 21 then
             menu.action(facility, name, {}, "", function()
-                util.trigger_script_event(1 << pid, {962740265, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0})
+                util.trigger_script_event(1 << pid, {-555356783, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0})
             end)
         elseif id > 21 then
             menu.action(arcade, name, {}, "", function() 
-                util.trigger_script_event(1 << pid, {962740265, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1})
+                util.trigger_script_event(1 << pid, {-555356783, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1})
             end)
         end
     end
 
     menu.action(cayoperico, "Cayo Perico", {"tpcayo"}, "", function()
-        util.trigger_script_event(1 << pid, {1463943751, pid, 0, 0, 3, 1, 0})
+        util.trigger_script_event(1 << pid, {1214823473, pid, 0, 0, 3, 1, 0})
     end)
 
     menu.action(cayoperico, "Cayo Perico (No Cutscene)", {"tpcayo2"}, "", function()
-        util.trigger_script_event(1 << pid, {1463943751, pid, 0, 0, 4, 1, 0})
+        util.trigger_script_event(1 << pid, {1214823473, pid, 0, 0, 4, 1, 0})
     end)
 
     menu.action(cayoperico, "Leaving Cayo Perico", {"cayoleave"}, "Player Must Be At Cayo Perico To Trigger This Event", function()
-        util.trigger_script_event(1 << pid, {1463943751, pid, 0, 0, 3, 0, 0})
+        util.trigger_script_event(1 << pid, {1214823473, pid, 0, 0, 3, 0, 0})
     end)
 
     menu.action(cayoperico, "Kicked From Cayo Perico", {"cayokick"}, "", function()
-        util.trigger_script_event(1 << pid, {1463943751, pid, 0, 0, 4, 0, 0})
+        util.trigger_script_event(1 << pid, {1214823473, pid, 0, 0, 4, 0, 0})
     end)
 
     local player_removals = menu.list(bozo, "Player Removals", {}, "")
     menu.action(player_removals, "Nasa Kick", {}, "", function()
-        util.trigger_script_event(1 << pid, {844746317, pid, -210634234})
+        util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
     if bailOnAdminJoin then
@@ -976,7 +976,7 @@ do
     end)
 end
 
-local jinx_army = {}
+local player_jinx_army = {}
 local army = menu.list(funfeatures, "Jinx Army", {}, "")
 menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 255, 1, 1, function(val)
     local player = players.user_ped()
@@ -986,18 +986,17 @@ menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 255, 1, 1, function(val)
     local jinx = util.joaat("a_c_cat_01")
     request_model(jinx)
      for i = 1, val do
-         jinx_army[i] = entities.create_ped(28, jinx, playerpos, 0)
-         ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
-         PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
-         TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+         player_jinx_army[i] = entities.create_ped(28, jinx, playerpos, 0)
+         ENTITY.SET_ENTITY_INVINCIBLE(player_jinx_army[i], true)
+         PED.SET_PED_COMPONENT_VARIATION(player_jinx_army[i], 0, 0, 1, 0)
+         TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(player_jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
          util.yield()
      end 
 end)
 
 menu.action(army, "Clear Jinxs", {}, "", function()
-    for i = 1, #jinx_army do
-        entities.delete_by_handle(jinx_army[i])
-        jinx_army[i] = nil
+    for i = 1, #player_jinx_army do
+        entities.delete_by_handle(player_jinx_army[i])
         util.yield()
     end
 end)
@@ -1345,8 +1344,8 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
 end)
 
 menu.divider(menu.my_root(), "Miscellaneous")
-local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
-menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
+menu.hyperlink(menu.my_root(), "Changelog", "https://discord.com/channels/948318760786342008/948318763491663909/1000607008883495022")
+menu.hyperlink(menu.my_root(), "Join The Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")
 local jinx = menu.list(credits, "Jinx", {}, "")
 menu.hyperlink(jinx, "Tiktok", "https://www.tiktok.com/@bigfootjinx")
@@ -1357,7 +1356,7 @@ menu.action(credits, "ICYPhoenix", {}, "I would have never made this script or t
 end)
 menu.action(credits, "Sapphire", {}, "dealing with all my autism and helping a ton when I first started the lua as well as when I started learning stands api and natives", function()
 end)
-menu.action(credits, "aaronlink127", {}, "helping with math stuff and telling me how to properly use pairs", function()
+menu.action(credits, "aaronlink127", {}, "helping with math stuff and also helping with the auto updater", function()
 end)
 menu.action(credits, "Ren", {}, "dealing with all my autism and yelling at me to fix my code", function()
 end)

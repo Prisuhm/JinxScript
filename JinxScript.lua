@@ -833,18 +833,12 @@ local function player(pid)
     end)
 
     menu.action(player_removals, "Abortion Crash", {}, "", function()
-        local pos = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
-        local hakuchou = util.joaat("hakuchou2")
-    
-        STREAMING.REQUEST_MODEL(hakuchou)
-        while not STREAMING.HAS_MODEL_LOADED(hakuchou) do
-            util.yield()
-        end
-    
-        local vehicle = entities.create_vehicle(hakuchou, pos, 0)
-        VEHICLE.SET_VEHICLE_MOD(vehicle, 34, 3, false)
+        menu.trigger_commands("tp " .. players.get_name(pid))
+        menu.trigger_commands("hakuchou2")
+        util.yield(100)
+        menu.trigger_commands("upgrade")
         util.yield(1000)
-        entities.delete_by_handle(vehicle)
+        menu.trigger_commands("deletevehicle")
     end) 
     
 

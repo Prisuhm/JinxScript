@@ -1332,7 +1332,7 @@ menu.action(menu.my_root(), "Check For Updates", {}, "", function()
     async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
         currentVer = tonumber(output)
         if localVer ~= currentVer then
-            util.toast("Outdated JinxScript Version Detected, Download Most Up-To-Date Build.")
+            util.toast("Outdated JinxScript version detected, Downloading most recent build.")
             async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
                 local f = io.open(filesystem.scripts_dir()..SCRIPT_RELPATH, "wb")
                 f:write(a)

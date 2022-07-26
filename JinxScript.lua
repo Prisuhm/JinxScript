@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 
-local localVer = 1.4
+local localVer = 1.41
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     if localVer ~= currentVer then
@@ -27,11 +27,11 @@ end
 local spawned_objects = {}
 
 local function get_interior_player_is_in(pid)
-    return memory.read_int(memory.script_global(((2689224 + 1) + (pid * 451)) + 242)) 
+    return memory.read_int(memory.script_global(((2689235 + 1) + (pid * 451)) + 242)) 
 end
 
 local function is_player_in_interior(pid)
-    return (memory.read_int(memory.script_global(2689224 + 1 + (pid * 451) + 242 )) ~= 0)
+    return (memory.read_int(memory.script_global(2689235 + 1 + (pid * 451) + 242 )) ~= 0)
 end
 
 local function get_entity_owner(addr)
@@ -400,7 +400,6 @@ local function player(pid)
             util.yield()
         end
     end)
-
 
     local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
     player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
@@ -890,14 +889,14 @@ local function bitTest(addr, offset)
     return (memory.read_int(addr) & (1 << offset)) ~= 0
 end
 menu.action(self, "Claim All Destroyed Vehicles", {}, "Claims all vehicles from Mors Mutual Insurance.\nSadly doesn't save across sessions.", function()
-    local count = memory.read_int(memory.script_global(1585853))
+    local count = memory.read_int(memory.script_global(1585857))
     for i = 0, count do
-        local canFix = ( bitTest(memory.script_global(1585853 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585853 + 1 + (i * 142) + 103), 2))
+        local canFix = ( bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
         poop = {1, 3, 16}
         if canFix then
-            MISC.CLEAR_BIT(memory.script_global(1585853 + 1 + (i * 142) + 103), 1)
-            MISC.CLEAR_BIT(memory.script_global(1585853 + 1 + (i * 142) + 103), 3)
-            MISC.CLEAR_BIT(memory.script_global(1585853 + 1 + (i * 142) + 103), 16)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
             util.yield()
         end
     end
@@ -1108,8 +1107,8 @@ for id, data in pairs(weapon_stuff) do
     menu.toggle(finger_thing, name, {}, "", function(state)
         toggled = state
         while toggled do
-            if memory.read_int(memory.script_global(4516656 + 930)) == 3 then
-                memory.write_int(memory.script_global(4516656 + 935), NETWORK.GET_NETWORK_TIME())
+            if memory.read_int(memory.script_global(4521801 + 930)) == 3 then
+                memory.write_int(memory.script_global(4521801 + 935), NETWORK.GET_NETWORK_TIME())
                 local inst = v3.new()
                 v3.set(inst,CAM.GET_FINAL_RENDERED_CAM_ROT(2))
                 local tmp = v3.toDir(inst)

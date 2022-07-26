@@ -1,5 +1,25 @@
 util.require_natives(1640181023)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
+
+local localVer = 1.4
+async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
+    currentVer = tonumber(output)
+    if localVer ~= currentVer then
+        util.toast("Outdated JinxScript Version Detected, Download Most Up-To-Date Build.")
+        async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
+            local f = io.open(filesystem.scripts_dir()..SCRIPT_RELPATH, "wb")
+            f:write(a)
+            f:close()
+            util.toast("Successfully updated JinxScript, please restart the script :)")
+            util.stop_script()
+        end)
+        async_http.dispatch()
+    else
+        util.toast("You are already on the newest version :)")
+    end
+end)
+async_http.dispatch()
+
 local function player_toggle_loop(root, pid, menu_name, command_names, help_text, callback)
     return menu.toggle_loop(root, menu_name, command_names, help_text, function()
         if not players.exists(pid) then util.stop_thread() end
@@ -1327,27 +1347,6 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
 end)
 
 menu.divider(menu.my_root(), "Miscellaneous")
-menu.action(menu.my_root(), "Check For Updates", {}, "", function()
-    local localVer = 1.4
-    async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
-        currentVer = tonumber(output)
-        if localVer ~= currentVer then
-            util.toast("Outdated JinxScript version detected, Downloading most recent build.")
-            async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
-                local f = io.open(filesystem.scripts_dir()..SCRIPT_RELPATH, "wb")
-                f:write(a)
-                f:close()
-                util.toast("Successfully updated JinxScript, please restart the script :)")
-                util.stop_script()
-            end)
-            async_http.dispatch()
-        else
-            util.toast("You are already on the newest version :)")
-        end
-    end)
-    async_http.dispatch()
-end)
-
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")

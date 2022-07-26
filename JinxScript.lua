@@ -1340,6 +1340,7 @@ menu.action(menu.my_root(), "Check For Update", {}, "", function()
                 util.toast("Successfully updated JinxScript, please restart the script :)")
                 util.stop_script()
             end)
+            async_http.dispatch()
         else
             util.toast("You are already on the newest version :)")
         end

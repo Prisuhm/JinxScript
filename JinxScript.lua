@@ -1327,7 +1327,7 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
 end)
 
 menu.divider(menu.my_root(), "Miscellaneous")
-menu.action(menu.my_root(), "Check For Update", {}, "", function()
+menu.action(menu.my_root(), "Check For Updates", {}, "", function()
     local localVer = 1.4
     async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
         currentVer = tonumber(output)

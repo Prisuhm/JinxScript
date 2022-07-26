@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 
-local localVer = 1.41
+local localVer = 1.42
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     if localVer ~= currentVer then

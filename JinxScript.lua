@@ -58,13 +58,16 @@ local function request_model(hash)
     end
 end
 
+
 local stinky_admins = {
-    99453882,
-    174754789,
-    56778561,
-    104041189,
-    25695975,
+    {"SweetPlumbus", 99453882}, 
+    {"NotSweetPlumbus", 174754789}, 
+    {"Huginn5", 56778561}, 
+    {"FoxesAreCool69", 104041189}, 
+    {"TheUntamedVoid", 25695975}, 
 }
+
+
 local All_business_properties = {
     -- Clubhouses
     "1334 Roy Lowenstein Blvd",
@@ -813,12 +816,12 @@ local function player(pid)
     end)
 
     if bailOnAdminJoin then
-        for i, rid in ipairs(stinky_admins) do
-            if not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == rid then
+        for i, data in ipairs(stinky_admins) do
+            local name = data[1]
+            local rid = data[2]
+            if not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == rid and players.get_name(pid) == name then
                 util.toast(players.get_name(pid) .. " Is A Known Rockstar Admin. Quitting To Story Mode. Stay There Until They Get Off To Prevent A Possible Ban")
                 menu.trigger_commands("quickbail")
-                util.yield(1000)
-                menu.trigger_commands("quit")
                 return
             end
             util.yield()
@@ -1099,7 +1102,7 @@ for id, data in pairs(weapon_stuff) do
                 v3.add(inst, tmp)
                 v3.free(tmp)
                 local x, y, z = v3.get(inst)
-                local fingerPos = PED.GET_PED_BONE_COORDS(players.user_ped(), 0xff9, 0.3, 0, 0.)
+                local fingerPos = PED.GET_PED_BONE_COORDS(players.user_ped(), 0xff9, 0.7, 0, 0)
                 MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS_IGNORE_ENTITY(fingerPos.x, fingerPos.y, fingerPos.z, x, y, z, 1, true, projectile, 0, true, false, 500, players.user_ped(), 0)
             end
             util.yield(100)
@@ -1323,8 +1326,27 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Area Has Been Cleaned!")
 end)
 
-
 menu.divider(menu.my_root(), "Miscellaneous")
+menu.action(menu.my_root(), "Check For Update", {}, "", function()
+    local localVer = 1.4
+    async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
+        local currentVer = tonumber(output)
+        util.toast(output)
+
+        if localVer ~= currentVer then
+            util.toast("Outdated JinxScript Version Detected, Download Most Up-To-Date Build.")
+            async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
+                util.yield()
+                util.create_thread(load(a))end,function()
+                util.toast('Failed to load content from GitHub.\nPlease make sure you are connected to internet and [Stand > Lua Scripts > Settings > Disable Internet Access] is disabled, then try again.')
+            end)
+        else
+            util.toast("You are already on the newest version :)")
+        end
+    end)
+    async_http.dispatch()
+end)
+
 local discord = menu.list(menu.my_root(), "Join The Discord", {}, "")
 menu.hyperlink(discord, "Jinx Script Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")

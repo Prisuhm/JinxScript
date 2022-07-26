@@ -1328,7 +1328,7 @@ end)
 
 menu.divider(menu.my_root(), "Miscellaneous")
 menu.action(menu.my_root(), "Check For Update", {}, "", function()
-    local localVer = 1.4
+    local localVer = 1.5
     async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
         currentVer = tonumber(output)
     end)

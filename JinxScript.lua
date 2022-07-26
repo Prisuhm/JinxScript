@@ -1344,7 +1344,6 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
 end)
 
 menu.divider(menu.my_root(), "Miscellaneous")
-menu.hyperlink(menu.my_root(), "Changelog", "https://discord.com/channels/948318760786342008/948318763491663909/1000607008883495022")
 menu.hyperlink(menu.my_root(), "Join The Discord", "https://discord.gg/6TWDGfGG64")
 local credits = menu.list(menu.my_root(), "Credits", {}, "")
 local jinx = menu.list(credits, "Jinx", {}, "")

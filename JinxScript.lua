@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
 
-local localVer = 1.5
+local localVer = 1.51
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     if localVer ~= currentVer then
@@ -17,29 +17,6 @@ async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScrip
     end
 end)
 async_http.dispatch()
-
-
-local rainbow = {}
-
-rainbow.r = 255;
-rainbow.g = 0;
-rainbow.b = 0;
-
-local function RgbFade()
-    if (rainbow.r > 0 and rainbow.b == 0) then
-        rainbow.r = rainbow.r - 1;
-        rainbow.g = rainbow.g + 1;
-    end
-    if (rainbow.g > 0 and rainbow.r == 0) then
-        rainbow.g = rainbow.g - 1;
-        rainbow.b = rainbow.b + 1;
-    end
-    if (rainbow.b > 0 and rainbow.g == 0) then
-        rainbow.r = rainbow.r + 1;
-        rainbow.b = rainbow.b - 1;
-    end
-end
-
 
 local function player_toggle_loop(root, pid, menu_name, command_names, help_text, callback)
     return menu.toggle_loop(root, menu_name, command_names, help_text, function()

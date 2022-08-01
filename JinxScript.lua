@@ -1400,7 +1400,7 @@ for index, data in pairs(interiors) do
     menu.action(teleport, location_name, {}, "", function()
         menu.trigger_commands("doors on")
         menu.trigger_commands("nodeathbarriers")
-        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), location_pos.x, location_pos.y, location_pos.z, false, false, false)
+        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), location_coords.x, location_coords.y, location_coords.z, false, false, false)
     end)
 end
 

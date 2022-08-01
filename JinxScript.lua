@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
-util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64" )
+util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64")
 
-local localVer = 1.51
+local localVer = 1.52
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     if localVer ~= currentVer then
@@ -355,7 +355,7 @@ local function player(pid)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
 
-    local jinx_army = {}
+    local player_jinx_army = {}
     local army_player = menu.list(funfeatures_player, "Jinx Army", {}, "")
     menu.click_slider(army_player, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -365,18 +365,18 @@ local function player(pid)
         local jinx = util.joaat("a_c_cat_01")
         request_model(jinx)
         for i = 1, val do
-            jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
-            ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
-            PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jinx_army[i], true)
-            PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+            player_jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
+            ENTITY.SET_ENTITY_INVINCIBLE(player_jinx_army[i], true)
+            PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(player_jinx_army[i], true)
+            PED.SET_PED_COMPONENT_VARIATION(player_jinx_army[i], 0, 0, 1, 0)
+            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(player_jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
             util.yield()
         end 
     end)
 
     menu.action(army_player, "Clear Jinxs", {}, "", function()
-        for i, jinx in ipairs(jinx_army) do
-            entities.delete_by_handle(jinx_army)
+        for i, jinx in ipairs(player_jinx_army) do
+            entities.delete_by_handle(player_jinx_army[i])
         end
     end)
 
@@ -551,54 +551,7 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {-555356783, pid, math.random(1, 32), 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
         util.yield(1000)
     end)
-
-
-    if menu.get_edition() == 3 then
-        menu.action(trolling, "Transaction Error", {}, "", function()
-            if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 then
-                util.request_script_host("freemode")
-                while players.get_script_host() ~= players.user() do util.yield_once() end
-                local sscript = menu.ref_by_path("Online>Session>Session Scripts>Run Script>Removed Freemode Activities>Destroy Vehicle")
-                menu.trigger_command(sscript)
-                while SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) == 0 do
-                    util.yield(1000)
-                end
-            end
-            if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_destroy_veh")) ~= 0 then
-                util.yield(1000)
-                local blip = HUD.GET_FIRST_BLIP_INFO_ID(225) == 0 and 348 or 225
-                local pos = get_blip_coords(blip)
-                local explodeTargetVeh = function()
-                    ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
-                    local handle = PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) or players.user_ped()
-                    local oldPos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
-                    ENTITY.SET_ENTITY_COORDS(handle, pos.x, pos.y + 20, pos.z, false, false, false, false)
-                    util.yield(100)
-                    for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-                        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) then
-                            ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false) 
-                            FIRE.ADD_OWNED_EXPLOSION(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), pos.x, pos.y, pos.z, 2, 50, true, false, 0.0)
-                        end
-                    end
-                end
-                if pos.x ~= 0 and pos.y ~= 0 and pos.z ~= 0 then
-                    explodeTargetVeh()
-                else
-                    util.yield(100)
-                    coords = get_blip_coords(blip)
-                    while pos.x == 0 do
-                        coords = get_blip_coords(blip)
-                        util.yield_once()
-                    end
-                    util.yield(1000)
-                    explodeTargetVeh()
-                    util.yield(100)
-                    ENTITY.SET_ENTITY_COORDS(handle, oldPos.x, oldPos.y, oldPos.z, false, false, false, false)
-                end
-            end
-        end)
-    end
-
+	
     menu.click_slider(trolling, "Mug Player", {}, "", 0, 2000000000, 0, 1000, function(amount)
         util.trigger_script_event(1 << pid, {-1529596656, players.user(), -1296682161, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
         util.trigger_script_event(1 << players.user(), {-1529596656, players.user(), -1296682161, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
@@ -1264,7 +1217,7 @@ do
     end)
 end
 
-local player_jinx_army = {}
+local jinx_army = {}
 local army = menu.list(funfeatures, "Jinx Army", {}, "")
 menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
     local player = players.user_ped()
@@ -1274,18 +1227,18 @@ menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
     local jinx = util.joaat("a_c_cat_01")
     request_model(jinx)
      for i = 1, val do
-        player_jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
-        ENTITY.SET_ENTITY_INVINCIBLE(player_jinx_army[i], true)
-        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(player_jinx_army[i], true)
-        PED.SET_PED_COMPONENT_VARIATION(player_jinx_army[i], 0, 0, 1, 0)
-        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(player_jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+        jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
+        ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
+        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jinx_army[i], true)
+        PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
+        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
         util.yield()
      end 
 end)
 
 menu.action(army, "Clear Jinxs", {}, "", function()
-    for i, jinx in ipairs(player_jinx_army) do
-        entities.delete_by_handle(player_jinx_army)
+    for i, jinx in ipairs(jinx_army) do
+        entities.delete_by_handle(jinx_army[i])
     end
 end)
 
@@ -1380,7 +1333,6 @@ for index, data in pairs(interiors) do
         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), location_coords.x, location_coords.y, location_coords.z, false, false, false)
     end)
 end
-
 
 local finger_thing = menu.list(weapon_options, "Finger Gun", {}, "")
 for id, data in pairs(weapon_stuff) do

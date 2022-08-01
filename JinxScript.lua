@@ -5,7 +5,7 @@ local localVer = 1.52
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     if localVer ~= currentVer then
-        util.toast("Outdated JinxScript version detected. Downloading the most recent version :)")
+        util.toast("New JinxScript version is available. Downloading the most recent version :)")
         async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
             local f = io.open(filesystem.scripts_dir()..SCRIPT_RELPATH, "wb")
             f:write(a)

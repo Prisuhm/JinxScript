@@ -441,11 +441,15 @@ local function player(pid)
         local object_hash = util.joaat("prop_ld_ferris_wheel")
         request_model(ped_hash)
         request_model(object_hash)
-        local emptyseat = -1
         
         while glitchVeh do
             if not PED.IS_PED_IN_VEHICLE(player, player_veh, false) then 
                 util.toast("Player isn't in a vehicle. :/")
+                menu.set_value(glitchVehCmd, false);
+            break end
+
+            if not VEHICLE.ARE_ANY_VEHICLE_SEATS_FREE(player_veh) then
+                util.toast("No free seats are available. :/")
                 menu.set_value(glitchVehCmd, false);
             break end
 
@@ -500,6 +504,12 @@ local function player(pid)
         while glitchForcefield do
             local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
+            
+            if PED.IS_PED_IN_ANY_VEHICLE(player, true) then
+                util.toast("Player is in a vehicle. :/")
+                menu.set_value(glitchforcefield_toggle, false);
+            break end
+            
             local stupid_object = entities.create_object(glitch_hash, playerpos)
             ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
             ENTITY.SET_ENTITY_INVINCIBLE(stupid_object, true)
@@ -549,13 +559,12 @@ local function player(pid)
             util.toast("Player isn't in a vehicle. :/")
             return
         end
+
         NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
-        util.yield(500)
-        if NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(player_veh) then
-            entities.delete_by_handle(player_veh)
-        else
-            util.toast("Failed to get control of their vehicle. :/")
-        end
+        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(player_veh, false, false)
+        ENTITY.SET_VEHICLE_AS_NO_LONGER_NEEDED(player_veh)
+        entities.delete_by_handle(player_veh)
+        ENTITY.DELETE_VEHICLE(player_veh)
     end)
 
     local freeze = menu.list(trolling, "Freeze Player", {}, "")
@@ -822,17 +831,6 @@ local function player(pid)
         entities.delete_by_handle(ramp)
     end)
 
-    menu.action(trolling, "Burst All Tires", {}, "", function()
-        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if not PED.IS_PED_IN_ANY_VEHICLE(player, false) then 
-            util.toast("Player isn't in a vehicle. :/")
-        end
-        for i = 0, 7 do
-            VEHICLE.SET_VEHICLE_TYRES_CAN_BURST(PED.GET_VEHICLE_PED_IS_IN(player), true)
-            VEHICLE.SET_VEHICLE_TYRE_BURST(PED.GET_VEHICLE_PED_IS_IN(player), i, true, 1000)
-        end
-    end)
-
     menu.action(trolling, "Force Interior State", {}, "Can Be Undone By Rejoining. Player Must Be In An Apartment", function(s)
         if is_player_in_interior(pid) then
             util.trigger_script_event(1 << pid, {-1338917610, pid, pid, pid, pid, math.random(-2147483647, 2147483647), pid})
@@ -1013,17 +1011,6 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
-    menu.action(player_removals, "Nasa Crash", {}, "", function()
-        local pos = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
-        local hakuchou = util.joaat("hakuchou2")
-        request_model(hakuchou)
-    
-        local vehicle = entities.create_vehicle(hakuchou, pos, 0)
-        VEHICLE.SET_VEHICLE_MOD(vehicle, 34, 3, false)
-        util.yield(1000)
-        entities.delete_by_handle(vehicle)
-    end) 
-
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
             util.toast(players.get_name(pid) .. " Is a Rockstar Admin. Bailing from the session.")
@@ -1075,11 +1062,11 @@ end)
 local function bitTest(addr, offset)
     return (memory.read_int(addr) & (1 << offset)) ~= 0
 end
-menu.toggle_loop(self, "Auto Claim All Destroyed Vehicles", {}, "Claims all vehicles from Mors Mutual Insurance.\nSadly doesn't save across sessions.", function()
+menu.toggle_loop(self, "Auto Claim All Destroyed Vehicles", {}, "Claims all vehicles from Mors Mutual Insurance every time you join a new session.", function()
     local count = memory.read_int(memory.script_global(1585857))
-    if not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(player) and get_transition_state(pid) ~= 0 then
+    if get_transition_state(players.user()) == 99 then
         for i = 0, count do
-            local canFix = ( bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
+            local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
             if canFix then
                 MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
                 MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
@@ -1088,10 +1075,6 @@ menu.toggle_loop(self, "Auto Claim All Destroyed Vehicles", {}, "Claims all vehi
             end
         end
     end
-end)
-
-menu.action(self, "Open Luxury Auto Dealership", {}, "", function()
-    memory.write_int(memory.script_global(262145 + 32662), 0)
 end)
 
 local muggerWarning
@@ -1170,7 +1153,7 @@ menu.click_slider_float(vehicle, "Suspension Height", {}, "", -50, 50, 0, 1, fun
     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(VehicleHandle, pos.x, pos.y, pos.z + 2.8, false, false, false) -- Dropping vehicle so the suspension updates
 end)
 
-menu.click_slider_float(vehicle, "Torque Multiplier", {}, "", 0, 500, 100, 10, function(value)
+menu.click_slider_float(vehicle, "Torque Multiplier", {}, "", 0, 1000, 100, 10, function(value)
     value/=100
     local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
     if VehicleHandle == 0 then return end
@@ -1255,60 +1238,6 @@ for id, data in pairs(drugged_effects) do
         end
     end)
 end
-
-do
-    local toggled
-    menu.toggle(funfeatures, "Personal Pet Jinx", {}, "", function(tgl)
-        toggled = tgl
-        local player = players.user_ped()
-        local pos = ENTITY.GET_ENTITY_COORDS(player, false)
-        local jinx = util.joaat("a_c_cat_01")
-        request_model(jinx)
-        if toggled then
-            jinx_cat = entities.create_ped(28, jinx, pos, 0)
-            PED.SET_PED_COMPONENT_VARIATION(jinx_cat, 0, 0, 1, 0)
-            ENTITY.SET_ENTITY_INVINCIBLE(jinx_cat, true)
-            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(jinx_cat)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
-            repeat
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
-                util.yield(2500)
-            until not toggled
-            entities.delete_by_handle(jinx_cat)
-        end
-    end)
-end
-
-local jinx_army = {}
-local army = menu.list(funfeatures, "Jinx Army", {}, "")
-menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
-    local player = players.user_ped()
-    local pos = ENTITY.GET_ENTITY_COORDS(player, false)
-    pos.y = pos.y - 5
-    pos.z = pos.z + 1
-    local jinx = util.joaat("a_c_cat_01")
-    request_model(jinx)
-     for i = 1, val do
-        jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
-        ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
-        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jinx_army[i], true)
-        PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
-        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
-        util.yield()
-     end 
-end)
-
-menu.action(army, "Clear Jinxs", {}, "", function()
-    for i, jinx in ipairs(jinx_army) do
-        entities.delete_by_handle(jinx_army[i])
-    end
-end)
-
-menu.action(funfeatures, "Find Jinx", {}, "", function()
-    local player = players.user_ped()
-    local pos = ENTITY.GET_ENTITY_COORDS(player, false)
-    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(jinx_cat, pos.x, pos.y, pos.z, false, false, false)
-end)
 
 menu.action(funfeatures, "Custom Fake Banner", {"banner"}, "", function(on_click) menu.show_command_box("banner ") end, function(text)
     custom_alert(text)
@@ -1503,6 +1432,64 @@ for id, data in pairs(weapon_stuff) do
         MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 999999, 0)
     end)
 end
+
+menu.toggle_loop(vehicle, "Rapid Fire Khanjali", {}, "", function()
+    VEHICLE.SET_VEHICLE_MOD(entities.get_user_vehicle_as_handle(), 10, math.random(-1, 0), false)
+end)
+
+do
+    local toggled
+    menu.toggle(funfeatures, "Personal Pet Jinx", {}, "", function(tgl)
+        toggled = tgl
+        local player = players.user_ped()
+        local pos = ENTITY.GET_ENTITY_COORDS(player, false)
+        local jinx = util.joaat("a_c_cat_01")
+        request_model(jinx)
+        if toggled then
+            jinx_cat = entities.create_ped(28, jinx, pos, 0)
+            PED.SET_PED_COMPONENT_VARIATION(jinx_cat, 0, 0, 1, 0)
+            ENTITY.SET_ENTITY_INVINCIBLE(jinx_cat, true)
+            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(jinx_cat)
+            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
+            repeat
+                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
+                util.yield(2500)
+            until not toggled
+            entities.delete_by_handle(jinx_cat)
+        end
+    end)
+end
+
+local jinx_army = {}
+local army = menu.list(funfeatures, "Jinx Army", {}, "")
+menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
+    local player = players.user_ped()
+    local pos = ENTITY.GET_ENTITY_COORDS(player, false)
+    pos.y = pos.y - 5
+    pos.z = pos.z + 1
+    local jinx = util.joaat("a_c_cat_01")
+    request_model(jinx)
+     for i = 1, val do
+        jinx_army[i] = entities.create_ped(28, jinx, pos, 0)
+        ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
+        PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jinx_army[i], true)
+        PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
+        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+        util.yield()
+     end 
+end)
+
+menu.action(army, "Clear Jinxs", {}, "", function()
+    for i, jinx in ipairs(jinx_army) do
+        entities.delete_by_handle(jinx_army[i])
+    end
+end)
+
+menu.action(funfeatures, "Find Jinx", {}, "", function()
+    local player = players.user_ped()
+    local pos = ENTITY.GET_ENTITY_COORDS(player, false)
+    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(jinx_cat, pos.x, pos.y, pos.z, false, false, false)
+end)
 
 menu.toggle_loop(detection, "Unreleased Vehicle Check", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do

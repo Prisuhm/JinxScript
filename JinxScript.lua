@@ -2,7 +2,7 @@ util.require_natives(1651208000)
 util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64")
 
 local response = false
-local localVer = 1.60
+local localVer = 1.70
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -53,6 +53,25 @@ end
 local function get_entity_owner(addr)
     return memory.read_byte(memory.read_long(addr + 0xD0) + 0x49)
 end
+
+
+local function BlockSyncs(pid, callback)
+	for _, i in ipairs(players.list(false, true, true)) do
+		if i ~= pid then
+			local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
+			menu.trigger_command(outSync, "on")
+		end
+	end
+	util.yield(10)
+	callback()
+	for _, i in ipairs(players.list(false, true, true)) do
+		if i ~= pid then
+			local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
+			menu.trigger_command(outSync, "off")
+		end
+	end
+end
+
 
 local function get_blip_coords(blipId)
     local blip = HUD.GET_FIRST_BLIP_INFO_ID(blipId)
@@ -297,7 +316,7 @@ local interiors = {
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
 
-local launch_vehicle = {"Launch Up", "Launch Forward", "Slingshot"}
+local launch_vehicle = {"Launch Up", "Launch Forward", "Launch Backwards", "Launch Down", "Slingshot"}
 local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto Shop", "Apartment"}
 local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "tug"}
 local cleanse = { "Clear Peds", "Clear Vehicles", "Clear Objects", "Clear Pickups", "Clear Ropes", "Clear Projectiles"}
@@ -316,6 +335,16 @@ local bailOnAdminJoin = false
 local protections = menu.list(menu.my_root(), "Protections", {}, "")
 menu.toggle(protections, "Bail On Admin Join", {}, "", function(on)
     bailOnAdminJoin = on
+end)
+
+local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
+local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
+util.create_tick_handler(function()
+    if menu.get_value(spoofedrid) == "213034124" and menu.get_value(spoofer) then
+        util.toast("You silly little sausage...")
+        menu.trigger_commands("forcequit")
+        menu.set_value(spoofer, false)
+    end
 end)
 
 local function player(pid)   
@@ -394,25 +423,63 @@ local function player(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player, false)
         local glitch_hash = util.joaat("prop_shuttering03")
         request_model(glitch_hash)
-
-        local dumb_object = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 0.5, 0))
-        ENTITY.SET_ENTITY_VISIBLE(dumb_object, false)
-        ENTITY.SET_ENTITY_INVINCIBLE(dumb_object, true)
+        local dumb_object_front = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 1, 0))
+        local dumb_object_back = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 0, 0))
+        ENTITY.SET_ENTITY_VISIBLE(dumb_object_front, false)
+        ENTITY.SET_ENTITY_VISIBLE(dumb_object_back, false)
         util.yield()
-        entities.delete_by_handle(dumb_object)
+        entities.delete_by_handle(dumb_object_front)
+        entities.delete_by_handle(dumb_object_back)
         util.yield()    
+    end)
+    
+    local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
+    local object_stuff = {
+        names = {
+            "Ferris Wheel",
+            "UFO",
+            "Cement Mixer",
+            "Scaffolding",
+            "Garage Door",
+            "Big Bowling Ball",
+            "Big Soccer Ball",
+            "Big Orange Ball",
+            "Stunt Ramp",
+
+        },
+        objects = {
+            "prop_ld_ferris_wheel",
+            "p_spinning_anus_s",
+            "prop_staticmixer_01",
+            "prop_towercrane_02a",
+            "des_scaffolding_root",
+            "prop_sm1_11_garaged",
+            "stt_prop_stunt_bowling_ball",
+            "stt_prop_stunt_soccer_ball",
+            "prop_juicestand",
+            "stt_prop_stunt_jump_l",
+        }
+    }
+
+    local object_hash = util.joaat("prop_ld_ferris_wheel")
+    menu.list_select(glitch_player_list, "Object", {}, "Object to use for Glitch Player.", object_stuff.names, 1, function(index)
+        object_hash = util.joaat(object_stuff.objects[index])
+    end)
+
+    menu.slider(glitch_player_list, "Spawn Delay", {}, "", 0, 3000, 50, 10, function(amount)
+        delay = amount
     end)
 
     local glitchPlayer = false
     local glitchPlayer_toggle
-    glitchPlayer_toggle = menu.toggle(trolling, "Glitch Player", {}, "", function(toggled)
+    glitchPlayer_toggle = menu.toggle(glitch_player_list, "Glitch Player", {}, "", function(toggled)
         glitchPlayer = toggled
-        local glitch_hash = util.joaat("prop_ld_ferris_wheel")
-        local poopy_butt = util.joaat("rallytruck")
-        request_model(glitch_hash)
-        request_model(poopy_butt)
 
         while glitchPlayer do
+            local glitch_hash = object_hash
+            local poopy_butt = util.joaat("rallytruck")
+            request_model(glitch_hash)
+            request_model(poopy_butt)
             local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
             local stupid_object = entities.create_object(glitch_hash, playerpos)
@@ -422,10 +489,10 @@ local function player(pid)
             ENTITY.SET_ENTITY_INVINCIBLE(stupid_object, true)
             ENTITY.SET_ENTITY_COLLISION(stupid_object, true, true)
             ENTITY.APPLY_FORCE_TO_ENTITY(vehicle, 1, 0.0, 10, 10, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
-            util.yield(50)
+            util.yield(delay)
             entities.delete_by_handle(stupid_object)
             entities.delete_by_handle(vehicle)
-            util.yield()    
+            util.yield(delay)    
         end
     end)
 
@@ -470,12 +537,11 @@ local function player(pid)
             end
 
             for i = 0, seat_count -1 do
-                if VEHICLE.IS_VEHICLE_SEAT_FREE(player_veh, i, true) == true then
+                if VEHICLE.ARE_ANY_VEHICLE_SEATS_FREE(player_veh) then
                     local emptyseat = i
                     for l = 1, 25 do
                         PED.SET_PED_INTO_VEHICLE(glitched_ped, player_veh, emptyseat)
                         ENTITY.SET_ENTITY_COLLISION(glitch_obj, true, true)
-                        VEHICLE.SET_VEHICLE_DOORS_LOCKED(player_veh, 4)
                         util.yield()
                     end
                 end
@@ -520,11 +586,11 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(trolling, pid, "Yeet Player", {}, "", function() 
-        local poopy_butt = util.joaat("rallytruck")
+    player_toggle_loop(trolling, pid, "Yeet Player", {}, "Works on vehicles as well", function() 
+        local poopy_butt = util.joaat("adder")
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
-        pos.z -= 12
+        pos.z -= 10
         request_model(poopy_butt)
         local vehicle = entities.create_vehicle(poopy_butt, pos, 0)
         ENTITY.SET_ENTITY_VISIBLE(vehicle, false)
@@ -532,15 +598,15 @@ local function player(pid)
         if vehicle ~= 0 then
             ENTITY.APPLY_FORCE_TO_ENTITY(vehicle, 1, 0.0, 0.0, 100, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
         end
-        util.yield(150)
+        util.yield(250)
         entities.delete_by_handle(vehicle)
     end)
 
     menu.action(trolling, "Launch Player", {}, "", function() 
-        local stinky_butt = util.joaat("rallytruck")
+        local stinky_butt = util.joaat("adder")
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
-        pos.z -= 1
+        pos.z -= 10
         request_model(stinky_butt)
         local vehicle = entities.create_vehicle(stinky_butt, pos, 0)
         ENTITY.SET_ENTITY_VISIBLE(vehicle, false)
@@ -548,7 +614,7 @@ local function player(pid)
         if vehicle ~= 0 then
             ENTITY.APPLY_FORCE_TO_ENTITY(vehicle, 1, 0.0, 0.0, 100, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
         end
-        util.yield(250)
+        util.yield(150)
         entities.delete_by_handle(vehicle)
     end)
 
@@ -559,12 +625,14 @@ local function player(pid)
             util.toast("Player isn't in a vehicle. :/")
             return
         end
-
         NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(player_veh, false, false)
-        ENTITY.SET_VEHICLE_AS_NO_LONGER_NEEDED(player_veh)
-        entities.delete_by_handle(player_veh)
-        ENTITY.DELETE_VEHICLE(player_veh)
+        util.yield(500)
+        if NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(player_veh) then
+            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(player_veh, false, false)
+            entities.delete_by_handle(player_veh)
+        else
+            util.toast("Failed to get control over the players vehicle. :/")
+        end
     end)
 
     local freeze = menu.list(trolling, "Freeze Player", {}, "")
@@ -746,7 +814,7 @@ local function player(pid)
     menu.action(trolling, "Send To Jail", {}, "", function()
         local my_pos = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
         local my_ped = PLAYER.GET_PLAYER_PED(players.user())
-        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(my_ped, 1641.8458, 2526.8176, 45.5652, true, false, false, false)
+        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(my_ped, 1628.5234, 2570.5613, 45.56485, true, false, false, false)
         menu.trigger_commands("givesh " .. players.get_name(pid))
         menu.trigger_commands("summon " .. players.get_name(pid))
         menu.trigger_commands("invisibility on")
@@ -781,6 +849,12 @@ local function player(pid)
                 break
             case "Launch Forward":
                 ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 100000, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                break
+            case "Launch Backwards":
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, -100000, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                break
+            case "Launch Down":
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, -100000, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             case "Slingshot":
                 ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, 100000, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
@@ -861,7 +935,7 @@ local function player(pid)
 
         local radar_dish = entities.create_object(radar, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 20, -3), ENTITY.GET_ENTITY_HEADING(player))
         NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(radar_dish)
-        menu.trigger_commands("say using nasa satellites to find who asked")
+        chat.send_message("using nasa satellites to find who asked", false, true, true)
         util.yield(10000)
         entities.delete_by_handle(radar_dish)
     end)
@@ -980,7 +1054,6 @@ local function player(pid)
         end
     end
 
-    
     menu.action(tp_player, "Heist Passed Apartment Teleport", {}, "", function()
         util.trigger_script_event(1 << pid, {-1390976345, players.user(), pid, -1, 1, 1, 0, 1, 0}) 
     end)
@@ -1011,6 +1084,30 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
+    menu.action(player_removals, "Mother Nature Crash", {}, "", function()
+        local user = PLAYER.GET_PLAYER_PED(players.user())
+        local model = util.joaat("h4_prop_bush_mang_ad")
+        local pos = players.get_position(pid)
+        local oldPos = players.get_position(players.user())
+        BlockSyncs(pid, function() -- blocking outgoing syncs to prevent the lobby from crashing :5head:
+            util.yield(100)
+            ENTITY.SET_ENTITY_VISIBLE(user, false)
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos.x, pos.y, pos.z, false, false, false)
+            PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user(), model)
+            PED.SET_PED_COMPONENT_VARIATION(user, 5, 8, 0, 0)
+            util.yield(500)
+            PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
+            util.yield(2500)
+            TASK.CLEAR_PED_TASKS_IMMEDIATELY(user)
+            for i = 1, 5 do
+                util.spoof_script("freemode", SYSTEM.WAIT) -- preventing wasted screen
+            end
+            ENTITY.SET_ENTITY_HEALTH(user, 0) -- killing ped because it will still crash others until you die (clearing tasks doesnt seem to do much)
+            NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(oldPos.x, oldPos.y, oldPos.z, 0, false, false, 0)
+            ENTITY.SET_ENTITY_VISIBLE(user, true)
+        end)
+    end)
+
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
             util.toast(players.get_name(pid) .. " Is a Rockstar Admin. Bailing from the session.")
@@ -1022,6 +1119,44 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
+
+
+local unlocks = menu.list(self, "Collectibles", {}, "")
+menu.click_slider(unlocks, "Movie Props", {""}, "", 0, 9, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 0, 9, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Hidden Caches", {""}, "", 0, 9, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 1, i, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Treasure Chests", {""}, "", 0, 1, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 2, i, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Radio Antennas", {""}, "", 0, 9, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 3, i, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Media USBs", {""}, "", 0, 19, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 4, i, 1, 1, 1})
+end)
+
+menu.action(unlocks, "Shipwreck", {""}, "", function()
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 5, 0, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Buried Stash", {""}, "", 0, 1, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 6, i, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Jack O' Lanterns", {""}, "", 0, 9, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 8, i, 1, 1, 1})
+end)
+
+menu.click_slider(unlocks, "Lamar Davis Organics Product", {""}, "", 0, 99, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 9, i, 1, 1, 1})
+end)
 
 local proofsList = menu.list(self, "Invulnerabilities", {}, "Custom Godmode")
 local immortalityCmd = menu.ref_by_path("Self>Immortality")
@@ -1553,82 +1688,85 @@ menu.toggle_loop(protections, "Block All Stunt Tubes", {}, "(Note: disable when 
 end)
 
 menu.toggle_loop(protections, "Block Unwanted Vehicles", {}, "", function()
-    for i, vehicle in ipairs(entities.get_all_vehicles_as_pointers()) do
+    for _, vehicle in ipairs(entities.get_all_vehicles_as_pointers()) do
         for i, name in ipairs(unwanted_vehicles) do
             if entities.get_model_hash(vehicle) == util.joaat(name) then
-                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
+                NETWORK.SET_ENTITY_LOCALLY_INVISIBLE(vehicle)
                 util.toast("[JinxScript] Blocked vehicle sync with model: " .. name)
-                entities.delete_by_pointer(vehicle)
             end
         end
     end
 end)
 
+menu.toggle_loop(protections, "Block Vehicle Ramming", {}, "", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local player_veh = PED.GET_VEHICLE_PED_IS_USING(player)
+        ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), player_veh, true)
+    end
+end)
 
-menu.action_slider(protections, "Cleanse Area", {}, "", cleanse, function(index, value)
-    local entitycount = 0
-    pluto_switch value do
-        case "Clear Peds":
-            for _, ped in pairs(entities.get_all_peds_as_handles()) do
-                if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) then
-                    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
+menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Ropes", "Projectiles"}, function(index, name)
+    util.toast("Clearing "..name:lower().."...")
+    local counter = 0
+    local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+    pluto_switch index do
+        case 1:
+            for _, ped in ipairs(entities.get_all_peds_as_handles()) do
+                if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) and (not NETWORK.NETWORK_IS_ACTIVITY_SESSION() or NETWORK.NETWORK_IS_ACTIVITY_SESSION() and not ENTITY.IS_ENTITY_A_MISSION_ENTITY(ped)) then
                     entities.delete_by_handle(ped)
-                    entitycount += 1
+                    counter += 1
+                    util.yield_once()
                 end
             end
-            util.toast("Cleared " .. entitycount .. " Peds")
             break
-        case "Clear Vehicles":
-            for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-                if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) then
-                    ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
-                    entities.delete_by_handle(veh)
-                    entitycount += 1
+        case 2:
+            for _, vehicle in ipairs(entities.get_all_vehicles_as_handles()) do
+                if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and DECORATOR.DECOR_GET_INT(vehicle, "Player_Vehicle") == 0 and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
+                    entities.delete_by_handle(vehicle)
+                    counter += 1
                 end
+                util.yield(25)
             end
-            util.toast("Cleared ".. entitycount .." Vehicles")
-            entitycount = 0
             break
-        case "Clear Objects":
-            for _, object in pairs(entities.get_all_objects_as_handles()) do
-                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
+        case 3:
+            for _, object in ipairs(entities.get_all_objects_as_handles()) do
                 entities.delete_by_handle(object)
-                entitycount += 1
+                counter += 1
+                util.yield_once()
             end
-            util.toast("Cleared " .. entitycount .. " Objects")
-            entitycount = 0
             break
-        case "Clear Pickups":
-            for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
-                ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
+        case 4:
+            for _, pickup in ipairs(entities.get_all_pickups_as_handles()) do
                 entities.delete_by_handle(pickup)
-                entitycount += 1
+                counter += 1
+                util.yield_once()
             end
-            util.toast("Cleared " .. entitycount .. " Pickups")
-            entitycount = 0
             break
-        case "Clear Ropes":
-            util.toast("Cleansing You Of Skidded Ropes")
+        case 5:
             local temp = memory.alloc(4)
-            for i = 0, 100 do
+            for i = 0, 101 do
                 memory.write_int(temp, i)
-                PHYSICS.DELETE_ROPE(temp)
+                if PHYSICS.DOES_ROPE_EXIST(temp) then
+                    PHYSICS.DELETE_ROPE(temp)
+                    counter += 1
+                end
+                util.yield_once()
             end
-            util.toast("Cleared All Ropes")
             break
-        case "Clear Projectiles":
-            local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
-            MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 400, 0)
-            util.toast("Cleared All Projectiles")
+        case 6:
+            local coords = players.get_position(players.user())
+            MISC.CLEAR_AREA_OF_PROJECTILES(coords.x, coords.y, coords.z, 1000, 0)
+            counter = "all"
             break
-        end
-    end)
+    end
+    util.toast("Cleared "..tostring(counter).." "..name:lower()..".")
+end)
 
 menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     local cleanse_entitycount = 0
     for _, ped in pairs(entities.get_all_peds_as_handles()) do
         if ped ~= players.user_ped() and not PED.IS_PED_A_PLAYER(ped) then
-            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(ped, false, false)
             entities.delete_by_handle(ped)
             cleanse_entitycount += 1
         end
@@ -1636,23 +1774,21 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Cleared " .. cleanse_entitycount .. " Peds")
     cleanse_entitycount = 0
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) then
-            ENTITY.SET_ENTITY_AS_MISSION_ENTITY(veh, false, false)
+        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
             entities.delete_by_handle(veh)
             cleanse_entitycount += 1
+            util.yield()
         end
     end
     util.toast("Cleared ".. cleanse_entitycount .." Vehicles")
     cleanse_entitycount = 0
     for _, object in pairs(entities.get_all_objects_as_handles()) do
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(object, false, false)
         entities.delete_by_handle(object)
         cleanse_entitycount += 1
     end
     util.toast("Cleared " .. cleanse_entitycount .. " Objects")
     cleanse_entitycount = 0
     for _, pickup in pairs(entities.get_all_pickups_as_handles()) do
-        ENTITY.SET_ENTITY_AS_MISSION_ENTITY(pickup, false, false)
         entities.delete_by_handle(pickup)
         cleanse_entitycount += 1
     end
@@ -1680,7 +1816,7 @@ menu.action(credits, "ICYPhoenix", {}, "I would have never made this script or t
 end)
 menu.action(credits, "Sapphire", {}, "dealing with all my autism and helping a ton when I first started the lua as well as when I started learning stands api and natives", function()
 end)
-menu.action(credits, "aaronlink127", {}, "helping with math stuff and also helping with the auto updater", function()
+menu.action(credits, "aaronlink127", {}, "helping with math stuff and also helping with the auto updater and some other features", function()
 end)
 menu.action(credits, "Ren", {}, "dealing with all my autism and yelling at me to fix my code", function()
 end)

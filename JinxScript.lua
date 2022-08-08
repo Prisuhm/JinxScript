@@ -1,8 +1,8 @@
 util.require_natives(1651208000)
-util.toast("Welcome To Jinx Script!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64")
-
+util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64")
+memory.write_int(memory.script_global(2788199 + 589), -1) 
 local response = false
-local localVer = 1.70
+local localVer = 1.8
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -50,11 +50,6 @@ local function is_player_in_interior(pid)
     return (memory.read_int(memory.script_global(2689235 + 1 + (pid * 453) + 243)) ~= 0)
 end
 
-local function get_entity_owner(addr)
-    return memory.read_byte(memory.read_long(addr + 0xD0) + 0x49)
-end
-
-
 local function BlockSyncs(pid, callback)
 	for _, i in ipairs(players.list(false, true, true)) do
 		if i ~= pid then
@@ -79,7 +74,7 @@ local function get_blip_coords(blipId)
     return v3(0, 0, 0)
 end
 
-local function custom_alert(l1) --Credit to whoever sent me this
+local function custom_alert(l1) -- totally not skidded from lancescript
     poptime = os.time()
     while true do
         if PAD.IS_CONTROL_JUST_RELEASED(18, 18) then
@@ -169,48 +164,6 @@ local proofs = {
     melee = {name="Melee",on=false},
     steam = {name="Steam",on=false},
     drown = {name="Drowning",on=false},
-}
-
-local cage_objects = {
-    "prop_gold_cont_01",
-    "prop_gold_cont_01b",
-    "prop_rub_cage01a",
-    "prop_fnclink_03e",
-    "prop_fnclink_04m",
-    "prop_fnclink_10d_ld",
-    "prop_fnclink_10b",
-    "prop_snow_fnclink_03crnr2",
-    "prop_snow_fnclink_03i",
-    "prop_snow_fnclink_03h"
-}
-
-local stunt_tubes = {
-    "stt_prop_stunt_tube_crn_5d",
-    "stt_prop_stunt_tube_cross",
-    "stt_prop_stunt_tube_end",
-    "stt_prop_stunt_tube_ent",
-    "stt_prop_stunt_tube_fn_01",
-    "stt_prop_stunt_tube_fn_02",
-    "stt_prop_stunt_tube_fn_03",
-    "stt_prop_stunt_tube_fn_04",
-    "stt_prop_stunt_tube_fn_05",
-    "stt_prop_stunt_tube_fork",
-    "stt_prop_stunt_tube_gap_01",
-    "stt_prop_stunt_tube_gap_02",
-    "stt_prop_stunt_tube_hg",
-    "stt_prop_stunt_tube_jmp",
-    "stt_prop_stunt_tube_jmp2",
-    "stt_prop_stunt_tube_l",
-    "stt_prop_stunt_tube_m",
-    "stt_prop_stunt_tube_qg",
-    "stt_prop_stunt_tube_s",
-    "stt_prop_stunt_tube_speed",
-    "stt_prop_stunt_tube_speeda",
-    "stt_prop_stunt_tube_speedb",
-    "stt_prop_stunt_tube_xs",
-    "stt_prop_stunt_tube_xxs",
-    "stt_prop_track_tube_01",
-    "stt_prop_track_tube_02"
 }
 
 local effect_stuff = {
@@ -318,11 +271,11 @@ local interiors = {
 
 local launch_vehicle = {"Launch Up", "Launch Forward", "Launch Backwards", "Launch Down", "Slingshot"}
 local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto Shop", "Apartment"}
-local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "tug"}
+local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "dump"}
 local cleanse = { "Clear Peds", "Clear Vehicles", "Clear Objects", "Clear Pickups", "Clear Ropes", "Clear Projectiles"}
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
-local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585}
+local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local session = menu.list(menu.my_root(), "Session", {}, "")
@@ -364,6 +317,49 @@ local function player(pid)
     menu.toggle_loop(friendly, "Give Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function(toggled)
         ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), true, true, true, true, true, 0, 0, true)
         end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
+    end)
+
+    menu.action(friendly, "Random Halloween Collectible Treat", {}, "This can be spammed but I don't know the risks, so proceed with caution. It is also possible that you can turn people into animals.", function()
+        util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -5, 1, 1, 1})
+    end)
+
+    menu.action(friendly, "Rank Them Up", {}, "Gives them ~175k RP. Can boost a lvl 1 ~25 levels.", function()
+        util.trigger_script_event(1 << pid, {-1178972880, pid, 5, 0, 1, 1, 1})
+        for i = 0, 9 do
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 0, i, 1, 1, 1})
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 1, i, 1, 1, 1})
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 3, i, 1, 1, 1})
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 10, i, 1, 1, 1})
+        end
+        for i = 0, 1 do
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 2, i, 1, 1, 1})
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 6, i, 1, 1, 1})
+        end
+        for i = 0, 19 do
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 4, i, 1, 1, 1})
+        end
+        for i = 0, 99 do
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 9, i, 1, 1, 1})
+            util.yield()
+        end
+    end)
+
+    local rpwarning
+     rpwarning = menu.action(friendly, "Collectible RP Loop", {}, "", function(click_type)
+        menu.show_warning(rpwarning, click_type, "Warning: This will kick legit players and hasn't been fully tested yet. Proceed with caution.", function()
+            local rp_loop = menu.list(friendly, "Collectible RP Loop", {}, "")
+            menu.delete(rpwarning)
+            local delay = 500
+            menu.slider(rp_loop, "Delay", {"givedelay"}, "", 0, 2500, 500, 10, function(amount)
+                delay = amount
+            end)
+
+            menu.toggle_loop(rp_loop, "Enable RP Loop", {}, "Each collectible gives 1k RP", function(toggled)
+                util.trigger_script_event(1 << pid, {-1178972880, pid, 4, -1, 1, 1, 1})
+                util.yield(delay)
+            end)
+            menu.trigger_command(rp_loop)
+        end)
     end)
 
     local funfeatures_player = menu.list(bozo, "Fun Features", {}, "")
@@ -466,7 +462,7 @@ local function player(pid)
         object_hash = util.joaat(object_stuff.objects[index])
     end)
 
-    menu.slider(glitch_player_list, "Spawn Delay", {}, "", 0, 3000, 50, 10, function(amount)
+    menu.slider(glitch_player_list, "Spawn Delay", {"spawndelay"}, "", 0, 3000, 50, 10, function(amount)
         delay = amount
     end)
 
@@ -730,7 +726,7 @@ local function player(pid)
         NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(ramp_cage)
     end)
 
-    menu.action(cage, "Shipping Container", {}, "", function()
+    menu.action(cage, "Shipping Container", {"cage"}, "", function()
         local container_hash = util.joaat("prop_container_05a")
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(player, 0, 0, -1)
@@ -1084,8 +1080,8 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
-    menu.action(player_removals, "Mother Nature Crash", {}, "", function()
-        local user = PLAYER.GET_PLAYER_PED(players.user())
+    menu.action(player_removals, "Mother Nature Crash", {}, "sometimes doesn't work for some reason. cry about it bozo.", function()
+        local user = players.user_ped()
         local model = util.joaat("h4_prop_bush_mang_ad")
         local pos = players.get_position(pid)
         local oldPos = players.get_position(players.user())
@@ -1098,7 +1094,6 @@ local function player(pid)
             util.yield(500)
             PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
             util.yield(2500)
-            TASK.CLEAR_PED_TASKS_IMMEDIATELY(user)
             for i = 1, 5 do
                 util.spoof_script("freemode", SYSTEM.WAIT) -- preventing wasted screen
             end
@@ -1107,6 +1102,7 @@ local function player(pid)
             ENTITY.SET_ENTITY_VISIBLE(user, true)
         end)
     end)
+
 
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
@@ -1120,10 +1116,9 @@ end
 players.on_join(player)
 players.dispatch_on_join()
 
-
 local unlocks = menu.list(self, "Collectibles", {}, "")
 menu.click_slider(unlocks, "Movie Props", {""}, "", 0, 9, 0, 1, function(i)
-    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 0, 9, 1, 1, 1})
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 0, i, 1, 1, 1})
 end)
 
 menu.click_slider(unlocks, "Hidden Caches", {""}, "", 0, 9, 0, 1, function(i)
@@ -1150,6 +1145,10 @@ menu.click_slider(unlocks, "Buried Stash", {""}, "", 0, 1, 0, 1, function(i)
     util.trigger_script_event(1 << players.user(), {-1178972880, 0, 6, i, 1, 1, 1})
 end)
 
+menu.action(unlocks, "Halloween T-Shirt", {""}, "", function()
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 7, 1, 1, 1, 1})
+end)
+
 menu.click_slider(unlocks, "Jack O' Lanterns", {""}, "", 0, 9, 0, 1, function(i)
     util.trigger_script_event(1 << players.user(), {-1178972880, 0, 8, i, 1, 1, 1})
 end)
@@ -1157,6 +1156,11 @@ end)
 menu.click_slider(unlocks, "Lamar Davis Organics Product", {""}, "", 0, 99, 0, 1, function(i)
     util.trigger_script_event(1 << players.user(), {-1178972880, 0, 9, i, 1, 1, 1})
 end)
+
+menu.click_slider(unlocks, "Junk Energy Skydive", {""}, "", 0, 9, 0, 1, function(i)
+    util.trigger_script_event(1 << players.user(), {-1178972880, 0, 10, i, 1, 1, 1})
+end)
+
 
 local proofsList = menu.list(self, "Invulnerabilities", {}, "Custom Godmode")
 local immortalityCmd = menu.ref_by_path("Self>Immortality")
@@ -1197,19 +1201,18 @@ end)
 local function bitTest(addr, offset)
     return (memory.read_int(addr) & (1 << offset)) ~= 0
 end
-menu.toggle_loop(self, "Auto Claim All Destroyed Vehicles", {}, "Claims all vehicles from Mors Mutual Insurance every time you join a new session.", function()
+menu.toggle_loop(self, "Auto Claim Destroyed Vehicles", {}, "Automatically claims destroyed vehicles so you won't have to.", function()
     local count = memory.read_int(memory.script_global(1585857))
-    if get_transition_state(players.user()) == 99 then
-        for i = 0, count do
-            local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
-            if canFix then
-                MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
-                MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
-                MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
-                util.yield(1000)
-            end
+    for i = 0, count do
+        local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
+        if canFix then
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
+            util.toast("Your personal vehicle was destroyed. It has been automatically claimed.")
         end
     end
+    util.yield(100)
 end)
 
 local muggerWarning
@@ -1249,6 +1252,11 @@ menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     memory.write_int(memory.script_local("am_criminal_damage", 108 + 39), memory.read_int(memory.script_global(262145 + 11674)))
 end)
 
+menu.action(session, "Nuke Lobby", {}, "will kick the entire lobby", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        util.trigger_script_event(1 << players.get_script_host(), {550764271, pid, 0, memory.read_int(memory.script_global(2683918 + 1485))})
+    end
+end)
 menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
     ENTITY.SET_ENTITY_PROOFS(entities.get_user_vehicle_as_handle(), true, true, true, true, true, 0, 0, true)
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
@@ -1276,7 +1284,7 @@ menu.toggle_loop(vehicle, "Indicator Lights", {}, "", function()
     end
 end)
 
-menu.click_slider_float(vehicle, "Suspension Height", {}, "", -50, 50, 0, 1, function(value)
+menu.click_slider_float(vehicle, "Suspension Height", {"suspensionheight"}, "", -100, 100, 0, 1, function(value)
     value/=100
     local player = players.user_ped()
     local pos = ENTITY.GET_ENTITY_COORDS(player, false)
@@ -1288,7 +1296,7 @@ menu.click_slider_float(vehicle, "Suspension Height", {}, "", -50, 50, 0, 1, fun
     ENTITY.SET_ENTITY_COORDS_NO_OFFSET(VehicleHandle, pos.x, pos.y, pos.z + 2.8, false, false, false) -- Dropping vehicle so the suspension updates
 end)
 
-menu.click_slider_float(vehicle, "Torque Multiplier", {}, "", 0, 1000, 100, 10, function(value)
+menu.click_slider_float(vehicle, "Torque Multiplier", {"torque"}, "", 0, 1000, 100, 10, function(value)
     value/=100
     local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
     if VehicleHandle == 0 then return end
@@ -1297,7 +1305,7 @@ menu.click_slider_float(vehicle, "Torque Multiplier", {}, "", 0, 1000, 100, 10, 
     memory.write_float(CHandlingData + 0x004C, value)
 end)
 
-menu.click_slider_float(vehicle, "Upshift Multiplier", {}, "", 0, 500, 100, 10, function(value)
+menu.click_slider_float(vehicle, "Upshift Multiplier", {"upshift"}, "", 0, 500, 100, 10, function(value)
     value/=100
     local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
     if VehicleHandle == 0 then return end
@@ -1306,13 +1314,22 @@ menu.click_slider_float(vehicle, "Upshift Multiplier", {}, "", 0, 500, 100, 10, 
     memory.write_float(CHandlingData + 0x0058, value)
 end)
 
-menu.click_slider_float(vehicle, "Downshift Multiplier", {}, "", 0, 500, 100, 10, function(value)
+menu.click_slider_float(vehicle, "Downshift Multiplier", {"downshift"}, "", 0, 500, 100, 10, function(value)
     value/=100
     local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
     if VehicleHandle == 0 then return end
     local CAutomobile = entities.handle_to_pointer(VehicleHandle)
     local CHandlingData = memory.read_long(CAutomobile + 0x0938)
     memory.write_float(CHandlingData + 0x005C, value)
+end)
+
+menu.click_slider_float(vehicle, "Curve Ratio Multiplier", {"curve"}, "", 0, 500, 100, 10, function(value)
+    value/=100
+    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
+    if VehicleHandle == 0 then return end
+    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
+    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
+    memory.write_float(CHandlingData + 0x0094, value)
 end)
 
 menu.toggle_loop(vehicle, "Random Upgrades", {}, "Only works on vehicles you spawned in for some reason", function()
@@ -1572,28 +1589,23 @@ menu.toggle_loop(vehicle, "Rapid Fire Khanjali", {}, "", function()
     VEHICLE.SET_VEHICLE_MOD(entities.get_user_vehicle_as_handle(), 10, math.random(-1, 0), false)
 end)
 
-do
-    local toggled
-    menu.toggle(funfeatures, "Personal Pet Jinx", {}, "", function(tgl)
-        toggled = tgl
-        local player = players.user_ped()
-        local pos = ENTITY.GET_ENTITY_COORDS(player, false)
+local jinx_pet
+menu.toggle_loop(funfeatures, "Personal Pet Jinx", {}, "", function()
+    if not jinx_pet or not ENTITY.DOES_ENTITY_EXIST(jinx_pet) then
         local jinx = util.joaat("a_c_cat_01")
         request_model(jinx)
-        if toggled then
-            jinx_cat = entities.create_ped(28, jinx, pos, 0)
-            PED.SET_PED_COMPONENT_VARIATION(jinx_cat, 0, 0, 1, 0)
-            ENTITY.SET_ENTITY_INVINCIBLE(jinx_cat, true)
-            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(jinx_cat)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
-            repeat
-                TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_cat, player, 0, -0.3, 0, 7.0, -1, 1.5, true)
-                util.yield(2500)
-            until not toggled
-            entities.delete_by_handle(jinx_cat)
-        end
-    end)
-end
+        local pos = players.get_position(players.user())
+        jinx_pet = entities.create_ped(28, jinx, pos, 0)
+        PED.SET_PED_COMPONENT_VARIATION(jinx_pet, 0, 0, 1, 0)
+        ENTITY.SET_ENTITY_INVINCIBLE(jinx_pet, true)
+    end
+    NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(jinx_pet)
+    TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_pet, players.user_ped(), 0, -0.3, 0, 7.0, -1, 1.5, true)
+    util.yield(2500)
+end, function()
+    entities.delete_by_handle(jinx_pet)
+    jinx_pet = nil
+end)
 
 local jinx_army = {}
 local army = menu.list(funfeatures, "Jinx Army", {}, "")
@@ -1664,47 +1676,114 @@ menu.toggle_loop(detection, "Vehicle Godmode Check", {}, "Players in godmode wil
     end 
 end)
 
-menu.toggle_loop(protections, "Block Common Cages", {}, "", function()
-    for i, object in ipairs(entities.get_all_objects_as_pointers()) do
-        for i, name in ipairs(cage_objects) do
-            if entities.get_model_hash(object) == util.joaat(name) then
-                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
-                entities.delete_by_pointer(object)
-            end
+menu.toggle_loop(detection, "Modded Scenario Detection", {}, "", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        if PED.IS_PED_USING_ANY_SCENARIO(player) then
+            util.draw_debug_text(players.get_name(pid) .. " Is In A Modded Scenario")
         end
-    end
-end)
-
-menu.toggle_loop(protections, "Block All Stunt Tubes", {}, "(Note: disable when entering a stunt race)", function()
-    for i, object in ipairs(entities.get_all_objects_as_pointers()) do
-        for i, name in ipairs(stunt_tubes) do
-            if entities.get_model_hash(object) == util.joaat(name) then
-                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(obejct)
-                entities.delete_by_pointer(object)
-                util.toast("[JinxScript] Blocked bad object spawn with model: " .. name)
-            end
-        end
-    end
+    end 
 end)
 
 menu.toggle_loop(protections, "Block Unwanted Vehicles", {}, "", function()
     for _, vehicle in ipairs(entities.get_all_vehicles_as_pointers()) do
         for i, name in ipairs(unwanted_vehicles) do
-            if entities.get_model_hash(vehicle) == util.joaat(name) then
-                NETWORK.SET_ENTITY_LOCALLY_INVISIBLE(vehicle)
-                util.toast("[JinxScript] Blocked vehicle sync with model: " .. name)
+            if entities.get_model_hash(vehicle) == 1043221410 then
+                entities.delete_by_pointer(vehicle)
+                util.toast("Blocked Bad Vehicle Sync")
             end
         end
     end
 end)
 
-menu.toggle_loop(protections, "Block Vehicle Ramming", {}, "", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local player_veh = PED.GET_VEHICLE_PED_IS_USING(player)
-        ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), player_veh, true)
+local anticage = menu.list(protections, "Anti-Cage Protection", {}, "")
+local values = {
+    [0] = 0,
+    [1] = 50,
+    [2] = 88,
+    [3] = 160,
+    [4] = 208,
+    }
+
+local alpha = 160
+menu.slider(anticage, "Cage Alpha", {"cagealpha"}, "The ammount of transparency that objects will have", 0, #values, 3, 1, function(amount)
+    alpha = values[amount]
+end)
+
+menu.toggle_loop(anticage, "Enable Anti-Cage", {"anticage"}, "", function()
+    local user = players.user_ped()
+    local veh = PED.GET_VEHICLE_PED_IS_USING(user)
+    local my_ents = {user, veh}
+    for i, obj_ptr in ipairs(entities.get_all_objects_as_pointers()) do
+        local net_obj = memory.read_long(obj_ptr + 0xd0)
+        if net_obj == 0 or memory.read_byte(net_obj + 0x49) == players.user() then
+            continue
+        end
+        local obj_handle = entities.pointer_to_handle(obj_ptr)
+        ENTITY.SET_ENTITY_ALPHA(obj_handle, alpha, false)
+        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(obj_handle)
+        for i, data in ipairs(my_ents) do
+            if data ~= 0 then
+                ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(obj_handle, data, false)
+                ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(data, obj_handle, false)
+            end
+        end
+        SHAPETEST.RELEASE_SCRIPT_GUID_FROM_ENTITY(obj_handle)
     end
 end)
+
+local ghost_entities = menu.list(protections, "Ghost Entities", {}, "")
+menu.toggle_loop(ghost_entities, "Objects", {"ghostobjects"}, "Disables collion with objects", function()
+    local user = players.user_ped()
+    local veh = PED.GET_VEHICLE_PED_IS_USING(user)
+    local my_ents = {user, veh}
+    for i, obj_ptr in ipairs(entities.get_all_objects_as_pointers()) do
+        local net_obj = memory.read_long(obj_ptr + 0xd0)
+        local obj_handle = entities.pointer_to_handle(obj_ptr)
+        ENTITY.SET_ENTITY_ALPHA(obj_handle, 255, false)
+        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(obj_handle)
+        for i, data in ipairs(my_ents) do
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(obj_handle, data, false)
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(data, obj_handle, false)  
+        end
+        SHAPETEST.RELEASE_SCRIPT_GUID_FROM_ENTITY(obj_handle)
+    end
+end)
+
+menu.toggle_loop(ghost_entities, "Vehicles", {"ghostvehicles"}, "Disables collion with vehicles", function()
+    local user = players.user_ped()
+    local veh = PED.GET_VEHICLE_PED_IS_USING(user)
+    local my_ents = {user, veh}
+    for i, veh_ptr in ipairs(entities.get_all_vehicles_as_pointers()) do
+        local net_veh = memory.read_long(veh_ptr + 0xd0)
+        local veh_handle = entities.pointer_to_handle(veh_ptr)
+        ENTITY.SET_ENTITY_ALPHA(veh_handle, 255, false)
+        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(veh_handle)
+        for i, data in ipairs(my_ents) do
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(veh_handle, data, false)
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(data, veh_handle, false)  
+        end
+        SHAPETEST.RELEASE_SCRIPT_GUID_FROM_ENTITY(veh_handle)
+    end
+end)
+
+menu.toggle_loop(ghost_entities, "Peds", {"ghostpeds"}, "Disables collion with peds", function()
+    local user = players.user_ped()
+    local veh = PED.GET_VEHICLE_PED_IS_USING(user)
+    local my_ents = {user, veh}
+    for i, ped_ptr in ipairs(entities.get_all_peds_as_pointers()) do
+        local net_ped = memory.read_long(ped_ptr + 0xd0)
+        local ped_handle = entities.pointer_to_handle(ped_ptr)
+        ENTITY.SET_ENTITY_ALPHA(ped_handle, 255, false)
+        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(ped_handle)
+        for i, data in ipairs(my_ents) do
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(ped_handle, data, false)
+            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(data, ped_handle, false)  
+        end
+        SHAPETEST.RELEASE_SCRIPT_GUID_FROM_ENTITY(ped_handle)
+    end
+end)
+
 
 menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Ropes", "Projectiles"}, function(index, name)
     util.toast("Clearing "..name:lower().."...")
@@ -1774,11 +1853,9 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Cleared " .. cleanse_entitycount .. " Peds")
     cleanse_entitycount = 0
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
-            entities.delete_by_handle(veh)
-            cleanse_entitycount += 1
-            util.yield()
-        end
+        entities.delete_by_handle(veh)
+        cleanse_entitycount += 1
+        util.yield()
     end
     util.toast("Cleared ".. cleanse_entitycount .." Vehicles")
     cleanse_entitycount = 0
@@ -1821,6 +1898,8 @@ end)
 menu.action(credits, "Ren", {}, "dealing with all my autism and yelling at me to fix my code", function()
 end)
 menu.action(credits, "well in that case", {}, "for making pluto and allowing parts of my code look nicer and run smoother", function()
+end)
+menu.action(credits, "jerry123", {}, "for cleaning my code in some spots and telling me what can be improved", function()
 end)
 menu.action(credits, "Scriptcat", {}, "being there since I started and telling me some useful lua tips and forcing me to start learning stands api and natives", function()
 end)

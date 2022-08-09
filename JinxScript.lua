@@ -1771,7 +1771,7 @@ menu.toggle_loop(protections, "Ghost Objects", {"ghostobjects"}, "Disables colli
     for i, obj_ptr in ipairs(entities.get_all_objects_as_pointers()) do
         local net_obj = memory.read_long(obj_ptr + 0xd0)
         local obj_handle = entities.pointer_to_handle(obj_ptr)
-        ENTITY.SET_ENTITY_ALPHA(obj_handle, ghost_alpha, false)
+        ENTITY.SET_ENTITY_ALPHA(obj_handle, 255, false)
         CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(obj_handle)
         for i, data in ipairs(my_ents) do
             ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(obj_handle, data, false)
@@ -1788,7 +1788,7 @@ menu.toggle_loop(protections, "Ghost Vehicles", {"ghostvehicles"}, "Disables col
     for i, veh_ptr in ipairs(entities.get_all_vehicles_as_pointers()) do
         local net_veh = memory.read_long(veh_ptr + 0xd0)
         local veh_handle = entities.pointer_to_handle(veh_ptr)
-        ENTITY.SET_ENTITY_ALPHA(veh_handle, ghost_alpha, false)
+        ENTITY.SET_ENTITY_ALPHA(veh_handle, 255, false)
         CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(veh_handle)
         for i, data in ipairs(my_ents) do
             ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(veh_handle, data, false)

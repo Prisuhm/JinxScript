@@ -1,13 +1,12 @@
 util.require_natives(1651208000)
-util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64")
-memory.write_int(memory.script_global(2788199 + 589), -1) 
+util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.8
+local localVer = 1.9
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
     if localVer ~= currentVer then
-        util.toast("New JinxScript version is available, update the lua to get the newest version")
+        util.toast("New JinxScript version is available, update the lua to get the newest version.")
         menu.action(menu.my_root(), "Update Lua", {}, "", function()
             async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua',function(a)
                 local err = select(2,load(a))
@@ -269,6 +268,41 @@ local interiors = {
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
 
+local object_stuff = {
+    names = {
+        "Ferris Wheel",
+        "UFO",
+        "Cement Mixer",
+        "Scaffolding",
+        "Garage Door",
+        "Big Bowling Ball",
+        "Big Soccer Ball",
+        "Big Orange Ball",
+        "Stunt Ramp",
+
+    },
+    objects = {
+        "prop_ld_ferris_wheel",
+        "p_spinning_anus_s",
+        "prop_staticmixer_01",
+        "prop_towercrane_02a",
+        "des_scaffolding_root",
+        "prop_sm1_11_garaged",
+        "stt_prop_stunt_bowling_ball",
+        "stt_prop_stunt_soccer_ball",
+        "prop_juicestand",
+        "stt_prop_stunt_jump_l",
+    }
+}
+
+local values = {
+    [0] = 0,
+    [1] = 50,
+    [2] = 88,
+    [3] = 160,
+    [4] = 208,
+}
+
 local launch_vehicle = {"Launch Up", "Launch Forward", "Launch Backwards", "Launch Down", "Slingshot"}
 local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto Shop", "Apartment"}
 local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "dump"}
@@ -276,6 +310,7 @@ local cleanse = { "Clear Peds", "Clear Vehicles", "Clear Objects", "Clear Pickup
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
+
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local session = menu.list(menu.my_root(), "Session", {}, "")
@@ -319,10 +354,6 @@ local function player(pid)
         end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
     end)
 
-    menu.action(friendly, "Random Halloween Collectible Treat", {}, "This can be spammed but I don't know the risks, so proceed with caution. It is also possible that you can turn people into animals.", function()
-        util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -5, 1, 1, 1})
-    end)
-
     menu.action(friendly, "Rank Them Up", {}, "Gives them ~175k RP. Can boost a lvl 1 ~25 levels.", function()
         util.trigger_script_event(1 << pid, {-1178972880, pid, 5, 0, 1, 1, 1})
         for i = 0, 9 do
@@ -342,6 +373,32 @@ local function player(pid)
             util.trigger_script_event(1 << pid, {-1178972880, pid, 9, i, 1, 1, 1})
             util.yield()
         end
+    end)
+
+
+    local toggled = false    
+    local animal_toggle
+    animal_toggle = menu.toggle(friendly, "Turn Into Animal", {}, "A scuffed way of doing it but it shouldn't kill them.", function(toggle)
+        -- hi there, if you're gonna steal this then at least credit me
+        toggled = toggle
+        while toggled do
+            local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            if not PED.IS_PED_MODEL(player, 0x9C9EFFD8) and not PED.IS_PED_MODEL(player, 0x705E61F2) then
+                util.toast("Player is already an animal. :/")
+                menu.set_value(animal_toggle, false);
+            break end
+            util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -1, 1, 1, 1})
+            util.yield()
+        end
+    end)
+
+    local halloween_loop = menu.list(friendly, "Halloween Collectible Loop", {}, "")
+    local halloween_delay = 500
+    menu.slider(halloween_loop, "Delay", {}, "", 0, 2500, 500, 10, function(amount)
+        halloween_delay = amount
+    end)
+    player_toggle_loop(halloween_loop, pid, "Enable Loop", {}, "Should give them quite a bit of money and some other stuff, kind of a 50k loop", function()
+        util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -1, 1, 1, 1})
     end)
 
     local rpwarning
@@ -430,34 +487,6 @@ local function player(pid)
     end)
     
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
-    local object_stuff = {
-        names = {
-            "Ferris Wheel",
-            "UFO",
-            "Cement Mixer",
-            "Scaffolding",
-            "Garage Door",
-            "Big Bowling Ball",
-            "Big Soccer Ball",
-            "Big Orange Ball",
-            "Stunt Ramp",
-
-        },
-        objects = {
-            "prop_ld_ferris_wheel",
-            "p_spinning_anus_s",
-            "prop_staticmixer_01",
-            "prop_towercrane_02a",
-            "des_scaffolding_root",
-            "prop_sm1_11_garaged",
-            "stt_prop_stunt_bowling_ball",
-            "stt_prop_stunt_soccer_ball",
-            "prop_juicestand",
-            "stt_prop_stunt_jump_l",
-        }
-    }
-
-    local object_hash = util.joaat("prop_ld_ferris_wheel")
     menu.list_select(glitch_player_list, "Object", {}, "Object to use for Glitch Player.", object_stuff.names, 1, function(index)
         object_hash = util.joaat(object_stuff.objects[index])
     end)
@@ -1093,7 +1122,13 @@ local function player(pid)
             PED.SET_PED_COMPONENT_VARIATION(user, 5, 8, 0, 0)
             util.yield(500)
             PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
-            util.yield(2500)
+            util.yield(2000)
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos.x, pos.y, pos.z, false, false, false)
+            PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user(), model)
+            PED.SET_PED_COMPONENT_VARIATION(user, 5, 31, 0, 0) -- resending again with dif parachute bag because it doesnt seem to work sometimes on 8
+            util.yield(500)
+            PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
+            util.yield(2000)
             for i = 1, 5 do
                 util.spoof_script("freemode", SYSTEM.WAIT) -- preventing wasted screen
             end
@@ -1102,7 +1137,6 @@ local function player(pid)
             ENTITY.SET_ENTITY_VISIBLE(user, true)
         end)
     end)
-
 
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
@@ -1466,7 +1500,11 @@ menu.toggle(funfeatures, "Tesla Autopilot", {}, "", function(toggled)
     local tesla = util.joaat("raiden")
     request_model(tesla_ai)
     request_model(tesla)
-    if toggled then
+    if toggled then     
+        if PED.IS_PED_IN_ANY_VEHICLE(player, true) then
+            menu.trigger_commands("deletevehicle")
+        end
+
         tesla_ai_ped = entities.create_ped(26, tesla_ai, playerpos, 0)
         tesla_vehicle = entities.create_vehicle(tesla, playerpos, 0)
         ENTITY.SET_ENTITY_INVINCIBLE(tesla_ai_ped, true)
@@ -1635,7 +1673,7 @@ end)
 menu.action(funfeatures, "Find Jinx", {}, "", function()
     local player = players.user_ped()
     local pos = ENTITY.GET_ENTITY_COORDS(player, false)
-    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(jinx_cat, pos.x, pos.y, pos.z, false, false, false)
+    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(jinx_pet, pos.x, pos.y, pos.z, false, false, false)
 end)
 
 menu.toggle_loop(detection, "Unreleased Vehicle Check", {}, "", function()
@@ -1697,14 +1735,6 @@ menu.toggle_loop(protections, "Block Unwanted Vehicles", {}, "", function()
 end)
 
 local anticage = menu.list(protections, "Anti-Cage Protection", {}, "")
-local values = {
-    [0] = 0,
-    [1] = 50,
-    [2] = 88,
-    [3] = 160,
-    [4] = 208,
-    }
-
 local alpha = 160
 menu.slider(anticage, "Cage Alpha", {"cagealpha"}, "The ammount of transparency that objects will have", 0, #values, 3, 1, function(amount)
     alpha = values[amount]
@@ -1733,14 +1763,19 @@ menu.toggle_loop(anticage, "Enable Anti-Cage", {"anticage"}, "", function()
 end)
 
 local ghost_entities = menu.list(protections, "Ghost Entities", {}, "")
-menu.toggle_loop(ghost_entities, "Objects", {"ghostobjects"}, "Disables collion with objects", function()
+
+local ghost_alpha = 160
+menu.slider(anticage, "Ghost Alpha", {"ghostalpha"}, "The ammount of transparency that ghost entities will have", 0, #values, 3, 1, function(amount)
+    ghost_alpha = values[amount]
+end)
+menu.toggle_loop(protections, "Objects", {"ghostobjects"}, "Disables collision with objects", function()
     local user = players.user_ped()
     local veh = PED.GET_VEHICLE_PED_IS_USING(user)
     local my_ents = {user, veh}
     for i, obj_ptr in ipairs(entities.get_all_objects_as_pointers()) do
         local net_obj = memory.read_long(obj_ptr + 0xd0)
         local obj_handle = entities.pointer_to_handle(obj_ptr)
-        ENTITY.SET_ENTITY_ALPHA(obj_handle, 255, false)
+        ENTITY.SET_ENTITY_ALPHA(obj_handle, ghost_alpha, false)
         CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(obj_handle)
         for i, data in ipairs(my_ents) do
             ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(obj_handle, data, false)
@@ -1750,14 +1785,14 @@ menu.toggle_loop(ghost_entities, "Objects", {"ghostobjects"}, "Disables collion 
     end
 end)
 
-menu.toggle_loop(ghost_entities, "Vehicles", {"ghostvehicles"}, "Disables collion with vehicles", function()
+menu.toggle_loop(ghost_entities, "Vehicles", {"ghostvehicles"}, "Disables collision with vehicles", function()
     local user = players.user_ped()
     local veh = PED.GET_VEHICLE_PED_IS_USING(user)
     local my_ents = {user, veh}
     for i, veh_ptr in ipairs(entities.get_all_vehicles_as_pointers()) do
         local net_veh = memory.read_long(veh_ptr + 0xd0)
         local veh_handle = entities.pointer_to_handle(veh_ptr)
-        ENTITY.SET_ENTITY_ALPHA(veh_handle, 255, false)
+        ENTITY.SET_ENTITY_ALPHA(veh_handle, ghost_alpha, false)
         CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(veh_handle)
         for i, data in ipairs(my_ents) do
             ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(veh_handle, data, false)
@@ -1767,22 +1802,6 @@ menu.toggle_loop(ghost_entities, "Vehicles", {"ghostvehicles"}, "Disables collio
     end
 end)
 
-menu.toggle_loop(ghost_entities, "Peds", {"ghostpeds"}, "Disables collion with peds", function()
-    local user = players.user_ped()
-    local veh = PED.GET_VEHICLE_PED_IS_USING(user)
-    local my_ents = {user, veh}
-    for i, ped_ptr in ipairs(entities.get_all_peds_as_pointers()) do
-        local net_ped = memory.read_long(ped_ptr + 0xd0)
-        local ped_handle = entities.pointer_to_handle(ped_ptr)
-        ENTITY.SET_ENTITY_ALPHA(ped_handle, 255, false)
-        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(ped_handle)
-        for i, data in ipairs(my_ents) do
-            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(ped_handle, data, false)
-            ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(data, ped_handle, false)  
-        end
-        SHAPETEST.RELEASE_SCRIPT_GUID_FROM_ENTITY(ped_handle)
-    end
-end)
 
 
 menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Ropes", "Projectiles"}, function(index, name)
@@ -1903,7 +1922,7 @@ menu.action(credits, "jerry123", {}, "for cleaning my code in some spots and tel
 end)
 menu.action(credits, "Scriptcat", {}, "being there since I started and telling me some useful lua tips and forcing me to start learning stands api and natives", function()
 end)
-menu.action(credits, "ERR_NET_ARRAY", {}, "helping with op memory editing", function()
+menu.action(credits, "ERR_NET_ARRAY", {}, "helping with memory editing", function()
 end)
 menu.action(credits, "d6b.", {}, "gifting nitro because he is such a super gamer gigachad", function()
 end)

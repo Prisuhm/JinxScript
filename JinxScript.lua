@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.9
+local localVer = 1.91
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1764,13 +1764,7 @@ menu.toggle_loop(anticage, "Enable Anti-Cage", {"anticage"}, "", function()
     end
 end)
 
-local ghost_entities = menu.list(protections, "Ghost Entities", {}, "")
-
-local ghost_alpha = 160
-menu.slider(anticage, "Ghost Alpha", {"ghostalpha"}, "The ammount of transparency that ghost entities will have", 0, #values, 3, 1, function(amount)
-    ghost_alpha = values[amount]
-end)
-menu.toggle_loop(protections, "Objects", {"ghostobjects"}, "Disables collision with objects", function()
+menu.toggle_loop(protections, "Ghost Objects", {"ghostobjects"}, "Disables collision with objects", function()
     local user = players.user_ped()
     local veh = PED.GET_VEHICLE_PED_IS_USING(user)
     local my_ents = {user, veh}
@@ -1787,7 +1781,7 @@ menu.toggle_loop(protections, "Objects", {"ghostobjects"}, "Disables collision w
     end
 end)
 
-menu.toggle_loop(ghost_entities, "Vehicles", {"ghostvehicles"}, "Disables collision with vehicles", function()
+menu.toggle_loop(protections, "Ghost Vehicles", {"ghostvehicles"}, "Disables collision with vehicles", function()
     local user = players.user_ped()
     local veh = PED.GET_VEHICLE_PED_IS_USING(user)
     local my_ents = {user, veh}

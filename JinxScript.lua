@@ -105,6 +105,34 @@ local function request_model(hash)
     end
 end
 
+local object_stuff = {
+    names = {
+        "Ferris Wheel",
+        "UFO",
+        "Cement Mixer",
+        "Scaffolding",
+        "Garage Door",
+        "Big Bowling Ball",
+        "Big Soccer Ball",
+        "Big Orange Ball",
+        "Stunt Ramp",
+
+    },
+    objects = {
+        "prop_ld_ferris_wheel",
+        "p_spinning_anus_s",
+        "prop_staticmixer_01",
+        "prop_towercrane_02a",
+        "des_scaffolding_root",
+        "prop_sm1_11_garaged",
+        "stt_prop_stunt_bowling_ball",
+        "stt_prop_stunt_soccer_ball",
+        "prop_juicestand",
+        "stt_prop_stunt_jump_l",
+    }
+}
+
+
 local All_business_properties = {
     -- Clubhouses
     "1334 Roy Lowenstein Blvd",
@@ -268,32 +296,6 @@ local interiors = {
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
 
-local object_stuff = {
-    names = {
-        "Ferris Wheel",
-        "UFO",
-        "Cement Mixer",
-        "Scaffolding",
-        "Garage Door",
-        "Big Bowling Ball",
-        "Big Soccer Ball",
-        "Big Orange Ball",
-        "Stunt Ramp",
-
-    },
-    objects = {
-        "prop_ld_ferris_wheel",
-        "p_spinning_anus_s",
-        "prop_staticmixer_01",
-        "prop_towercrane_02a",
-        "des_scaffolding_root",
-        "prop_sm1_11_garaged",
-        "stt_prop_stunt_bowling_ball",
-        "stt_prop_stunt_soccer_ball",
-        "prop_juicestand",
-        "stt_prop_stunt_jump_l",
-    }
-}
 
 local values = {
     [0] = 0,
@@ -375,7 +377,6 @@ local function player(pid)
         end
     end)
 
-
     local toggled = false    
     local animal_toggle
     animal_toggle = menu.toggle(friendly, "Turn Into Animal", {}, "A scuffed way of doing it but it shouldn't kill them.", function(toggle)
@@ -397,7 +398,7 @@ local function player(pid)
     menu.slider(halloween_loop, "Delay", {}, "", 0, 2500, 500, 10, function(amount)
         halloween_delay = amount
     end)
-    player_toggle_loop(halloween_loop, pid, "Enable Loop", {}, "Should give them quite a bit of money and some other stuff, kind of a 50k loop", function()
+    player_toggle_loop(halloween_loop, pid, "Enable Loop", {}, "Should give them quite a bit of money and some other stuff", function()
         util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -1, 1, 1, 1})
     end)
 
@@ -487,6 +488,7 @@ local function player(pid)
     end)
     
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
+    local object_hash = util.joaat("prop_ld_ferris_wheel")
     menu.list_select(glitch_player_list, "Object", {}, "Object to use for Glitch Player.", object_stuff.names, 1, function(index)
         object_hash = util.joaat(object_stuff.objects[index])
     end)

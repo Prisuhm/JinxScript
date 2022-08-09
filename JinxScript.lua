@@ -1288,11 +1288,6 @@ menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     memory.write_int(memory.script_local("am_criminal_damage", 108 + 39), memory.read_int(memory.script_global(262145 + 11674)))
 end)
 
-menu.action(session, "Nuke Lobby", {}, "will kick the entire lobby", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        util.trigger_script_event(1 << players.get_script_host(), {550764271, pid, 0, memory.read_int(memory.script_global(2683918 + 1485))})
-    end
-end)
 menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
     ENTITY.SET_ENTITY_PROOFS(entities.get_user_vehicle_as_handle(), true, true, true, true, true, 0, 0, true)
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)

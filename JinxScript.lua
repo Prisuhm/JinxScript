@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.91
+local localVer = 1.92
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -234,7 +234,6 @@ local drugged_effects = {
 
 local unreleased_vehicles = {
     "Brioso3",
-    "Draugur",
     "Kanjosj",
     "Postlude",
     "Rhinehart",
@@ -316,7 +315,6 @@ local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 17740
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local session = menu.list(menu.my_root(), "Session", {}, "")
-local vehicle = menu.list(menu.my_root(), "Vehicle", {}, "")
 local visuals = menu.list(menu.my_root(), "Visuals", {}, "")
 local funfeatures = menu.list(menu.my_root(), "Fun Features", {}, "")
 local teleport = menu.list(menu.my_root(), "Teleport", {}, "")
@@ -351,7 +349,7 @@ local function player(pid)
 
     local friendly = menu.list(bozo, "Friendly", {}, "")
     local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-    menu.toggle_loop(friendly, "Give Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function(toggled)
+    menu.toggle_loop(friendly, "Give Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
         ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), true, true, true, true, true, 0, 0, true)
         end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
     end)
@@ -412,7 +410,7 @@ local function player(pid)
                 delay = amount
             end)
 
-            menu.toggle_loop(rp_loop, "Enable RP Loop", {}, "Each collectible gives 1k RP", function(toggled)
+            menu.toggle_loop(rp_loop, "Enable RP Loop", {}, "Each collectible gives 1k RP", function()
                 util.trigger_script_event(1 << pid, {-1178972880, pid, 4, -1, 1, 1, 1})
                 util.yield(delay)
             end)
@@ -501,14 +499,14 @@ local function player(pid)
     local glitchPlayer_toggle
     glitchPlayer_toggle = menu.toggle(glitch_player_list, "Glitch Player", {}, "", function(toggled)
         glitchPlayer = toggled
+        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
+        local glitch_hash = object_hash
+        local poopy_butt = util.joaat("rallytruck")
+        request_model(glitch_hash)
+        request_model(poopy_butt)
 
         while glitchPlayer do
-            local glitch_hash = object_hash
-            local poopy_butt = util.joaat("rallytruck")
-            request_model(glitch_hash)
-            request_model(poopy_butt)
-            local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-            local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
             local stupid_object = entities.create_object(glitch_hash, playerpos)
             local vehicle = entities.create_vehicle(poopy_butt, playerpos, 0)
             ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
@@ -954,7 +952,7 @@ local function player(pid)
         MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 400, 0)
     end)
 
-    menu.action(trolling, "Look For Who Asked", {}, "", function(toggled)
+    menu.action(trolling, "Look For Who Asked", {}, "", function()
         local radar = util.joaat("prop_air_bigradar")
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
@@ -1027,7 +1025,7 @@ local function player(pid)
         end
     end)   
 
-    player_toggle_loop(kill_godmode, pid, "Explode", {}, "Blocked By Most Menus", function(toggled)
+    player_toggle_loop(kill_godmode, pid, "Explode", {}, "Blocked By Most Menus", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player)
         if not PED.IS_PED_DEAD_OR_DYING(player) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) then
@@ -1036,7 +1034,7 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function(toggled)
+    player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function()
         util.trigger_script_event(1 << pid, {-1388926377, pid, -1762807505, math.random(0, 9999)})
     end)
 
@@ -1111,32 +1109,26 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
     end)
 
-    menu.action(player_removals, "Mother Nature Crash", {}, "sometimes doesn't work for some reason. cry about it bozo.", function()
-        local user = players.user_ped()
-        local model = util.joaat("h4_prop_bush_mang_ad")
-        local pos = players.get_position(pid)
-        local oldPos = players.get_position(players.user())
+    menu.action(player_removals, "Mother Nature Crash", {}, "", function()
+        local user = players.user()
+        local user_ped = players.user_ped()
+        local model = util.joaat("h4_prop_bush_mang_ad") -- special op object so you dont have to be near them :D
         BlockSyncs(pid, function() -- blocking outgoing syncs to prevent the lobby from crashing :5head:
             util.yield(100)
-            ENTITY.SET_ENTITY_VISIBLE(user, false)
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos.x, pos.y, pos.z, false, false, false)
-            PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user(), model)
-            PED.SET_PED_COMPONENT_VARIATION(user, 5, 8, 0, 0)
-            util.yield(500)
-            PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
-            util.yield(2000)
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos.x, pos.y, pos.z, false, false, false)
-            PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user(), model)
-            PED.SET_PED_COMPONENT_VARIATION(user, 5, 31, 0, 0) -- resending again with dif parachute bag because it doesnt seem to work sometimes on 8
-            util.yield(500)
-            PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user())
-            util.yield(2000)
+            ENTITY.SET_ENTITY_VISIBLE(user_ped, false)
+            for i = 0, 110 do
+                PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(user, model)
+                PED.SET_PED_COMPONENT_VARIATION(user_ped, 5, i, 0, 0)
+                util.yield(25)
+                PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(user)
+            end
             for i = 1, 5 do
                 util.spoof_script("freemode", SYSTEM.WAIT) -- preventing wasted screen
             end
-            ENTITY.SET_ENTITY_HEALTH(user, 0) -- killing ped because it will still crash others until you die (clearing tasks doesnt seem to do much)
-            NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(oldPos.x, oldPos.y, oldPos.z, 0, false, false, 0)
-            ENTITY.SET_ENTITY_VISIBLE(user, true)
+            ENTITY.SET_ENTITY_HEALTH(user_ped, 0) -- killing ped because it will still crash others until you die (clearing tasks doesnt seem to do much)
+            local pos = players.get_position(user)
+            NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(pos.x, pos.y, pos.z, 0, false, false, 0)
+            ENTITY.SET_ENTITY_VISIBLE(user_ped, true)
         end)
     end)
 
@@ -1212,62 +1204,6 @@ util.create_tick_handler(function()
     end
 end)
 
-menu.toggle(self, "No No Square", {""}, "No no, don't touch me there, this is my no no square.", function(toggled)
-    if toggled then
-        local player = players.user_ped()
-        local pos = ENTITY.GET_ENTITY_COORDS(player, false)
-        local ball = util.joaat("prop_juicestand")
-        request_model(ball)
-
-        if PED.IS_PED_IN_ANY_VEHICLE(player, false) then 
-            util.toast("You are in a vehicle. :/")
-        return end
-        protection = entities.create_object(ball, pos)
-        ENTITY.FREEZE_ENTITY_POSITION(protection, true)
-        ENTITY.ATTACH_ENTITY_TO_ENTITY(protection, player, 0, 0, 0, 0, 0, 0, 0, 0, false, true, false, 0, true)
-        menu.trigger_commands("explosionsproof on")
-        ENTITY.SET_ENTITY_VISIBLE(protection, false)
-    else
-        if protection ~= nil then 
-            entities.delete_by_handle(protection)
-        end
-    end
-end)
-
-local function bitTest(addr, offset)
-    return (memory.read_int(addr) & (1 << offset)) ~= 0
-end
-menu.toggle_loop(self, "Auto Claim Destroyed Vehicles", {}, "Automatically claims destroyed vehicles so you won't have to.", function()
-    local count = memory.read_int(memory.script_global(1585857))
-    for i = 0, count do
-        local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
-        if canFix then
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
-            util.toast("Your personal vehicle was destroyed. It has been automatically claimed.")
-        end
-    end
-    util.yield(100)
-end)
-
-local muggerWarning
-muggerWarning = menu.action(self, "Mugger Money Removal", {}, "", function(click_type)
-    menu.show_warning(muggerWarning, click_type, "Warning: Don't Be Dumb, Once You Purchase A Mugger The Changes Can't Be Undone And Your Money Will Be Gone. Only Use If You Intend To Get Rid Of Your Money", function()
-        menu.delete(muggerWarning)
-        local muggerList = menu.list(self, "Mugger Money Removal")
-        local price = 1000
-        menu.click_slider(muggerList, "Mugger Price", {"muggerprice"}, "", 0, 2000000000, 0, 1000, function(value)
-            price = value
-        end)
-
-        menu.toggle_loop(muggerList, "Change Mugger Price", {}, "", function()
-            memory.write_int(memory.script_global(262145 + 4121), price) 
-        end)
-        menu.trigger_command(muggerList)
-    end)
-end)
-
 local criminalDamageCmdRef = menu.ref_by_path("Online>Session>Session Scripts>Run Script>Freemode Activities>Criminal Damage")
 menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_criminal_damage")) == 0 then
@@ -1288,6 +1224,7 @@ menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     memory.write_int(memory.script_local("am_criminal_damage", 108 + 39), memory.read_int(memory.script_global(262145 + 11674)))
 end)
 
+local vehicle = menu.list(self, "Vehicle", {}, "")
 menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
     ENTITY.SET_ENTITY_PROOFS(entities.get_user_vehicle_as_handle(), true, true, true, true, true, 0, 0, true)
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
@@ -1371,6 +1308,112 @@ menu.toggle_loop(vehicle, "Random Upgrades", {}, "Only works on vehicles you spa
         end
     end
     util.yield(100)
+end)
+
+
+local weapon_options = menu.list(self, "Weapon Options", {}, "")
+local finger_thing = menu.list(weapon_options, "Finger Gun", {}, "")
+for id, data in pairs(weapon_stuff) do
+    local name = data[1]
+    local weapon_name = data[2]
+    local projectile = util.joaat(weapon_name)
+    while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
+        WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
+        util.yield(10)
+    end
+    menu.toggle(finger_thing, name, {}, "", function(state)
+        toggled = state
+        while toggled do
+            if memory.read_int(memory.script_global(4521801 + 930)) == 3 then
+                memory.write_int(memory.script_global(4521801 + 935), NETWORK.GET_NETWORK_TIME())
+                local inst = v3.new()
+                v3.set(inst,CAM.GET_FINAL_RENDERED_CAM_ROT(2))
+                local tmp = v3.toDir(inst)
+                v3.set(inst, v3.get(tmp))
+                v3.mul(inst, 1000)
+                v3.set(tmp, CAM.GET_FINAL_RENDERED_CAM_COORD())
+                v3.add(inst, tmp)
+                v3.free(tmp)
+                local x, y, z = v3.get(inst)
+                local fingerPos = PED.GET_PED_BONE_COORDS(players.user_ped(), 0xff9, 0.7, 0, 0)
+                MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS_IGNORE_ENTITY(fingerPos.x, fingerPos.y, fingerPos.z, x, y, z, 1, true, projectile, 0, true, false, 500, players.user_ped(), 0)
+            end
+            util.yield(100)
+        end
+        local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
+        MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 999999, 0)
+    end)
+end
+local weapon_thing = menu.list(weapon_options, "Change Bullet Projectile", {}, "")
+for id, data in pairs(weapon_stuff) do
+    local name = data[1]
+    local weapon_name = data[2]
+    local a = false
+    menu.toggle(weapon_thing, name, {}, "", function(toggle)
+        a = toggle
+        while a do
+            local weapon = util.joaat(weapon_name)
+            projectile = weapon
+            while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
+                WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
+                util.yield(10)
+            end
+            local inst = v3.new()
+            if PED.IS_PED_SHOOTING(PLAYER.PLAYER_PED_ID()) then
+                if not WEAPON.GET_PED_LAST_WEAPON_IMPACT_COORD(PLAYER.PLAYER_PED_ID(), inst) then
+                    v3.set(inst,CAM.GET_FINAL_RENDERED_CAM_ROT(2))
+                    local tmp = v3.toDir(inst)
+                    v3.set(inst, v3.get(tmp))
+                    v3.mul(inst, 1000)
+                    v3.set(tmp, CAM.GET_FINAL_RENDERED_CAM_COORD())
+                    v3.add(inst, tmp)
+                    v3.free(tmp)
+                end
+                local x, y, z = v3.get(inst)
+                local wpEnt = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(PLAYER.PLAYER_PED_ID(), false)
+                local wpCoords = ENTITY._GET_ENTITY_BONE_POSITION_2(wpEnt, ENTITY.GET_ENTITY_BONE_INDEX_BY_NAME(wpEnt, "gun_muzzle"))
+                MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(wpCoords.x, wpCoords.y, wpCoords.z, x, y, z, 1, true, weapon, PLAYER.PLAYER_PED_ID(), true, false, 1000)
+            end
+            util.yield()
+        end
+        local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
+        MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 999999, 0)
+    end)
+end
+
+local other = menu.list(self, "Miscellaneous", {}, "")
+local function bitTest(addr, offset)
+    return (memory.read_int(addr) & (1 << offset)) ~= 0
+end
+menu.toggle_loop(other, "Auto Claim Destroyed Vehicles", {}, "Automatically claims destroyed vehicles so you won't have to.", function()
+    local count = memory.read_int(memory.script_global(1585857))
+    for i = 0, count do
+        local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
+        if canFix then
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
+            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
+            util.toast("Your personal vehicle was destroyed. It has been automatically claimed.")
+        end
+    end
+    util.yield(100)
+end)
+
+local muggerWarning
+muggerWarning = menu.action(other, "Mugger Money Removal", {}, "", function(click_type)
+    menu.show_warning(muggerWarning, click_type, "Warning: Don't Be Dumb, Once You Purchase A Mugger The Changes Can't Be Undone And Your Money Will Be Gone. Only Use If You Intend To Get Rid Of Your Money", function()
+        menu.delete(muggerWarning)
+        local muggerList = menu.list(self, "Mugger Money Removal")
+        local price = 1000
+        menu.click_slider(muggerList, "Mugger Price", {"muggerprice"}, "", 0, 2000000000, 0, 1000, function(value)
+            price = value
+        end)
+
+        menu.toggle_loop(muggerList, "Change Mugger Price", {}, "", function()
+            memory.write_int(memory.script_global(262145 + 4121), price) 
+        end)
+        menu.trigger_command(muggerList)
+    end)
 end)
 
 menu.click_slider(visuals, "Drunk Mode", {}, "", 0, 5, 1, 1, function(val)
@@ -1533,7 +1576,7 @@ menu.toggle(funfeatures, "Tesla Autopilot", {}, "", function(toggled)
 end)
 
 
- menu.toggle_loop(funfeatures, "LA Traffic", {}, "", function(toggled)
+ menu.toggle_loop(funfeatures, "LA Traffic", {}, "", function()
     for i, ped in ipairs(entities.get_all_peds_as_handles()) do
         TASK.SET_DRIVE_TASK_DRIVING_STYLE(ped, math.random(1, #drivingStyles))
         PED.SET_PED_KEEP_TASK(ped, true)
@@ -1551,77 +1594,15 @@ for index, data in pairs(interiors) do
     end)
 end
 
-local finger_thing = menu.list(funfeatures, "Finger Gun", {}, "")
-for id, data in pairs(weapon_stuff) do
-    local name = data[1]
-    local weapon_name = data[2]
-    local projectile = util.joaat(weapon_name)
-    while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
-        WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
-        util.yield(10)
+local rapid_khanjali
+rapid_khanjali = menu.toggle_loop(vehicle, "Rapid Fire Khanjali", {}, "", function()
+    local player_veh = PED.GET_VEHICLE_PED_IS_USING(players.user_ped())
+    if ENTITY.GET_ENTITY_MODEL(player_veh) == util.joaat("khanjali") then
+        VEHICLE.SET_VEHICLE_MOD(player_veh, 10, math.random(-1, 0), false)
+    else
+        util.toast("Please get in a khanjali.")
+        menu.trigger_command(rapid_khanjali, "off")
     end
-    menu.toggle(finger_thing, name, {}, "", function(state)
-        toggled = state
-        while toggled do
-            if memory.read_int(memory.script_global(4521801 + 930)) == 3 then
-                memory.write_int(memory.script_global(4521801 + 935), NETWORK.GET_NETWORK_TIME())
-                local inst = v3.new()
-                v3.set(inst,CAM.GET_FINAL_RENDERED_CAM_ROT(2))
-                local tmp = v3.toDir(inst)
-                v3.set(inst, v3.get(tmp))
-                v3.mul(inst, 1000)
-                v3.set(tmp, CAM.GET_FINAL_RENDERED_CAM_COORD())
-                v3.add(inst, tmp)
-                v3.free(tmp)
-                local x, y, z = v3.get(inst)
-                local fingerPos = PED.GET_PED_BONE_COORDS(players.user_ped(), 0xff9, 0.7, 0, 0)
-                MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS_IGNORE_ENTITY(fingerPos.x, fingerPos.y, fingerPos.z, x, y, z, 1, true, projectile, 0, true, false, 500, players.user_ped(), 0)
-            end
-            util.yield(100)
-        end
-        local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
-        MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 999999, 0)
-    end)
-end
-local weapon_thing = menu.list(funfeatures, "Bullet Projectile", {}, "")
-for id, data in pairs(weapon_stuff) do
-    local name = data[1]
-    local weapon_name = data[2]
-    local a = false
-    menu.toggle(weapon_thing, name, {}, "", function(toggle)
-        a = toggle
-        while a do
-            local weapon = util.joaat(weapon_name)
-            projectile = weapon
-            while not WEAPON.HAS_WEAPON_ASSET_LOADED(projectile) do
-                WEAPON.REQUEST_WEAPON_ASSET(projectile, 31, false)
-                util.yield(10)
-            end
-            local inst = v3.new()
-            if PED.IS_PED_SHOOTING(PLAYER.PLAYER_PED_ID()) then
-                if not WEAPON.GET_PED_LAST_WEAPON_IMPACT_COORD(PLAYER.PLAYER_PED_ID(), inst) then
-                    v3.set(inst,CAM.GET_FINAL_RENDERED_CAM_ROT(2))
-                    local tmp = v3.toDir(inst)
-                    v3.set(inst, v3.get(tmp))
-                    v3.mul(inst, 1000)
-                    v3.set(tmp, CAM.GET_FINAL_RENDERED_CAM_COORD())
-                    v3.add(inst, tmp)
-                    v3.free(tmp)
-                end
-                local x, y, z = v3.get(inst)
-                local wpEnt = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(PLAYER.PLAYER_PED_ID(), false)
-                local wpCoords = ENTITY._GET_ENTITY_BONE_POSITION_2(wpEnt, ENTITY.GET_ENTITY_BONE_INDEX_BY_NAME(wpEnt, "gun_muzzle"))
-                MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(wpCoords.x, wpCoords.y, wpCoords.z, x, y, z, 1, true, weapon, PLAYER.PLAYER_PED_ID(), true, false, 1000)
-            end
-            util.yield()
-        end
-        local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
-        MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 999999, 0)
-    end)
-end
-
-menu.toggle_loop(vehicle, "Rapid Fire Khanjali", {}, "", function()
-    VEHICLE.SET_VEHICLE_MOD(entities.get_user_vehicle_as_handle(), 10, math.random(-1, 0), false)
 end)
 
 local jinx_pet

@@ -1692,15 +1692,6 @@ menu.toggle_loop(detection, "Vehicle Godmode Check", {}, "Players in godmode wil
     end 
 end)
 
-menu.toggle_loop(detection, "Modded Scenario Detection", {}, "", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if PED.IS_PED_USING_ANY_SCENARIO(player) then
-            util.draw_debug_text(players.get_name(pid) .. " Is In A Modded Scenario")
-        end
-    end 
-end)
-
 menu.toggle_loop(protections, "Block Unwanted Vehicles", {}, "", function()
     for _, vehicle in ipairs(entities.get_all_vehicles_as_pointers()) do
         for i, name in ipairs(unwanted_vehicles) do

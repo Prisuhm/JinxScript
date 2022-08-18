@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.92
+local localVer = 1.93
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -36,6 +36,21 @@ local function player_toggle_loop(root, pid, menu_name, command_names, help_text
 end
 local spawned_objects = {}
 
+
+write_global = {
+	byte = function(global, value)
+		local address = memory.script_global(global)
+		if address ~= 0 then memory.write_byte(address, value) end
+	end,
+	int = function(global, value)
+		local address = memory.script_global(global)
+		if address ~= 0 then memory.write_int(address, value) end
+	end,
+	float = function(global, value)
+		local address = memory.script_global(global)
+		if address ~= 0 then memory.write_float(address, value) end
+	end
+}
 
 local function get_transition_state(pid)
     return memory.read_int(memory.script_global(((2689235 + 1) + (pid * 453)) + 230))
@@ -104,34 +119,6 @@ local function request_model(hash)
         util.yield()
     end
 end
-
-local object_stuff = {
-    names = {
-        "Ferris Wheel",
-        "UFO",
-        "Cement Mixer",
-        "Scaffolding",
-        "Garage Door",
-        "Big Bowling Ball",
-        "Big Soccer Ball",
-        "Big Orange Ball",
-        "Stunt Ramp",
-
-    },
-    objects = {
-        "prop_ld_ferris_wheel",
-        "p_spinning_anus_s",
-        "prop_staticmixer_01",
-        "prop_towercrane_02a",
-        "des_scaffolding_root",
-        "prop_sm1_11_garaged",
-        "stt_prop_stunt_bowling_ball",
-        "stt_prop_stunt_soccer_ball",
-        "prop_juicestand",
-        "stt_prop_stunt_jump_l",
-    }
-}
-
 
 local All_business_properties = {
     -- Clubhouses
@@ -239,8 +226,6 @@ local unreleased_vehicles = {
     "Rhinehart",
     "Ruiner4",
     "Sentinel4",
-    "Tenf",
-    "Tenf2",
     "Vigero2",
     "Weevil2",
 }
@@ -306,14 +291,14 @@ local values = {
 
 local launch_vehicle = {"Launch Up", "Launch Forward", "Launch Backwards", "Launch Down", "Slingshot"}
 local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto Shop", "Apartment"}
-local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "dump"}
-local cleanse = { "Clear Peds", "Clear Vehicles", "Clear Objects", "Clear Pickups", "Clear Ropes", "Clear Projectiles"}
+local unwanted_vehicles = {"cargoplane", "tug", "jet", "skylift", "towtruck", "towtruck2", "dump", "blimp"}
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
 
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
+local vehicle = menu.list(menu.my_root(), "Vehicle", {}, "")
 local session = menu.list(menu.my_root(), "Session", {}, "")
 local visuals = menu.list(menu.my_root(), "Visuals", {}, "")
 local funfeatures = menu.list(menu.my_root(), "Fun Features", {}, "")
@@ -469,7 +454,43 @@ local function player(pid)
         end
     end)
 
+    local mugger_models = {
+        "u_m_y_fibmugger_01",
+        "mp_g_m_pros_01",
+        "g_m_m_armgoon_01",
+        "g_m_m_armgoon_02",
+        "g_m_m_chigoon_01",
+        "g_m_m_chigoon_02",
+        "a_m_m_farmer_01"
+    }
+
     local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
+    menu.toggle_loop(trolling, "Mugger Loop Test", {"mug"}, "", function() -- credit to wiri <3
+        if not NETWORK.NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
+            local bits_addr = memory.script_global(1853348 + (players.user() * 834 + 1) + 140)
+            memory.write_int(bits_addr, memory.read_int(bits_addr) | (1 << 0))
+            write_global.int(1853348 + (players.user() * 834 + 1) + 141, pid)
+        end
+        for i, model in ipairs(entities.get_all_peds_as_pointers()) do
+            for i, name in ipairs(mugger_models) do
+                if entities.get_model_hash(model) == util.joaat(name) then
+                    NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(model)
+                    local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+                    local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
+                    if not ENTITY.IS_ENTITY_DEAD(entities.pointer_to_handle(model), 0) then
+                        ENTITY.SET_ENTITY_COORDS(entities.pointer_to_handle(model), playerpos.x, playerpos.y, playerpos.z , false, false, false, false)
+                        util.yield(1000)
+                        ENTITY.SET_ENTITY_COORDS(entities.pointer_to_handle(model), playerpos.x, playerpos.y + 400, playerpos.z, false, false, false, false)
+                        util.yield(100)
+                        FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), playerpos.x, playerpos.y + 400, playerpos.z, 2, 50, true, false, 0.0)
+                        util.yield(100)
+                    end
+                end
+            end
+        end
+    end)
+    
+
     player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player, false)
@@ -486,6 +507,33 @@ local function player(pid)
     end)
     
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
+    local object_stuff = {
+        names = {
+            "Ferris Wheel",
+            "UFO",
+            "Cement Mixer",
+            "Scaffolding",
+            "Garage Door",
+            "Big Bowling Ball",
+            "Big Soccer Ball",
+            "Big Orange Ball",
+            "Stunt Ramp",
+
+        },
+        objects = {
+            "prop_ld_ferris_wheel",
+            "p_spinning_anus_s",
+            "prop_staticmixer_01",
+            "prop_towercrane_02a",
+            "des_scaffolding_root",
+            "prop_sm1_11_garaged",
+            "stt_prop_stunt_bowling_ball",
+            "stt_prop_stunt_soccer_ball",
+            "prop_juicestand",
+            "stt_prop_stunt_jump_l",
+        }
+    }
+
     local object_hash = util.joaat("prop_ld_ferris_wheel")
     menu.list_select(glitch_player_list, "Object", {}, "Object to use for Glitch Player.", object_stuff.names, 1, function(index)
         object_hash = util.joaat(object_stuff.objects[index])
@@ -499,14 +547,14 @@ local function player(pid)
     local glitchPlayer_toggle
     glitchPlayer_toggle = menu.toggle(glitch_player_list, "Glitch Player", {}, "", function(toggled)
         glitchPlayer = toggled
-        local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
-        local glitch_hash = object_hash
-        local poopy_butt = util.joaat("rallytruck")
-        request_model(glitch_hash)
-        request_model(poopy_butt)
 
         while glitchPlayer do
+            local glitch_hash = object_hash
+            local poopy_butt = util.joaat("rallytruck")
+            request_model(glitch_hash)
+            request_model(poopy_butt)
+            local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
             local stupid_object = entities.create_object(glitch_hash, playerpos)
             local vehicle = entities.create_vehicle(poopy_butt, playerpos, 0)
             ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
@@ -1104,9 +1152,13 @@ local function player(pid)
         menu.trigger_commands("historyblock " .. players.get_name(pid))
         menu.trigger_commands("breakup " .. players.get_name(pid))
     end)
+    
+    menu.action(player_removals, "Silent Kick", {}, "", function()
+        util.trigger_script_event(1 << pid, {421832664, pid, 0, memory.read_int(memory.script_global(1951261 + 829))})
+    end)
 
     menu.action(player_removals, "Nasa Kick", {}, "", function()
-        util.trigger_script_event(1 << pid, {111242367, pid, -210634234})
+        util.trigger_script_event(1 << pid, {111242367, pid, memory.script_global(2689235 + 1 + (pid * 453) + 318 + 7)})
     end)
 
     menu.action(player_removals, "Mother Nature Crash", {}, "", function()
@@ -1224,7 +1276,10 @@ menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     memory.write_int(memory.script_local("am_criminal_damage", 108 + 39), memory.read_int(memory.script_global(262145 + 11674)))
 end)
 
-local vehicle = menu.list(self, "Vehicle", {}, "")
+menu.action(session, "Blast Lobby", {"nuke"}, "", function()
+    util.trigger_script_event(1 << players.user(), {550764271, players.get_script_host(), 0, memory.read_int(memory.script_global(2683918 + 1485))})
+end)
+
 menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
     ENTITY.SET_ENTITY_PROOFS(entities.get_user_vehicle_as_handle(), true, true, true, true, true, 0, 0, true)
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(player), false, false, false, false, false, 0, 0, false)
@@ -1765,12 +1820,9 @@ menu.toggle_loop(protections, "Ghost Vehicles", {"ghostvehicles"}, "Disables col
     end
 end)
 
-
-
-menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Ropes", "Projectiles"}, function(index, name)
+menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Ropes", "Projectiles", "Sounds"}, function(index, name)
     util.toast("Clearing "..name:lower().."...")
     local counter = 0
-    local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
     pluto_switch index do
         case 1:
             for _, ped in ipairs(entities.get_all_peds_as_handles()) do
@@ -1820,6 +1872,12 @@ menu.list_action(protections, "Clear All...", {}, "", {"Peds", "Vehicles", "Obje
             MISC.CLEAR_AREA_OF_PROJECTILES(coords.x, coords.y, coords.z, 1000, 0)
             counter = "all"
             break
+        case 4:
+            for i = 0, 99 do
+                AUDIO.STOP_SOUND(i)
+                util.yield_once()
+            end
+        break
     end
     util.toast("Cleared "..tostring(counter).." "..name:lower()..".")
 end)
@@ -1861,6 +1919,62 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped())
     MISC.CLEAR_AREA_OF_PROJECTILES(pos.x, pos.y, pos.z, 400, 0)
     util.toast("Cleared All Projectiles")
+end)
+
+local pool_limiter = menu.list(protections, "Pool Limiter", {}, "")
+local ped_limit = 175
+menu.slider(pool_limiter, "Ped Pool Limit", {"pedlimit"}, "", 0, 256, 175, 1, function(amount)
+    ped_limit = amount
+end)
+
+local veh_limit = 150
+menu.slider(pool_limiter, "Vehicle Pool Limit", {"pedlimit"}, "", 0, 300, 150, 1, function(amount)
+    veh_limit = amount
+end)
+
+local obj_limit = 500
+menu.slider(pool_limiter, "Object Pool Limit", {"pedlimit"}, "", 0, 2300, 500, 1, function(amount)
+    obj_limit = amount
+end)
+
+local projectile_limit = 25
+menu.slider(pool_limiter, "Projectile Pool Limit", {"pedlimit"}, "", 0, 50, 25, 1, function(amount)
+    projectile_limit = amount
+end)
+
+menu.toggle_loop(pool_limiter, "Enable Pool Limiter", {}, "", function()
+    local ped_count = 0
+    for _, ped in pairs(entities.get_all_peds_as_handles()) do
+        if ped ~= players.user_ped() then
+            ped_count += 1
+        end
+        if ped_count >= ped_limit then
+            for _, ped in pairs(entities.get_all_peds_as_handles()) do
+                entities.delete_by_handle(ped)
+            end
+            util.toast("[Stand Essentials] Ped Pool Limit Hit. Clearing Peds...")
+        end
+    end
+    local veh__count = 0
+    for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
+        veh__count += 1
+        if veh__count >= veh_limit then
+            for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
+                entities.delete_by_handle(veh)
+            end
+            util.toast("[Stand Essentials] Vehicle Pool Limit Hit. Clearing Vehicles...")
+        end
+    end
+    local obj_count = 0
+    for _, obj in pairs(entities.get_all_objects_as_handles()) do
+        obj_count += 1
+        if obj_count >= obj_limit then
+            for _, obj in pairs(entities.get_all_objects_as_handles()) do
+                entities.delete_by_handle(obj)
+            end
+            util.toast("[Stand Essentials] Object Pool Limit Hit. Clearing Objects...")
+        end
+    end
 end)
 
 local misc = menu.list(menu.my_root(), "Miscellaneous", {}, "")

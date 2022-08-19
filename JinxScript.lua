@@ -455,6 +455,7 @@ local function player(pid)
         end
     end)
 
+    local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
     player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(player, false)

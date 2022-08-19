@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.93
+local localVer = 1.94
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -454,43 +454,6 @@ local function player(pid)
             entities.delete_by_handle(player_jinx_army[i])
         end
     end)
-
-    local mugger_models = {
-        "u_m_y_fibmugger_01",
-        "mp_g_m_pros_01",
-        "g_m_m_armgoon_01",
-        "g_m_m_armgoon_02",
-        "g_m_m_chigoon_01",
-        "g_m_m_chigoon_02",
-        "a_m_m_farmer_01"
-    }
-
-    local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
-    menu.toggle_loop(trolling, "Mugger Loop Test", {"mug"}, "", function() -- credit to wiri <3
-        if not NETWORK.NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
-            local bits_addr = memory.script_global(1853348 + (players.user() * 834 + 1) + 140)
-            memory.write_int(bits_addr, memory.read_int(bits_addr) | (1 << 0))
-            write_global.int(1853348 + (players.user() * 834 + 1) + 141, pid)
-        end
-        for i, model in ipairs(entities.get_all_peds_as_pointers()) do
-            for i, name in ipairs(mugger_models) do
-                if entities.get_model_hash(model) == util.joaat(name) then
-                    NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(model)
-                    local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-                    local playerpos = ENTITY.GET_ENTITY_COORDS(player, false)
-                    if not ENTITY.IS_ENTITY_DEAD(entities.pointer_to_handle(model), 0) then
-                        ENTITY.SET_ENTITY_COORDS(entities.pointer_to_handle(model), playerpos.x, playerpos.y, playerpos.z , false, false, false, false)
-                        util.yield(1000)
-                        ENTITY.SET_ENTITY_COORDS(entities.pointer_to_handle(model), playerpos.x, playerpos.y + 400, playerpos.z, false, false, false, false)
-                        util.yield(100)
-                        FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), playerpos.x, playerpos.y + 400, playerpos.z, 2, 50, true, false, 0.0)
-                        util.yield(100)
-                    end
-                end
-            end
-        end
-    end)
-    
 
     player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
         local player = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -1153,10 +1116,6 @@ local function player(pid)
         menu.trigger_commands("historyblock " .. players.get_name(pid))
         menu.trigger_commands("breakup " .. players.get_name(pid))
     end)
-    
-    menu.action(player_removals, "Silent Kick", {}, "", function()
-        util.trigger_script_event(1 << pid, {421832664, pid, 0, memory.read_int(memory.script_global(1951261 + 829))})
-    end)
 
     menu.action(player_removals, "Nasa Kick", {}, "", function()
         util.trigger_script_event(1 << pid, {111242367, pid, memory.script_global(2689235 + 1 + (pid * 453) + 318 + 7)})
@@ -1275,10 +1234,6 @@ menu.action(session, "Criminal Damage Speed Run", {}, "", function()
     memory.write_int(memory.script_local("am_criminal_damage", 103), 2147483647)
     util.yield(1000)
     memory.write_int(memory.script_local("am_criminal_damage", 108 + 39), memory.read_int(memory.script_global(262145 + 11674)))
-end)
-
-menu.action(session, "Blast Lobby", {"nuke"}, "", function()
-    util.trigger_script_event(1 << players.user(), {550764271, players.get_script_host(), 0, memory.read_int(memory.script_global(2683918 + 1485))})
 end)
 
 menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()

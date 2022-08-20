@@ -323,11 +323,11 @@ end)
 
 local function player(pid)   
     if players.get_rockstar_id(pid) == 213034124 then
-        util.toast(lang.get_string(-766393174, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
+        util.toast(players.get_name(pid) .. " triggered a detection: JinxScript Developer\n(They might be a sussy imposter! watch out!)")
     end
 
     if players.get_rockstar_id(pid) == 115772212 then
-        util.toast(lang.get_string(-766393174, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "Based Gigachad\n (They are very based! Proceed with caution!)"}), TOAST_DEFAULT)
+        util.toast(players.get_name(pid) .. " triggered a detection: Based Gigachad\n(They are very based! Proceed with caution!)")
     end
     
     menu.divider(menu.player_root(pid), "Jinx Script")

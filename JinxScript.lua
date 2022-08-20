@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 1.94
+local localVer = 1.95
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1909,7 +1909,7 @@ menu.toggle_loop(pool_limiter, "Enable Pool Limiter", {}, "", function()
             for _, ped in pairs(entities.get_all_peds_as_handles()) do
                 entities.delete_by_handle(ped)
             end
-            util.toast("[Stand Essentials] Ped Pool Limit Hit. Clearing Peds...")
+            util.toast("[JinxScript] Ped Pool Limit Hit. Clearing Peds...")
         end
     end
     local veh__count = 0
@@ -1919,7 +1919,7 @@ menu.toggle_loop(pool_limiter, "Enable Pool Limiter", {}, "", function()
             for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
                 entities.delete_by_handle(veh)
             end
-            util.toast("[Stand Essentials] Vehicle Pool Limit Hit. Clearing Vehicles...")
+            util.toast("[JinxScript] Vehicle Pool Limit Hit. Clearing Vehicles...")
         end
     end
     local obj_count = 0
@@ -1929,7 +1929,7 @@ menu.toggle_loop(pool_limiter, "Enable Pool Limiter", {}, "", function()
             for _, obj in pairs(entities.get_all_objects_as_handles()) do
                 entities.delete_by_handle(obj)
             end
-            util.toast("[Stand Essentials] Object Pool Limit Hit. Clearing Objects...")
+            util.toast("[JinxScriptbject Pool Limit Hit. Clearing Objects...")
         end
     end
 end)

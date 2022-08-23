@@ -1158,7 +1158,7 @@ local function player(pid)
             end
             util.yield(250)
             if players.exists(pid) then
-                menu.trigger_commands("breakdown" .. players.get_name(pid))
+                menu.trigger_commands("breakup" .. players.get_name(pid))
             end
         end)
     else
@@ -1178,7 +1178,7 @@ local function player(pid)
     if menu.get_edition() >= 2 then 
         menu.action(kicks, "Block Join Kick", {"blast"}, "Will add them to blocked joins list, alternative to people who don't want to use block joins from every kicked player", function()
             menu.trigger_commands("historyblock " .. players.get_name(pid))
-            menu.trigger_commands("breakdown" .. players.get_name(pid))
+            menu.trigger_commands("breakup" .. players.get_name(pid))
         end)
     end
 

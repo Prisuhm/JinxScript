@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.00
+local localVer = 2.01
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -246,7 +246,6 @@ local modded_weapons = {
     "weapon_railgun",
     "weapon_stungun",
     "weapon_digiscanner",
-    "weapon_tacticalrifle",
 }
 
 local interiors = {
@@ -1142,7 +1141,7 @@ local function player(pid)
     end)
 
     menu.action(kicks, "Invalid Collectible", {"invalidcollectible"}, "", function() -- hi harvey :)
-        util.trigger_script_event(1 << pid, {111242367, pid, memory.script_global(2689235 + 1 + (pid * 453) + 318 + 7)})
+        util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -1, 1, 1, 1})
     end)
 
     if menu.get_edition() >= 2 then 
@@ -1217,6 +1216,7 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
+
 
 menu.toggle_loop(self, "Script Host Addict", {}, "A faster version of script host kleptomaniac", function()
     if players.get_script_host() ~= players.user() and get_transition_state(players.user()) ~= 0 then
@@ -1984,17 +1984,17 @@ menu.slider(pool_limiter, "Ped Pool Limit", {"pedlimit"}, "", 0, 256, 175, 1, fu
 end)
 
 local veh_limit = 200
-menu.slider(pool_limiter, "Vehicle Pool Limit", {"pedlimit"}, "", 0, 300, 150, 1, function(amount)
+menu.slider(pool_limiter, "Vehicle Pool Limit", {"vehlimit"}, "", 0, 300, 150, 1, function(amount)
     veh_limit = amount
 end)
 
 local obj_limit = 750
-menu.slider(pool_limiter, "Object Pool Limit", {"pedlimit"}, "", 0, 2300, 750, 1, function(amount)
+menu.slider(pool_limiter, "Object Pool Limit", {"objlimit"}, "", 0, 2300, 750, 1, function(amount)
     obj_limit = amount
 end)
 
 local projectile_limit = 25
-menu.slider(pool_limiter, "Projectile Pool Limit", {"pedlimit"}, "", 0, 50, 25, 1, function(amount)
+menu.slider(pool_limiter, "Projectile Pool Limit", {"projlimit"}, "", 0, 50, 25, 1, function(amount)
     projectile_limit = amount
 end)
 
@@ -2062,5 +2062,9 @@ end)
 menu.action(credits, "ERR_NET_ARRAY", {}, "helping with memory editing", function()
 end)
 menu.action(credits, "d6b.", {}, "gifting nitro because he is such a super gamer gigachad", function()
+end)
+
+menu.action(menu.my_root(), "Take Me To Player Features", {}, "", function()
+    menu.trigger_commands("jinxscript " .. players.get_name(players.user()))
 end)
 util.keep_running()

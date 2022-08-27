@@ -217,7 +217,6 @@ local drugged_effects = {
 }
 
 local unreleased_vehicles = {
-    "Brioso3",
     "Kanjosj",
     "Postlude",
     "Rhinehart",

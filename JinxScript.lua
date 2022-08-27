@@ -1,7 +1,7 @@
 util.require_natives(1651208000)
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.01
+local localVer = 2.02
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1140,7 +1140,7 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {1674887089, players.user(), memory.read_int(memory.script_global(1892703 + 1 + (pid * 599) + 510))})
     end)
 
-    menu.action(kicks, "Invalid Collectible", {"invalidcollectible"}, "", function() -- hi harvey :)
+    menu.action(kicks, "Invalid Collectible", {"invalidcollectible"}, "", function()
         util.trigger_script_event(1 << pid, {-1178972880, pid, 8, -1, 1, 1, 1})
     end)
 
@@ -1806,10 +1806,22 @@ menu.toggle_loop(detections, "Weapon In Interior", {}, "", function()
     end
 end)
 
-menu.toggle_loop(protections, "Anti-Mugger", {}, "", function() -- hi again
+menu.toggle_loop(protections, "Anti-Mugger", {}, "", function()
     if util.spoof_script("am_gang_call", SCRIPT.TERMINATE_THIS_THREAD) then
         util.toast("Mugger detected. Stopping mugger script...")
     end
+end)
+
+menu.toggle_loop(protections, "Block PTFX", {}, "", function()
+    local coords = ENTITY.GET_ENTITY_COORDS(players.user_ped() , false);
+    GRAPHICS.REMOVE_PARTICLE_FX_IN_RANGE(coords.x, coords.y, coords.z, 400)
+    GRAPHICS.REMOVE_PARTICLE_FX_FROM_ENTITY(players.user_ped())
+end)
+
+menu.toggle_loop(protections, "Block Fire Lag", {}, "", function()
+    local coords = ENTITY.GET_ENTITY_COORDS(players.user_ped() , false);
+    FIRE.STOP_FIRE_IN_RANGE(coords.x, coords.y, coords.z, 100)
+    FIRE.STOP_ENTITY_FIRE(players.user_ped())
 end)
 
 local anticage = menu.list(protections, "Anti-Cage Protection", {}, "")

@@ -1805,11 +1805,29 @@ menu.toggle_loop(detections, "Weapon In Interior", {}, "", function()
     end
 end)
 
+---Improvements:
+---1) It won't do anything if we're the sender
+---2) Works just in case of mugger, not for mercenaries
+---3) By deleting the ped (mugger) both scripts (senders and ours) will stop, not just ours.
+---Also, Lamar will call the sender to tell them the mugger failed
 menu.toggle_loop(protections, "Anti-Mugger", {}, "", function()
-    if util.spoof_script("am_gang_call", SCRIPT.TERMINATE_THIS_THREAD) then
-        util.toast("Mugger detected. Stopping mugger script...")
+    if NETWORK.NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
+        local ped_netId = memory.script_local("am_gang_call", 63 + 10 + (0 * 7 + 1))
+        local sender = memory.script_local("am_gang_call", 287)
+        local target = memory.script_local("am_gang_call", 288)
+
+        util.spoof_script("am_gang_call", function ()
+            if memory.read_int(sender) ~= players.user() and memory.read_int(target) == players.user() and
+            NETWORK.NETWORK_DOES_NETWORK_ID_EXIST(memory.read_int(ped_netId)) and
+            NETWORK.NETWORK_REQUEST_CONTROL_OF_NETWORK_ID(memory.read_int(ped_netId)) then
+                local mugger = NETWORK.NET_TO_PED(memory.read_int(ped_netId))
+                entities.delete_by_handle(mugger)
+                util.toast("Blocked mugger from " .. players.get_name(memory.read_int(sender)))
+            end
+        end)
     end
 end)
+
 
 menu.toggle_loop(protections, "Block PTFX", {}, "", function()
     local coords = ENTITY.GET_ENTITY_COORDS(players.user_ped() , false);

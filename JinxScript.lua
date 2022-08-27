@@ -1958,7 +1958,7 @@ menu.action(protections, "Clear Everything", {"cleanse"}, "", function()
     util.toast("Cleared " .. cleanse_entitycount .. " Peds")
     cleanse_entitycount = 0
     for _, veh in ipairs(entities.get_all_vehicles_as_handles()) do
-        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and DECORATOR.DECOR_GET_INT(vehicle, "Player_Vehicle") == 0 and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) and then
+        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and DECORATOR.DECOR_GET_INT(vehicle, "Player_Vehicle") == 0 and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
             entities.delete_by_handle(veh)
             cleanse_entitycount += 1
             util.yield()

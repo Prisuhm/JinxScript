@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.1
+local localVer = 2.11
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -399,7 +399,7 @@ end
 
 
 local function player(pid)   
-    if not players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then
+    if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
         chat.send_message("poop lol", false, true, true)
     end

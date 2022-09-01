@@ -223,7 +223,6 @@ local unreleased_vehicles = {
     "Tenf",
     "Tenf2",
     "Sentinel4",
-    "Vigero2",
     "Weevil2",
 }
 

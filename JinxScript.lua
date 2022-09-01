@@ -1270,7 +1270,7 @@ local function player(pid)
                 WEAPON.GIVE_WEAPON_TO_PED(ped2, util.joaat('WEAPON_MG'), 9999, false, false)
                 TASK.TASK_COMBAT_PED(ped2, ped, 0, 16)
                 setAttribute(ped2)
-                util.yield(2500)
+                util.yield(7500)
                 entities.delete_by_handle(ped2)
                 entities.delete_by_handle(ped1)
             else

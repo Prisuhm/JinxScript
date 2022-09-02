@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.12
+local localVer = 2.13
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -404,7 +404,7 @@ local function player(pid)
         if not players.is_marked_as_modder(pid) then
             util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
         else
-            local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakup")
+            local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakdown")
             util.toast("Fake JinxScript Developer Detected. Removing Them From The Session...")
             menu.trigger_command(kick)
         end
@@ -417,7 +417,7 @@ local function player(pid)
     end
 
     if pid ~= players.user() and players.is_marked_as_modder(pid) and (players.get_rockstar_id(pid) == 0xCB2A48C or players.get_name(pid) == "rageNetSyncTree") then
-        local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakup")
+        local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakdown")
         util.toast("Fake JinxScript Developer Detected. Removing Them From The Session...")
         menu.trigger_command(kick)
     end
@@ -1231,7 +1231,7 @@ local function player(pid)
             util.trigger_script_event(1 << pid, {0xB9BA4D30, pid, 0x4, -1, 1, 1, 1})
             util.trigger_script_event(1 << pid, {0x6A16C7F, pid, memory.script_global(0x2908D3 + 1 + (pid * 0x1C5) + 0x13E + 0x7)})
             util.trigger_script_event(1 << pid, {0x63D4BFB1, players.user(), memory.read_int(memory.script_global(0x1CE15F + 1 + (pid * 0x257) + 0x1FE))})
-            menu.trigger_commands("breakup" .. players.get_name(pid))
+            menu.trigger_commands("breakdown" .. players.get_name(pid))
         end)
     else
         menu.action(kicks, "Adaptive Kick", {"adaptivekick"}, "", function()
@@ -1244,7 +1244,7 @@ local function player(pid)
     if menu.get_edition() >= 2 then 
         menu.action(kicks, "Block Join Kick", {"blast"}, "Will add them to blocked joins list, alternative to people who don't want to use block joins from every kicked player", function()
             menu.trigger_commands("historyblock " .. players.get_name(pid))
-            menu.trigger_commands("breakup" .. players.get_name(pid))
+            menu.trigger_commands("breakdown" .. players.get_name(pid))
         end)
     end
 
@@ -1302,12 +1302,12 @@ local function player(pid)
         local mdl = util.joaat('cs_tenniscoach')
         BlockSyncs(pid, function()
             if request_model(mdl, 2) then
+                local oldpos = players.get_position(players.user())
                 menu.trigger_commands("spectate" .. players.get_name(pid) .. " off")
                 menu.trigger_commands("tp maze")
                 util.yield(100)
                 local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
                 local pos = players.get_position(pid)
-                local oldpos = players.get_position(players.user())
                 for i = 1, 5 do 
                     ped1 = entities.create_ped(26, mdl, pos, 0) 
                     ENTITY.SET_ENTITY_VISIBLE(ped1, false)

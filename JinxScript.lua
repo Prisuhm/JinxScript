@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.11
+local localVer = 2.12
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -382,32 +382,50 @@ local int_max = 0x7FFFFFFF
 local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
 local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
 util.create_tick_handler(function()
-    if menu.get_value(spoofedrid) == "213034124" and menu.get_value(spoofer) then
+    if menu.get_value(spoofedrid) == "0xCB2A48C" and menu.get_value(spoofer) then
         util.toast("You silly little sausage...")
         menu.trigger_commands("forcequit")
         menu.set_value(spoofer, false)
     end
 end)
 
-menu.trigger_commands("spoofrid off")
+--[[enu.trigger_commands("spoofrid off") -- debug stuff, ignore
 local blacklisted_users = {}
 for _, rid in ipairs(blacklisted_users) do
     if players.get_rockstar_id(players.user()) == rid then
         ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
     end
-end
+end]]
 
 
 local function player(pid)   
-    if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then
+
+    if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C and players.get_name(pid) == "rageNetSyncTree" then
+        if not players.is_marked_as_modder(pid) then
+            util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
+        else
+            local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakup")
+            util.toast("Fake JinxScript Developer Detected. Removing Them From The Session...")
+            menu.trigger_command(kick)
+        end
+    end
+
+    if pid ~= players.user() and (players.get_rockstar_id(pid) == 0xCB2A48C or players.get_name(pid) == "rageNetSyncTree") then -- debug stuff, ignore all this, was fucking around
+        util.yield(15000)
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
-        chat.send_message("poop lol", false, true, true)
+        chat.send_targeted_message(pid, players.user(), "test123", false)
+    end
+
+    if pid ~= players.user() and players.is_marked_as_modder(pid) and (players.get_rockstar_id(pid) == 0xCB2A48C or players.get_name(pid) == "rageNetSyncTree") then
+        local kick = menu.ref_by_rel_path(menu.player_root(pid), "Kick>breakup")
+        util.toast("Fake JinxScript Developer Detected. Removing Them From The Session...")
+        menu.trigger_command(kick)
     end
 
     if players.get_rockstar_id(pid) == 0x6E68B34 then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "Based Gigachad\n (They are very based! Proceed with caution!)"}), TOAST_DEFAULT)
     end
-    
+
     menu.divider(menu.player_root(pid), "Jinx Script")
     local bozo = menu.list(menu.player_root(pid), "Jinx Script", {"JinxScript"}, "")
 
@@ -522,7 +540,7 @@ local function player(pid)
             ENTITY.SET_ENTITY_INVINCIBLE(player_jinx_army[i], true)
             PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(player_jinx_army[i], true)
             PED.SET_PED_COMPONENT_VARIATION(player_jinx_army[i], 0, 0, 1, 0)
-            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(player_jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+            TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(player_jinx_army[i], ped, 0, -0.3, 0, 7.0, -1, 10, true)
             util.yield()
         end 
     end)
@@ -1230,10 +1248,12 @@ local function player(pid)
         end)
     end
 
-    menu.action(crashes, "Mother Nature", {"nature"}, "", function()
+    mothernature = menu.list(crashes, "Mother Nature")
+    menu.action(mothernature, "Mother Nature v1", {"nature"}, "", function()
         local user = players.user()
         local user_ped = players.user_ped()
         local model = util.joaat("h4_prop_bush_mang_ad") -- special op object so you dont have to be near them :D
+        local pos = players.get_position(user)
         BlockSyncs(pid, function() -- blocking outgoing syncs to prevent the lobby from crashing :5head:
             util.yield(100)
             menu.trigger_commands("invisibility on")
@@ -1248,31 +1268,57 @@ local function player(pid)
                 util.spoof_script("freemode", SYSTEM.WAIT) -- preventing wasted screen
             end
             ENTITY.SET_ENTITY_HEALTH(user_ped, 0) -- killing ped because it will still crash others until you die (clearing tasks doesnt seem to do much)
-            local pos = players.get_position(user)
             NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(pos, 0, false, false, 0)
             menu.trigger_commands("invisibility off")
         end)
     end)
     
+    menu.action(mothernature, "Mother Nature v2", {"nature"}, "", function() -- since v1 didnt work for some people
+        local user = players.user()
+        local user_ped = players.user_ped()
+        local model = util.joaat("h4_prop_bush_mang_ad")
+        local pos = players.get_position(user)
+        BlockSyncs(pid, function() 
+            util.yield(100)
+            menu.trigger_commands("invisibility on")
+            WEAPON.GIVE_DELAYED_WEAPON_TO_PED(user_ped, 0xFBAB5776, 100, false)
+            util.yield(100)
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user_ped, pos.x, pos.y, pos.z + 25, false, false, false)
+            PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(players.user(), model)
+            util.yield(1500)
+            PED.FORCE_PED_TO_OPEN_PARACHUTE(user_ped)
+            util.yield(5000)
+            for i = 1, 5 do
+                util.spoof_script("freemode", SYSTEM.WAIT)
+            end
+            ENTITY.SET_ENTITY_HEALTH(user_ped, 0)
+            NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(pos, 0, false, false, 0)
+            menu.trigger_commands("invisibility off")
+        end)
+    end)
+    
+
     menu.action(crashes, "Child Protective Services", {"cps"}, "Try not to get too close. Credits to aplics and Ventura.", function()
         local mdl = util.joaat('cs_tenniscoach')
-        BlockSyncs(pid, function() -- blocking outgoing syncs to prevent the lobby from crashing :5head:
+        BlockSyncs(pid, function()
             if request_model(mdl, 2) then
+                menu.trigger_commands("spectate" .. players.get_name(pid) .. " off")
+                menu.trigger_commands("tp maze")
+                util.yield(100)
                 local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
                 local pos = players.get_position(pid)
-                local ped1 = entities.create_ped(26, mdl, pos, 0) 
-                ENTITY.SET_ENTITY_VISIBLE(ped1, false)
-                WEAPON.GIVE_WEAPON_TO_PED(ped1, util.joaat('WEAPON_HOMINGLAUNCHER'), 9999, false, false)
-                TASK.TASK_COMBAT_PED(ped1, ped, 0, 16)
-                setAttribute(ped1)
-                local ped2 = entities.create_ped(26, mdl, pos, 0) 
-                ENTITY.SET_ENTITY_VISIBLE(ped2, false)
-                WEAPON.GIVE_WEAPON_TO_PED(ped2, util.joaat('WEAPON_MG'), 9999, false, false)
-                TASK.TASK_COMBAT_PED(ped2, ped, 0, 16)
-                setAttribute(ped2)
-                util.yield(7500)
-                entities.delete_by_handle(ped2)
+                local oldpos = players.get_position(players.user())
+                for i = 1, 5 do 
+                    local ped1 = entities.create_ped(26, mdl, pos, 0) 
+                    ENTITY.SET_ENTITY_VISIBLE(ped1, false)
+                    WEAPON.GIVE_WEAPON_TO_PED(ped1, util.joaat('WEAPON_HOMINGLAUNCHER'), 9999, false, false)
+                    TASK.TASK_COMBAT_PED(ped1, ped, 0, 16)
+                    util.yield(100)
+                    setAttribute(ped1)
+                end
+                util.yield(10000)
                 entities.delete_by_handle(ped1)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, oldpos.x, oldpos.y, oldpos.z, false, false, false)
             else
                 util.toast("Failed to load model. :/")
             end
@@ -1796,7 +1842,7 @@ menu.click_slider(army, "Spawn Jinx Army", {}, "", 1, 256, 30, 1, function(val)
         ENTITY.SET_ENTITY_INVINCIBLE(jinx_army[i], true)
         PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(jinx_army[i], true)
         PED.SET_PED_COMPONENT_VARIATION(jinx_army[i], 0, 0, 1, 0)
-        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], player, 0, -0.3, 0, 7.0, -1, 10, true)
+        TASK.TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_army[i], ped, 0, -0.3, 0, 7.0, -1, 10, true)
         util.yield()
      end 
 end)
@@ -1891,7 +1937,7 @@ menu.toggle_loop(detections, "Invisibility", {}, "Detects if someone is using in
             local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             if not util.is_session_transition_active() 
             and not ENTITY.IS_ENTITY_VISIBLE(ped) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and not TASK.IS_PED_STILL(ped)
-            and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 395.0 -- 400 was causing false positives
+            and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 300.0 -- 400 was causing false positives
             and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
                 util.draw_debug_text(players.get_name(pid) .. " Is Invisible")
                 break
@@ -1908,7 +1954,7 @@ menu.toggle_loop(detections, "Noclip", {}, "Detects if they player is using nocl
         util.yield()
         local currentpos = players.get_position(pid)
         local vel = ENTITY.GET_ENTITY_VELOCITY(ped)
-        if not util.is_session_transition_active()
+        if not util.is_session_transition_active() and players.exists(pid)
         and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0
         and not PED.IS_PED_IN_ANY_VEHICLE(ped, false) -- too many false positives occured when players where driving. so fuck them. lol.
         and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped)
@@ -2189,7 +2235,7 @@ menu.action(credits, "aaronlink127", {}, "helping with math stuff and also helpi
 end)
 menu.action(credits, "Ren", {}, "dealing with all my autism and yelling at me to fix my code", function()
 end)
-menu.action(credits, "well in that case", {}, "for making pluto and allowing parts of my code look nicer and run smoother", function()
+menu.action(credits, "well in that case", {}, "for making pluto and allowing parts of my code to look nicer and run smoother", function()
 end)
 menu.action(credits, "jerry123", {}, "for cleaning my code in some spots and telling me what can be improved", function()
 end)

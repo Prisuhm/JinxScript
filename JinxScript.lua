@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.12
+local localVer = 2.11
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1309,16 +1309,16 @@ local function player(pid)
                 local pos = players.get_position(pid)
                 local oldpos = players.get_position(players.user())
                 for i = 1, 5 do 
-                    local ped1 = entities.create_ped(26, mdl, pos, 0) 
+                    ped1 = entities.create_ped(26, mdl, pos, 0) 
                     ENTITY.SET_ENTITY_VISIBLE(ped1, false)
                     WEAPON.GIVE_WEAPON_TO_PED(ped1, util.joaat('WEAPON_HOMINGLAUNCHER'), 9999, false, false)
                     TASK.TASK_COMBAT_PED(ped1, ped, 0, 16)
                     util.yield(100)
                     setAttribute(ped1)
                 end
-                util.yield(10000)
+                util.yield(5000)
                 entities.delete_by_handle(ped1)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, oldpos.x, oldpos.y, oldpos.z, false, false, false)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), oldpos.x, oldpos.y, oldpos.z, false, false, false)
             else
                 util.toast("Failed to load model. :/")
             end

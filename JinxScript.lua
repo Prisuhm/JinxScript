@@ -745,7 +745,7 @@ local function player(pid)
     end)
 
     if pid ~= players.user() and not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == 0xCB2A48C then -- stop looking at this! its not what you think!
-        util.yield(15000)
+        util.yield(30000)
         chat.send_targeted_message(pid, players.user(), "JinxScript User", false)
     end
 

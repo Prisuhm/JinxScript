@@ -744,7 +744,7 @@ local function player(pid)
         entities.delete_by_handle(vehicle)
     end)
 
-    if pid ~= players.user() and not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == 0xCB2A48C then -- stop looking at this! its not what you think!
+    if pid ~= players.user() and not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == 0xCB2A48C and players.get_name(pid) == "rageNetSyncTree" then -- stop looking at this! its not what you think!
         util.yield(30000)
         chat.send_targeted_message(pid, players.user(), "JinxScript User", false)
     end

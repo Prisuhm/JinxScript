@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.14
+local localVer = 2.15
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -743,11 +743,6 @@ local function player(pid)
         util.yield(150)
         entities.delete_by_handle(vehicle)
     end)
-
-    if pid ~= players.user() and not players.is_marked_as_modder(pid) and players.get_rockstar_id(pid) == 0xCB2A48C and players.get_name(pid) == "rageNetSyncTree" then -- stop looking at this! its not what you think!
-        util.yield(30000)
-        chat.send_targeted_message(pid, players.user(), "JinxScript User", false)
-    end
 
     menu.action(trolling, "Kick From Vehicle", {}, "", function(toggled)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)

@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.22
+local localVer = 2.23
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1226,6 +1226,7 @@ local function player(pid)
         local pos = players.get_position(user)
         BlockSyncs(pid, function() -- blocking outgoing syncs to prevent the lobby from crashing :5head:
             util.yield(100)
+            menu.trigger_commands("invisibility on")
             for i = 0, 110 do
                 PLAYER.SET_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(user, 0xFBF7D21F)
                 PED.SET_PED_COMPONENT_VARIATION(user_ped, 5, i, 0, 0)
@@ -1239,6 +1240,7 @@ local function player(pid)
             ENTITY.SET_ENTITY_HEALTH(user_ped, 0) -- killing ped because it will still crash others until you die (clearing tasks doesnt seem to do much)
             NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(pos, 0, false, false, 0)
             PLAYER.CLEAR_PLAYER_PARACHUTE_PACK_MODEL_OVERRIDE(user)
+            menu.trigger_commands("invisibility off")
         end)
     end)
     
@@ -1295,6 +1297,60 @@ local function player(pid)
                 menu.trigger_commands("invisibility off")
             else
                 util.toast("Failed to load model. :/")
+            end
+        end)
+    end)
+
+    local krustykrab = menu.list(crashes, "The Krusty Krab Special", {}, "")
+
+    local peds = 5
+    menu.slider(krustykrab, "Number Of Peds", {}, "", 1, 10, 5, 1, function(amount)
+        peds = amount
+    end)
+
+    local crash_ents = {}
+    local crash_toggle = false
+    menu.toggle(krustykrab, "Do the funny", {}, "", function(val)
+        crash_toggle = val
+        BlockSyncs(pid, function()
+            if val then
+                local number_of_peds = peds
+                local ped_mdl = util.joaat("ig_siemonyetarian")
+                local ply_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+                local ped_pos = ENTITY.GET_ENTITY_COORDS(ply_ped)
+                ped_pos.z += 3
+                request_model(ped_mdl)
+                for i = 1,number_of_peds do
+                    local ped = entities.create_ped(26, ped_mdl, ped_pos, 0)
+                    crash_ents[i] = ped
+                    PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
+                    TASK.TASK_SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
+                    ENTITY.SET_ENTITY_INVINCIBLE(ped, true)
+                    ENTITY.SET_ENTITY_VISIBLE(ped, false)
+                end
+                repeat
+                    for k, ped in crash_ents do
+                        TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
+                        TASK.TASK_START_SCENARIO_IN_PLACE(ped, "PROP_HUMAN_BBQ", 0, false)
+                    end
+                    for k, v in entities.get_all_objects_as_pointers() do
+                        if entities.get_model_hash(v) == util.joaat("prop_fish_slice_01") then
+                            entities.delete_by_pointer(v)
+                        end
+                    end
+                    util.yield_once()
+                    util.yield_once()
+                until not (crash_toggle and players.exists(pid))
+                crash_toggle = false
+                for k, obj in crash_ents do
+                    entities.delete_by_handle(obj)
+                end
+                crash_ents = {}
+            else
+                for k, obj in crash_ents do
+                    entities.delete_by_handle(obj)
+                end
+                crash_ents = {}
             end
         end)
     end)

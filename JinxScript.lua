@@ -942,20 +942,20 @@ local function player(pid)
 
         pluto_switch value do
             case "Launch Up":
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, 100000, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             case "Launch Forward":
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 100000, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             case "Launch Backwards":
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, -100000, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, -100000.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             case "Launch Down":
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, -100000, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, -100000.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             case "Slingshot":
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, 100000, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
-                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 100000, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
+                ENTITY.APPLY_FORCE_TO_ENTITY(veh, 1, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
                 break
             end
         end)
@@ -1904,24 +1904,6 @@ menu.toggle_loop(detections, "Modded Vehicle", {}, "Detects if someone is using 
     end
 end)
 
-menu.toggle_loop(detections, "Invisibility", {}, "Detects if someone is using invisibility.", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        for i, interior in ipairs(interior_stuff) do
-            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-            local ped_ptr = entities.handle_to_pointer(ped)
-            if not util.is_session_transition_active() 
-            and not ENTITY.IS_ENTITY_VISIBLE(ped) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and not TASK.IS_PED_STILL(ped)
-            and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 200.0 -- anything higher caused false pos
-            and entities.player_info_get_game_state(ped_ptr) == 0
-            and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
-                util.toast(players.get_name(pid) .. " Is Invisible")
-                break
-            end
-        end
-    end
-end)
-
-
 menu.toggle_loop(detections, "Noclip", {}, "Detects if they player is using noclip aka levitation", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -1969,7 +1951,7 @@ menu.toggle_loop(detections, "Super Run", {}, "Detects if they player is using s
         if not util.is_session_transition_active() and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0 
         and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false)
         and not TASK.IS_PED_STILL(ped) and not PED.IS_PED_JUMPING(ped) and not ENTITY.IS_ENTITY_IN_AIR(ped) and not PED.IS_PED_CLIMBING(ped) and not PED.IS_PED_VAULTING(ped)
-        and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 300.0 and ped_speed > 25 then -- fastest run speed is about 18ish mph but using 25 to give it some headroom to prevent false positives
+        and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 300.0 and ped_speed > 30 then -- fastest run speed is about 18ish mph but using 25 to give it some headroom to prevent false positives
             util.toast(players.get_name(pid) .. " Is Using Super Run")
             break
         end

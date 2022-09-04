@@ -1987,19 +1987,6 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
     end
 end)
 
-menu.toggle_loop(detections, "Anti-Crash Camera", {}, "Detects if someone is in anti-crash camera", function()
-    for _, pid in ipairs(players.list(true, true, true)) do
-    local cam = players.get_cam_pos(pid)
-        if get_transition_state(pid) ~= 0 and players.exists(pid) then
-            util.yield(100)
-            if cam.x == 4071.319 or cam.y == -626.04224 or cam.z == 2690.0 then
-                util.toast(players.get_name(pid) .. " Is In Anti-Crash Camera")
-                break
-            end
-        end
-    end
-end)
-
 menu.toggle_loop(protections, "Anti-Mugger", {}, "", function() -- thx nowiry for improving my method :D
     if NETWORK.NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
         local ped_netId = memory.script_local("am_gang_call", 63 + 10 + (0 * 7 + 1))

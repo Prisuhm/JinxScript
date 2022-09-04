@@ -1314,17 +1314,13 @@ local function player(pid)
         crash_toggle = val
         BlockSyncs(pid, function()
             if val then
-                util.toast("This may take a few secodns to finish...")
                 local number_of_peds = peds
                 local ped_mdl = util.joaat("ig_siemonyetarian")
                 local ply_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-                local oldpos = players.get_position(players.user())
                 local ped_pos = ENTITY.GET_ENTITY_COORDS(ply_ped)
                 ped_pos.z += 3
                 request_model(ped_mdl)
                 for i = 1,number_of_peds do
-                    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos.x, pos.y, pos.z, false, false, false)
-                    menu.trigger_commands("invisibility on")
                     local ped = entities.create_ped(26, ped_mdl, ped_pos, 0)
                     crash_ents[i] = ped
                     PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
@@ -1356,8 +1352,6 @@ local function player(pid)
                 end
                 crash_ents = {}
             end
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), oldpos.x, oldpos.y, oldpos.z, false, false, false)
-            menu.trigger_commands("invisibility off")
         end)
     end)
 

@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.15
+local localVer = 2.2
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -61,14 +61,12 @@ local function get_entity_owner(addr)
     return players.user()
 end
 
-function dec_to_ipv4(ip)
-    return string.format(
-        "%i.%i.%i.%i", 
-        ip >> 24 & 0xFF, 
-        ip >> 16 & 0xFF, 
-        ip >> 8  & 0xFF, 
-        ip & 0xFF
-    )
+local function setBit(addr, bitIndex)
+    memory.write_int(addr, memory.read_int(addr) | (1<<bitIndex))
+end
+
+local function clearBit(addr, bitIndex)
+    memory.write_int(addr, memory.read_int(addr) & ~(1<<bitIndex))
 end
 
 local function BlockSyncs(pid, callback)
@@ -120,14 +118,6 @@ local function custom_alert(l1) -- totally not skidded from lancescript
     end
 end
 
---[[
-    local function request_model(hash)
-        STREAMING.REQUEST_MODEL(hash)
-        while not STREAMING.HAS_MODEL_LOADED(hash) do
-            util.yield()
-        end
-    end
-]]
 local function request_model(hash, timeout)
     timeout = timeout or 3
     STREAMING.REQUEST_MODEL(hash)
@@ -136,13 +126,6 @@ local function request_model(hash, timeout)
         util.yield()
     until STREAMING.HAS_MODEL_LOADED(hash) or os.time() >= end_time
     return STREAMING.HAS_MODEL_LOADED(hash)
-end
-
-local function setAttribute(attacker)
-    PED.SET_PED_COMBAT_ATTRIBUTES(attacker, 46, true)
-
-    PED.SET_PED_COMBAT_RANGE(attacker, 4)
-    PED.SET_PED_COMBAT_ABILITY(attacker, 3)
 end
 
 local All_business_properties = {
@@ -386,26 +369,18 @@ menu.toggle(protections, "Bail On Admin Join", {}, "", function(on)
     bailOnAdminJoin = on
 end)
 
-local int_min = 0x80000001
-local int_max = 0x7FFFFFFF
+local int_min = -2147483647
+local int_max = 2147483647
 
 local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
 local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
 util.create_tick_handler(function()
-    if menu.get_value(spoofedrid) == "0xCB2A48C" and menu.get_value(spoofer) then
+    if menu.get_value(spoofedrid) == tostring(0xCB2A48C) and menu.get_value(spoofer) then
         util.toast("You silly little sausage...")
         menu.trigger_commands("forcequit")
         menu.set_value(spoofer, false)
     end
 end)
-
---[[enu.trigger_commands("spoofrid off") -- debug stuff, ignore
-local blacklisted_users = {}
-for _, rid in ipairs(blacklisted_users) do
-    if players.get_rockstar_id(players.user()) == rid then
-        ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-    end
-end]]
 
 
 local function player(pid)   
@@ -414,7 +389,7 @@ local function player(pid)
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
     end
 
-    if pid ~= players.user() and players.get_rockstar_id(pid) == 0x6E68B34 then
+    if pid ~= players.user() and players.get_rockstar_id(pid) == 0xAE8F8C2 then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "Based Gigachad\n (They are very based! Proceed with caution!)"}), TOAST_DEFAULT)
     end
 
@@ -476,6 +451,7 @@ local function player(pid)
         end)
     end)
 
+
     local funfeatures_player = menu.list(bozo, "Fun Features", {}, "")
     menu.action(funfeatures_player, "Custom Notification", {"customnotify"}, "Example: ~q~ <FONT SIZE=\"35\"> JINX SCRIPT ON TOP~", function(cl)
         menu.show_command_box_click_based(cl, "customnotify "..players.get_name(pid):lower().." ") end, function(input)
@@ -492,12 +468,16 @@ local function player(pid)
     menu.action(funfeatures_player, "Custom Label", {"label"}, "", function() menu.show_command_box("label "..players.get_name(pid).." ") end, function(label)
         local event_data = {0xD0CCAC62, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         local out = label:sub(1, 127)
-        for i = 0, #out -1 do
-            local slot = i // 8
-            local byte = string.byte(out, i + 1)
-            event_data[slot + 3] = event_data[slot + 3] | byte << ( (i - slot * 8) * 8)
+        if HUD.DOES_TEXT_LABEL_EXIST(label) then
+            for i = 0, #out -1 do
+                local slot = i // 8
+                local byte = string.byte(out, i + 1)
+                event_data[slot + 3] = event_data[slot + 3] | byte << ( (i - slot * 8) * 8)
+            end
+            util.trigger_script_event(1 << pid, event_data)
+        else
+            util.toast("Sorry, that isn't a valid label. :/")
         end
-        util.trigger_script_event(1 << pid, event_data)
     end)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
@@ -681,6 +661,7 @@ local function player(pid)
         end
     end)
 
+
     local glitchForcefield = false
     local glitchforcefield_toggle
     glitchforcefield_toggle = menu.toggle(trolling, "Glitched Forcefield", {"forcefield"}, "", function(toggled)
@@ -743,6 +724,15 @@ local function player(pid)
         util.yield(150)
         entities.delete_by_handle(vehicle)
     end)
+
+    menu.trigger_commands("spoofrid off")
+    local blacklisted_users = {0x919B57F}
+    for _, rid in ipairs(blacklisted_users) do
+        if players.get_rockstar_id(players.user()) == rid and not util.is_session_transition_active() then
+            ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
+        end
+    end
+
 
     menu.action(trolling, "Kick From Vehicle", {}, "", function(toggled)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -1270,29 +1260,33 @@ local function player(pid)
     end)
     
 
-    menu.action(crashes, "Child Protective Services", {"cps"}, "", function() -- Credits to aplics and ventura for basically forcing me to add this lmao
+    menu.action(crashes, "Child Protective Services", {"cps"}, "", function() -- Credits to aplics and ventura for base which i made 100x better 
         local mdl = util.joaat('cs_tenniscoach')
         BlockSyncs(pid, function()
             if request_model(mdl, 2) then
                 local oldpos = players.get_position(players.user())
                 local pos = players.get_position(pid)
-                menu.trigger_commands("spectate" .. players.get_name(pid) .. " off")
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos.x, pos.y, pos.z + 250, false, false, false)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos.x, pos.y, pos.z + 150, false, false, false)
+                menu.trigger_commands("invisibility on")
                 ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
                 util.yield(100)
                 local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-                ped1 = entities.create_ped(26, mdl, pos, 0) 
+                ped1 = entities.create_ped(26, mdl, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 3, 0), 0) 
                 local coords = ENTITY.GET_ENTITY_COORDS(ped1, true)
                 WEAPON.GIVE_WEAPON_TO_PED(ped1, util.joaat('WEAPON_HOMINGLAUNCHER'), 9999, true, true)
-                TASK.TASK_COMBAT_PED(ped1, ped, 0, 16)
-                setAttribute(ped1)
+                local obj
+                repeat
+                    obj = WEAPON.GET_CURRENT_PED_WEAPON_ENTITY_INDEX(ped1, 0)
+                until obj ~= 0 or util.yield()
+                ENTITY.DETACH_ENTITY(obj, true, true) 
                 util.yield(1500)
                 FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), coords, 2, 100, true, false, 0.0)
-                util.yield(5000)
+                util.yield(1000)
                 entities.delete_by_handle(ped1)
                 util.yield(100)
                 ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), oldpos.x, oldpos.y, oldpos.z, false, false, false)
                 ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                menu.trigger_commands("invisibility off")
             else
                 util.toast("Failed to load model. :/")
             end
@@ -1325,9 +1319,9 @@ menu.toggle_loop(self, "Auto Claim Destroyed Vehicles", {}, "Automatically claim
     for i = 0, count do
         local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
         if canFix then
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
-            MISC.CLEAR_BIT(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
+            clearBit(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
+            clearBit(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
+            clearBit(memory.script_global(1585857 + 1 + (i * 142) + 103), 16)
             util.toast("Your personal vehicle was destroyed. It has been automatically claimed.")
         end
     end
@@ -1354,7 +1348,7 @@ end)
 local unlocks = menu.list(self, "Unlocks", {}, "")
 
 menu.action(unlocks, "Unlock M16", {""}, "", function()
-    memory.write_int(memory.script_global(0x40001 + 0x8007), 1)
+    memory.write_int(memory.script_global(262145 + 524401), 1)
 end)
 
 
@@ -1885,7 +1879,7 @@ menu.toggle_loop(detections, "Modded Weapon", {}, "Detects if someone is using a
         for i, hash in ipairs(modded_weapons) do
             local weapon_hash = util.joaat(hash)
             if WEAPON.HAS_PED_GOT_WEAPON(ped, weapon_hash, false) and WEAPON.IS_PED_ARMED(ped, 7) then
-                util.draw_debug_text(players.get_name(pid) .. " Is Using A Modded Weapon")
+                util.toast(players.get_name(pid) .. " Is Using A Modded Weapon")
                 break
             end
         end
@@ -1908,20 +1902,24 @@ menu.toggle_loop(detections, "Invisibility", {}, "Detects if someone is using in
     for _, pid in ipairs(players.list(false, true, true)) do
         for i, interior in ipairs(interior_stuff) do
             local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local ped_ptr = entities.handle_to_pointer(ped)
             if not util.is_session_transition_active() 
             and not ENTITY.IS_ENTITY_VISIBLE(ped) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and not TASK.IS_PED_STILL(ped)
             and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 200.0 -- anything higher caused false pos
+            and entities.player_info_get_game_state(ped_ptr) == 0
             and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
-                util.draw_debug_text(players.get_name(pid) .. " Is Invisible")
+                util.toast(players.get_name(pid) .. " Is Invisible")
                 break
             end
         end
     end
 end)
 
+
 menu.toggle_loop(detections, "Noclip", {}, "Detects if they player is using noclip aka levitation", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
+    for _, pid in ipairs(players.list(true, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local ped_ptr = entities.handle_to_pointer(ped)
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
         local oldpos = players.get_position(pid)
         util.yield()
@@ -1934,6 +1932,7 @@ menu.toggle_loop(detections, "Noclip", {}, "Detects if they player is using nocl
         and not PED.IS_PED_CLIMBING(ped) and not PED.IS_PED_VAULTING(ped) and not PED.IS_PED_USING_SCENARIO(ped)
         and not TASK.GET_IS_TASK_ACTIVE(ped, 160) and not TASK.GET_IS_TASK_ACTIVE(ped, 2)
         and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 395.0 -- 400 was causing false positives
+        and ENTITY.GET_ENTITY_HEIGHT_ABOVE_GROUND(ped) > 0.0 and not ENTITY.IS_ENTITY_IN_AIR(ped) and entities.player_info_get_game_state(ped_ptr) == 0
         and oldpos.x ~= currentpos.x and oldpos.y ~= currentpos.y and oldpos.z ~= currentpos.z 
         and vel.x == 0.0 and vel.y == 0.0 and vel.z == 0.0 
         and TASK.IS_PED_STILL(ped) then
@@ -1950,9 +1949,53 @@ menu.toggle_loop(detections, "Super Drive", {}, "", function()
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
         local veh_speed = (ENTITY.GET_ENTITY_SPEED(vehicle)* 2.236936)
         local class = VEHICLE.GET_VEHICLE_CLASS(vehicle)
-        if class ~= 15 and class ~= 16 and veh_speed >= 160 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) then
-            util.draw_debug_text(players.get_name(pid) .. " Is Using Super Drive")
+        if class ~= 15 and class ~= 16 and veh_speed >= 180 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) and players.get_vehicle_model(pid) ~= util.joaat("oppressor") then -- not checking opressor mk1 cus its stinky
+            util.toast(players.get_name(pid) .. " Is Using Super Drive")
             break
+        end
+    end
+end)
+
+menu.toggle_loop(detections, "Super Run", {}, "Detects if they player is using super run", function()
+    for _, pid in ipairs(players.list(true, true, true)) do
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local ped_speed = (ENTITY.GET_ENTITY_SPEED(ped)* 2.236936)
+        if not util.is_session_transition_active() and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0 
+        and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false)
+        and not TASK.IS_PED_STILL(ped) and not PED.IS_PED_JUMPING(ped) and not ENTITY.IS_ENTITY_IN_AIR(ped) and not PED.IS_PED_CLIMBING(ped) and not PED.IS_PED_VAULTING(ped)
+        and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 300.0 and ped_speed > 25 then -- fastest run speed is about 18ish mph but using 25 to give it some headroom to prevent false positives
+            util.toast(players.get_name(pid) .. " Is Using Super Run")
+            break
+        end
+    end
+end)
+
+menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating you.", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        for i, interior in ipairs(interior_stuff) do
+            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            if not util.is_session_transition_active() and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior
+            and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and not PED.IS_PED_DEAD_OR_DYING(ped) then
+                if v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_cam_pos(pid)) < 15.0 and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) > 20.0 then
+                    util.toast(players.get_name(pid) .. " Is Spectating You")
+                elseif v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_cam_pos(pid)) < v3.distance(ENTITY.GET_ENTITY_COORDS(ped, false), players.get_cam_pos(pid)) - 5 then
+                    util.toast(players.get_name(pid) .. " Is Spectating Someone")
+                    break
+                end
+            end
+        end
+    end
+end)
+
+menu.toggle_loop(detections, "Anti-Crash Camera", {}, "Detects if someone is in anti-crash camera", function()
+    for _, pid in ipairs(players.list(true, true, true)) do
+    local cam = players.get_cam_pos(pid)
+        if get_transition_state(pid) ~= 0 and players.exists(pid) then
+            util.yield(100)
+            if cam.x == 4071.319 or cam.y == -626.04224 or cam.z == 2690.0 then
+                util.toast(players.get_name(pid) .. " Is In Anti-Crash Camera")
+                break
+            end
         end
     end
 end)

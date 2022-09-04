@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.2
+local localVer = 2.21
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true

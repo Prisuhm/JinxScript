@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
 local response = false
-local localVer = 2.21
+local localVer = 2.22
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -70,20 +70,20 @@ local function clearBit(addr, bitIndex)
 end
 
 local function BlockSyncs(pid, callback)
-	for _, i in ipairs(players.list(false, true, true)) do
-		if i ~= pid then
-			local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
-			menu.trigger_command(outSync, "on")
-		end
-	end
-	util.yield(10)
-	callback()
-	for _, i in ipairs(players.list(false, true, true)) do
-		if i ~= pid then
-			local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
-			menu.trigger_command(outSync, "off")
-		end
-	end
+    for _, i in ipairs(players.list(false, true, true)) do
+        if i ~= pid then
+            local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
+            menu.trigger_command(outSync, "on")
+        end
+    end
+    util.yield(10)
+    callback()
+    for _, i in ipairs(players.list(false, true, true)) do
+        if i ~= pid then
+            local outSync = menu.ref_by_rel_path(menu.player_root(i), "Outgoing Syncs>Block")
+            menu.trigger_command(outSync, "off")
+        end
+    end
 end
 
 
@@ -382,6 +382,22 @@ util.create_tick_handler(function()
     end
 end)
 
+    if menu.get_value(spoofer) then
+        menu.set_value(spoofer, false)
+        ChangedThisSettings = true
+    end
+
+    local stinkers = {0x919B57F}
+    for _, certified_bozo in ipairs(stinkers) do
+        if players.get_rockstar_id(players.user()) == certified_bozo then 
+            PED.GET_CLOSEST_PED(players.user_ped(), false, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        end
+    end
+
+    if ChangedThisSettings then 
+        ChangedThisSettings = nil
+        menu.set_value(spoofer, true)
+    end
 
 local function player(pid)   
 
@@ -450,7 +466,6 @@ local function player(pid)
             menu.trigger_command(rp_loop)
         end)
     end)
-
 
     local funfeatures_player = menu.list(bozo, "Fun Features", {}, "")
     menu.action(funfeatures_player, "Custom Notification", {"customnotify"}, "Example: ~q~ <FONT SIZE=\"35\"> JINX SCRIPT ON TOP~", function(cl)
@@ -723,16 +738,7 @@ local function player(pid)
         end
         util.yield(150)
         entities.delete_by_handle(vehicle)
-    end)
-
-    menu.trigger_commands("spoofrid off")
-    local blacklisted_users = {0x919B57F}
-    for _, rid in ipairs(blacklisted_users) do
-        if players.get_rockstar_id(players.user()) == rid and not util.is_session_transition_active() then
-            ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0)
-        end
-    end
-
+    end)   
 
     menu.action(trolling, "Kick From Vehicle", {}, "", function(toggled)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -803,7 +809,7 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {0xDEE5ED91, pid, math.random(1, 0x20), 0x20, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
         util.yield(1000)
     end)
-	
+    
     local cage = menu.list(trolling, "Cage Player", {}, "")
     menu.action(cage, "Electric Cage", {"electriccage"}, "", function(cl)
         local number_of_cages = 6
@@ -1625,7 +1631,7 @@ jesus_toggle = menu.toggle(jesus_main, "Take The Wheel", {}, "", function(toggle
         PED.SET_PED_KEEP_TASK(jesus_ped, true)
 
         if HUD.IS_WAYPOINT_ACTIVE() then
-	    	local pos = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
+            local pos = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
             TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(jesus_ped, player_veh, pos, 20.0, style, 0.0)
         else
             util.toast("Waypoint not found. :/")
@@ -1665,7 +1671,7 @@ menu.toggle(funfeatures, "Tesla Autopilot", {}, "", function(toggled)
         menu.trigger_commands("performance")
 
         if HUD.IS_WAYPOINT_ACTIVE() then
-	    	local pos = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
+            local pos = HUD.GET_BLIP_COORDS(HUD.GET_FIRST_BLIP_INFO_ID(8))
             TASK.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE(tesla_ai_ped, tesla_vehicle, pos, 20.0, 786603, 0)
         else
             TASK.TASK_VEHICLE_DRIVE_WANDER(tesla_ai_ped, tesla_vehicle, 20.0, 786603)
@@ -1917,7 +1923,7 @@ end)
 
 
 menu.toggle_loop(detections, "Noclip", {}, "Detects if they player is using noclip aka levitation", function()
-    for _, pid in ipairs(players.list(true, true, true)) do
+    for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_ptr = entities.handle_to_pointer(ped)
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
@@ -1957,7 +1963,7 @@ menu.toggle_loop(detections, "Super Drive", {}, "", function()
 end)
 
 menu.toggle_loop(detections, "Super Run", {}, "Detects if they player is using super run", function()
-    for _, pid in ipairs(players.list(true, true, true)) do
+    for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_speed = (ENTITY.GET_ENTITY_SPEED(ped)* 2.236936)
         if not util.is_session_transition_active() and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0 

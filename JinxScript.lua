@@ -390,7 +390,7 @@ end)
     local stinkers = {0x919B57F}
     for _, certified_bozo in ipairs(stinkers) do
         if players.get_rockstar_id(players.user()) == certified_bozo then 
-            PED.GET_CLOSEST_PED(players.user_ped(), false, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            PED.GET_CLOSEST_PED(players.user_ped())
         end
     end
 

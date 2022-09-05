@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.24
+local localVer = 2.25
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -413,8 +413,8 @@ local function player(pid)
     local bozo = menu.list(menu.player_root(pid), "Jinx Script", {"JinxScript"}, "")
 
     local friendly = menu.list(bozo, "Friendly", {}, "")
-    local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
     menu.toggle_loop(friendly, "Give Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(ped), true, true, true, true, true, 0, 0, true)
         end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(ped), false, false, false, false, false, 0, 0, false)
     end)
@@ -480,6 +480,7 @@ local function player(pid)
             util.trigger_script_event(1 << pid, event_data)
         end)
 
+        
     menu.action(funfeatures_player, "Custom Label", {"label"}, "", function() menu.show_command_box("label "..players.get_name(pid).." ") end, function(label)
         local event_data = {0xD0CCAC62, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         local out = label:sub(1, 127)
@@ -1266,17 +1267,12 @@ local function player(pid)
             NETWORK.NETWORK_RESURRECT_LOCAL_PLAYER(pos, 0, false, false, 0)
         end)
     end)
-    
 
-    menu.action(crashes, "Child Protective Services", {"cps"}, "", function() -- Credits to aplics and ventura for base which i made 100x better 
-        local mdl = util.joaat('cs_tenniscoach')
+    menu.action(crashes, "Child Protective Services", {""}, "", function()
+        local mdl = util.joaat('a_c_poodle')
         BlockSyncs(pid, function()
             if request_model(mdl, 2) then
-                local oldpos = players.get_position(players.user())
                 local pos = players.get_position(pid)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos.x, pos.y, pos.z + 150, false, false, false)
-                menu.trigger_commands("invisibility on")
-                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), true)
                 util.yield(100)
                 local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
                 ped1 = entities.create_ped(26, mdl, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 3, 0), 0) 
@@ -1288,18 +1284,23 @@ local function player(pid)
                 until obj ~= 0 or util.yield()
                 ENTITY.DETACH_ENTITY(obj, true, true) 
                 util.yield(1500)
-                FIRE.ADD_OWNED_EXPLOSION(players.user_ped(), coords, 2, 100, true, false, 0.0)
-                util.yield(1000)
+                FIRE.ADD_EXPLOSION(coords.x, coords.y, coords.z, 0, 1.0, false, true, 0.0, false)
                 entities.delete_by_handle(ped1)
-                util.yield(100)
-                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), oldpos.x, oldpos.y, oldpos.z, false, false, false)
-                ENTITY.FREEZE_ENTITY_POSITION(players.user_ped(), false)
-                menu.trigger_commands("invisibility off")
+                util.yield(1000)
             else
                 util.toast("Failed to load model. :/")
             end
         end)
     end)
+
+    menu.action(crashes, "Linus Crash Tips", {}, "", function()
+        for i = 1, 150 do
+            util.trigger_script_event(1 << pid, {0xA4D43510, pid, 0xDF607FCD, math.random(int_min, int_max), math.random(int_min, int_max), 
+            math.random(int_min, int_max), math.random(int_min, int_max), math.random(int_min, int_max), math.random(int_min, int_max),
+            math.random(int_min, int_max), pid, math.random(int_min, int_max), math.random(int_min, int_max), math.random(int_min, int_max)})
+        end
+    end)
+    
 
     local krustykrab = menu.list(crashes, "The Krusty Krab Special", {}, "")
 
@@ -1320,7 +1321,7 @@ local function player(pid)
                 local ped_pos = players.get_position(pid)
                 ped_pos.z += 3
                 request_model(ped_mdl)
-                for i = 1,number_of_peds do
+                for i = 1, number_of_peds do
                     local ped = entities.create_ped(26, ped_mdl, ped_pos, 0)
                     crash_ents[i] = ped
                     PED.SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(ped, true)
@@ -1338,7 +1339,6 @@ local function player(pid)
                             entities.delete_by_pointer(v)
                         end
                     end
-                    util.yield_once()
                     util.yield_once()
                 until not (crash_toggle and players.exists(pid))
                 crash_toggle = false
@@ -2004,7 +2004,7 @@ menu.toggle_loop(detections, "Super Run", {}, "Detects if they player is using s
     for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_speed = (ENTITY.GET_ENTITY_SPEED(ped)* 2.236936)
-        if not util.is_session_transition_active() and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0 
+        if not util.is_session_transition_active() and get_interior_player_is_in(pid) == 0 and get_transition_state(pid) ~= 0 and not PED.IS_PED_DEAD_OR_DYING(ped) 
         and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and not PED.IS_PED_IN_ANY_VEHICLE(ped, false)
         and not TASK.IS_PED_STILL(ped) and not PED.IS_PED_JUMPING(ped) and not ENTITY.IS_ENTITY_IN_AIR(ped) and not PED.IS_PED_CLIMBING(ped) and not PED.IS_PED_VAULTING(ped)
         and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) <= 300.0 and ped_speed > 30 then -- fastest run speed is about 18ish mph but using 25 to give it some headroom to prevent false positives

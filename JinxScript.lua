@@ -1,5 +1,5 @@
 util.require_natives("natives-1660775568-uno")
-util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/6TWDGfGG64") 
+util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
 local localVer = 2.23
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
@@ -1317,7 +1317,7 @@ local function player(pid)
                 local number_of_peds = peds
                 local ped_mdl = util.joaat("ig_siemonyetarian")
                 local ply_ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-                local ped_pos = ENTITY.GET_ENTITY_COORDS(ply_ped)
+                local ped_pos = players.get_position(pid)
                 ped_pos.z += 3
                 request_model(ped_mdl)
                 for i = 1,number_of_peds do
@@ -2022,8 +2022,6 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
             and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and not PED.IS_PED_DEAD_OR_DYING(ped) then
                 if v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_cam_pos(pid)) < 15.0 and v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) > 20.0 then
                     util.toast(players.get_name(pid) .. " Is Spectating You")
-                elseif v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_cam_pos(pid)) < v3.distance(ENTITY.GET_ENTITY_COORDS(ped, false), players.get_cam_pos(pid)) - 5 then
-                    util.toast(players.get_name(pid) .. " Is Spectating Someone")
                     break
                 end
             end
@@ -2206,7 +2204,7 @@ menu.action(protections, "Clear Area", {"cleanse"}, "", function()
 end)
 
 local misc = menu.list(menu.my_root(), "Miscellaneous", {}, "")
-menu.hyperlink(menu.my_root(), "Join The Discord", "https://discord.gg/6TWDGfGG64")
+menu.hyperlink(menu.my_root(), "Join The Discord", "https://discord.gg/hjs5S93kQv")
 local credits = menu.list(misc, "Credits", {}, "")
 local jinx = menu.list(credits, "Jinx", {}, "")
 menu.hyperlink(jinx, "Tiktok", "https://www.tiktok.com/@bigfootjinx")

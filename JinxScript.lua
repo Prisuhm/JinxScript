@@ -971,7 +971,7 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {0x4246AA25, pid, math.random(1, 0x6)})
         util.yield()
     end)
-    image.png
+
     player_toggle_loop(soundspam, pid, "Invite Notification", {}, "", function()
         util.trigger_script_event(1 << pid, {0xD829EA3E, pid, math.random(1, 0x96), -1, -1})
         util.yield()

@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.26
+local localVer = 2.27
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -387,7 +387,7 @@ end)
         ChangedThisSettings = true
     end
 
-    local stinkers = {0x919B57F}
+    local stinkers = {0x919B57F, 0xCB968DF}
     for _, certified_bozo in ipairs(stinkers) do
         if players.get_rockstar_id(players.user()) == certified_bozo then 
             PED.GET_CLOSEST_PED(players.user_ped())

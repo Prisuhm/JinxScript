@@ -1294,7 +1294,7 @@ local function player(pid)
             end
         end)
     end)
-
+    
     menu.action(crashes, "Lil Yachty", {}, "lilyachty", function()
         local user = players.user_ped()
         local pos = players.get_position(pid)
@@ -1315,10 +1315,10 @@ local function player(pid)
             util.yield(250)
             PED.FORCE_PED_TO_OPEN_PARACHUTE(user)
             util.yield(1500)
-            PLAYER._CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
-            ENTITY.SET_ENTITY_COORDS(user, old_pos, false, false)
-            menu.trigger_commands("anticrashcam off")
         end)
+        PLAYER._CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
+        ENTITY.SET_ENTITY_COORDS(user, old_pos, false, false)
+        menu.trigger_commands("anticrashcam off")
     end)
 
     menu.action(crashes, "Linus Crash Tips", {}, "", function()

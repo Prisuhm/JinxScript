@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.42
+local localVer = 2.43
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -16,8 +16,8 @@ async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScrip
                 local f = io.open(filesystem.scripts_dir()..SCRIPT_RELPATH, "wb")
                 f:write(a)
                 f:close()
-                util.toast("Successfully updated JinxScript, please restart the script :)")
-                util.stop_script()
+                util.toast("Successfully updated JinxScript. Restarting Script... :)")
+                util.restart_script()
             end)
             async_http.dispatch()
         end)
@@ -2131,7 +2131,7 @@ menu.toggle_loop(detections, "Teleport", {}, "Detects if the player has teleport
             local currentpos = players.get_position(pid)
             for i, interior in ipairs(interior_stuff) do
                 if v3.distance(oldpos, currentpos) > 500 and oldpos.x ~= currentpos.x and oldpos.y ~= currentpos.y and oldpos.z ~= currentpos.z 
-                and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior and PLAYER.IS_PLAYER_PLAYING(pid) and player.exists(pid) then
+                and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior and PLAYER.IS_PLAYER_PLAYING(pid) and players.exists(pid) then
                     util.toast(players.get_name(pid) .. " Just teleported")
                 end
             end

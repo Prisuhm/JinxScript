@@ -1,7 +1,7 @@
 util.require_natives("natives-1660775568-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.41
+local localVer = 2.42
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1295,30 +1295,34 @@ local function player(pid)
         end)
     end)
     
-    menu.action(crashes, "Lil Yachty", {}, "lilyachty", function()
-        local user = players.user_ped()
-        local pos = players.get_position(pid)
-        local old_pos = ENTITY.GET_ENTITY_COORDS(user, false)
+    menu.action(crashes, "Lil Yachty", {}, "", function()
         local mdl = util.joaat("apa_mp_apa_yacht")
-        menu.trigger_commands("anticrashcam on")
+        local user = players.user_ped()
         BlockSyncs(pid, function()
+            local old_pos = ENTITY.GET_ENTITY_COORDS(user, false)
             WEAPON.GIVE_DELAYED_WEAPON_TO_PED(user, 0xFBAB5776, 100, false)
             PLAYER.SET_PLAYER_HAS_RESERVE_PARACHUTE(players.user())
             PLAYER._SET_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user(), mdl)
-            util.yield(100)
-            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos.x, pos.y, pos.z + 300, false, false, false)
-            util.yield(1000)
-            PED.FORCE_PED_TO_OPEN_PARACHUTE(user)
-            util.yield(250)
+            util.yield(50)
+            local pos = players.get_position(pid)
+            pos.z += 300
             TASK.CLEAR_PED_TASKS_IMMEDIATELY(user)
-            PAD._SET_CONTROL_NORMAL(0, 145, 1.0)
-            util.yield(250)
+            ENTITY.SET_ENTITY_COORDS_NO_OFFSET(user, pos, false, false, false)
+            repeat
+                util.yield()
+            until PED.GET_PED_PARACHUTE_STATE(user) == 0
             PED.FORCE_PED_TO_OPEN_PARACHUTE(user)
-            util.yield(1500)
+            util.yield(50)
+            TASK.CLEAR_PED_TASKS(user)
+            util.yield(50)
+            PED.FORCE_PED_TO_OPEN_PARACHUTE(user)
+            repeat
+                util.yield()
+            until PED.GET_PED_PARACHUTE_STATE(user) ~= 1
+            pcall(TASK.CLEAR_PED_TASKS_IMMEDIATELY, user)
+            PLAYER._CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
+            pcall(ENTITY.SET_ENTITY_COORDS, user, old_pos, false, false)
         end)
-        PLAYER._CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
-        ENTITY.SET_ENTITY_COORDS(user, old_pos, false, false)
-        menu.trigger_commands("anticrashcam off")
     end)
 
     menu.action(crashes, "Linus Crash Tips", {}, "", function()

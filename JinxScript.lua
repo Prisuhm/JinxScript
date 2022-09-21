@@ -1,7 +1,7 @@
-util.require_natives("natives-1660775568-uno")
+util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.43
+local localVer = 2.44
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -548,21 +548,6 @@ local function player(pid)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
     local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
-    player_toggle_loop(trolling, pid, "Buggy Movement", {}, "", function()
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
-        local glitch_hash = util.joaat("prop_shuttering03")
-        request_model(glitch_hash)
-        local dumb_object_front = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 1, 0))
-        local dumb_object_back = entities.create_object(glitch_hash, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 0, 0))
-        ENTITY.SET_ENTITY_VISIBLE(dumb_object_front, false)
-        ENTITY.SET_ENTITY_VISIBLE(dumb_object_back, false)
-        util.yield()
-        entities.delete_by_handle(dumb_object_front)
-        entities.delete_by_handle(dumb_object_back)
-        util.yield()    
-    end)
-    
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
     local object_stuff = {
         names = {
@@ -734,27 +719,9 @@ local function player(pid)
             
             local stupid_object = entities.create_object(glitch_hash, playerpos)
             ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
-            ENTITY.SET_ENTITY_INVINCIBLE(stupid_object, true)
-            ENTITY.SET_ENTITY_COLLISION(stupid_object, true, true)
             util.yield()
             entities.delete_by_handle(stupid_object)
             util.yield()    
-        end
-    end)
-
-    player_toggle_loop(trolling, pid, "Yeet Player", {}, "Works on vehicles as well", function() 
-        local poopy_butt = util.joaat("adder")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        pos.z -= 10
-        request_model(poopy_butt)
-        local poopy_vehicle = entities.create_vehicle(poopy_butt, pos, 0)
-        ENTITY.SET_ENTITY_VISIBLE(poopy_vehicle, false)
-        util.yield(250)
-        if poopy_vehicle ~= 0 then
-            ENTITY.APPLY_FORCE_TO_ENTITY(poopy_vehicle, 1, 0.0, 0.0, 75.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
-            util.yield(250)
-            entities.delete_by_handle(poopy_vehicle)
         end
     end)
 
@@ -842,27 +809,6 @@ local function player(pid)
             end
         end
     end)
-    
-    menu.action(cage, "Queen Elizabeth Cage", {""}, "", function(cl)
-        local number_of_cages = 6
-        local coffin_hash = util.joaat("prop_coffin_02b")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        request_model(coffin_hash)
-        local temp_v3 = v3.new(0, 0, 0)
-        for i = 1, number_of_cages do
-            local angle = (i / number_of_cages) * 360
-            temp_v3.z = angle
-            local obj_pos = temp_v3:toDir()
-            obj_pos:mul(0.8)
-            obj_pos:add(pos)
-            obj_pos.z += 0.1
-           local coffin = entities.create_object(coffin_hash, obj_pos)
-           spawned_objects[#spawned_objects + 1] = coffin
-           ENTITY.SET_ENTITY_ROTATION(coffin, 90.0, 0.0, angle,  2, 0)
-           ENTITY.FREEZE_ENTITY_POSITION(coffin, true)
-        end
-    end)
 
     menu.action(cage, "Shipping Container", {"cage"}, "", function()
         local container_hash = util.joaat("prop_container_ld_pu")
@@ -875,22 +821,6 @@ local function player(pid)
         ENTITY.FREEZE_ENTITY_POSITION(container, true)
     end)
 
-    menu.action(cage, "Gas Cage", {"gascage"}, "", function()
-        local gas_cage_hash = util.joaat("prop_gascage01")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        request_model(gas_cage_hash)
-        pos.z -= 1
-        local gas_cage = entities.create_object(gas_cage_hash, pos, 0)
-        pos.z += 1
-        local gas_cage2 = entities.create_object(gas_cage_hash, pos, 0)
-        spawned_objects[#spawned_objects + 1] = gas_cage
-        spawned_objects[#spawned_objects + 1] = gas_cage2
-        ENTITY.FREEZE_ENTITY_POSITION(gas_cage, true)
-        ENTITY.FREEZE_ENTITY_POSITION(gas_cage2, true)
-    end)
-
-
     menu.action(cage, "Delete Spawned Cages", {"clearcages"}, "", function()
         local entitycount = 0
         for i, object in ipairs(spawned_objects) do
@@ -902,38 +832,7 @@ local function player(pid)
         end
         util.toast("Cleared " .. entitycount .. " Spawned Cage Objects")
     end)
-
-    menu.action(trolling, "Climb Ladder", {""}, "", function(cl)
-        local number_of_cages = 10
-        local ladder_hash = util.joaat("prop_towercrane_02el2")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        pos.z -= 0.5
-        request_model(ladder_hash)
-        
-        if TASK.IS_PED_STILL(ped) then
-            util.toast("Player is not moving. :/")
-        return end
-
-        local temp_v3 = v3.new(0, 0, 0)
-        for i = 1, number_of_cages do
-            local angle = (i / number_of_cages) * 360
-            temp_v3.z = angle
-            local obj_pos = temp_v3:toDir()
-            obj_pos:mul(0.25)
-            obj_pos:add(pos)
-            local ladder = entities.create_object(ladder_hash, obj_pos)
-            ladder_objects[#ladder_objects + 1] = ladder
-            ENTITY.SET_ENTITY_VISIBLE(ladder, false)
-            ENTITY.SET_ENTITY_ROTATION(ladder, 0.0, 0.0, angle, 2, 0)
-            ENTITY.FREEZE_ENTITY_POSITION(ladder, true)
-        end
-        util.yield(2500)
-        for i, object in ipairs(ladder_objects) do
-            entities.delete_by_handle(object)
-        end
-    end)
-
+    
     menu.click_slider(trolling, "Fake Mug", {}, "", 0, 2000000000, 0, 1000, function(amount)
         util.trigger_script_event(1 << pid, {0xA4D43510, players.user(), 0xB2B6334F, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
         util.trigger_script_event(1 << players.user(), {0xA4D43510, players.user(), 0xB2B6334F, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
@@ -960,7 +859,7 @@ local function player(pid)
         for i = 1, 50 do
             MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 0, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
         end
-        util.yield(100)
+        util.yield()
     end)
 
     menu.action(trolling, "Send To Jail", {}, "", function()
@@ -1019,7 +918,6 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {0x4246AA25, pid, math.random(1, 0x6)})
         util.yield()
     end)
-
 
     menu.action(trolling, "Force Interior State", {}, "Can Be Undone By Rejoining. Player Must Be In An Apartment", function(s)
         if players.is_in_interior(pid) then
@@ -1325,6 +1223,15 @@ local function player(pid)
         end)
     end)
 
+    menu.action(crashes, "Fragment Crash", {""}, "", function()
+        BlockSyncs(pid, function()
+            local object = entities.create_object(util.joaat("prop_fragtest_cnst_04"), ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)))
+            OBJECT.BREAK_OBJECT_FRAGMENT_CHILD(object, 1, false)
+            util.yield(1000)
+            entities.delete_by_handle(object)
+        end)
+    end)
+
     menu.action(crashes, "Linus Crash Tips", {}, "", function()
         local int_min = -2147483647
         local int_max = 2147483647
@@ -1418,7 +1325,7 @@ local ghostCmd = menu.toggle(self, "Auto Ghost Godmode Players", {}, "", functio
 
     if not ghost then
         for _, pid in ipairs(players.list(false, true, true)) do
-            NETWORK._SET_RELATIONSHIP_TO_PLAYER(pid, false)
+            NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
         end
     return end
 
@@ -1428,7 +1335,7 @@ local ghostCmd = menu.toggle(self, "Auto Ghost Godmode Players", {}, "", functio
             local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
             for i, interior in ipairs(interior_stuff) do
                 if (players.is_godmode(pid) or not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(ped)) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
-                    NETWORK._SET_RELATIONSHIP_TO_PLAYER(pid, true)
+                    NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
                     break
                 end
             end
@@ -1441,6 +1348,10 @@ menu.toggle_loop(self, "Script Host Addict", {}, "A faster version of script hos
     if players.get_script_host() ~= players.user() and get_transition_state(players.user()) ~= 0 then
         menu.trigger_command(menu.ref_by_path("Players>"..players.get_name_with_tags(players.user())..">Friendly>Give Script Host"))
     end
+end)
+
+menu.toggle_loop(self, "Disable Text Chat", {}, "", function(toggled)
+    HUD.MP_TEXT_CHAT_DISABLE(true)
 end)
 
 local function bitTest(addr, offset)
@@ -1717,14 +1628,31 @@ menu.toggle(funfeatures, "Announce Sexual Acts", {}, "", function(toggled)
     end
 end)
 
+
+local obj
+menu.toggle(funfeatures, "Forcefield", {}, "", function(toggled)
+    local mdl = util.joaat("p_spinning_anus_s")
+    local playerpos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
+    request_model(mdl)
+    if toggled then
+        obj = entities.create_object(mdl, playerpos)
+        ENTITY.SET_ENTITY_VISIBLE(obj, false)
+        ENTITY.ATTACH_ENTITY_TO_ENTITY(obj, players.user_ped(), 0, 0, 0, 0, 0, 0, 0, false, false, true, false, 0, false, 0)
+    else
+        if obj ~= nil then 
+            entities.delete_by_handle(obj)
+        end
+    end
+end)
+
 if menu.get_edition() == 3 then 
     local criminalDamageCmdRef = menu.ref_by_path("Online>Session>Session Scripts>Run Script>Freemode Activities>Criminal Damage")
     menu.action(funfeatures, "Criminal Damage Speed Run", {}, "", function()
-        if SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_criminal_damage")) == 0 then
+        if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(util.joaat("am_criminal_damage")) == 0 then
             menu.trigger_command(criminalDamageCmdRef)
             repeat
                 util.yield()
-            until SCRIPT._GET_NUMBER_OF_REFERENCES_OF_SCRIPT_WITH_NAME_HASH(util.joaat("am_criminal_damage")) ~= 0
+            until SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(util.joaat("am_criminal_damage")) ~= 0
         end
         util.yield(1000)
         repeat
@@ -2038,7 +1966,7 @@ menu.toggle_loop(detections, "Unreleased Vehicle", {}, "Detects if someone is us
         local modelHash = players.get_vehicle_model(pid)
         for i, name in ipairs(unreleased_vehicles) do
             if modelHash == util.joaat(name) then
-                util.draw_debug_text(players.get_name(pid) .. " Is Driving An Unreleased Vehicle")
+                util.draw_debug_text(players.get_name(pid) .. " Is Driving An Unreleased Vehicle " .. "(" .. name .. ")")
             end
         end
     end
@@ -2050,7 +1978,7 @@ menu.toggle_loop(detections, "Modded Weapon", {}, "Detects if someone is using a
         for i, hash in ipairs(modded_weapons) do
             local weapon_hash = util.joaat(hash)
             if WEAPON.HAS_PED_GOT_WEAPON(ped, weapon_hash, false) and (WEAPON.IS_PED_ARMED(ped, 7) or TASK.GET_IS_TASK_ACTIVE(ped, 8) or TASK.GET_IS_TASK_ACTIVE(ped, 9)) then
-                util.toast(players.get_name(pid) .. " Is Using A Modded Weapon")
+                util.toast(players.get_name(pid) .. " Is Using A Modded Weapon " .. "(" .. hash .. ")")
                 break
             end
         end
@@ -2062,7 +1990,7 @@ menu.toggle_loop(detections, "Modded Vehicle", {}, "Detects if someone is using 
         local modelHash = players.get_vehicle_model(pid)
         for i, name in ipairs(modded_vehicles) do
             if modelHash == util.joaat(name) then
-                util.draw_debug_text(players.get_name(pid) .. " Is Driving A Modded Vehicle")
+                util.draw_debug_text(players.get_name(pid) .. " Is Driving A Modded Vehicle" .. "(" .. name .. ")")
                 break
             end
         end
@@ -2107,6 +2035,7 @@ menu.toggle_loop(detections, "Super Drive", {}, "", function()
     end
 end)
 
+
 menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating you.", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         for i, interior in ipairs(interior_stuff) do
@@ -2129,10 +2058,14 @@ menu.toggle_loop(detections, "Teleport", {}, "Detects if the player has teleport
             local oldpos = players.get_position(pid)
             util.yield(1000)
             local currentpos = players.get_position(pid)
-            for i, interior in ipairs(interior_stuff) do
-                if v3.distance(oldpos, currentpos) > 500 and oldpos.x ~= currentpos.x and oldpos.y ~= currentpos.y and oldpos.z ~= currentpos.z 
-                and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior and PLAYER.IS_PLAYER_PLAYING(pid) and players.exists(pid) then
-                    util.toast(players.get_name(pid) .. " Just teleported")
+            if get_transition_state(pid) ~= 0 then
+                for i, interior in ipairs(interior_stuff) do
+                    if v3.distance(oldpos, currentpos) > 500 and oldpos.x ~= currentpos.x and oldpos.y ~= currentpos.y and oldpos.z ~= currentpos.z then
+                        util.yield(500)
+                        if get_interior_player_is_in(pid) == interior and PLAYER.IS_PLAYER_PLAYING(pid) and players.exists(pid) then
+                            util.toast(players.get_name(pid) .. " Just teleported")
+                        end
+                    end
                 end
             end
         end
@@ -2174,7 +2107,7 @@ menu.toggle_loop(anticage, "Enable Anti-Cage", {"anticage"}, "", function()
             continue
         end
         local obj_handle = entities.pointer_to_handle(obj_ptr)
-        CAM._DISABLE_CAM_COLLISION_FOR_ENTITY(obj_handle)
+        CAM.SET_GAMEPLAY_CAM_IGNORE_ENTITY_COLLISION_THIS_UPDATE(obj_handle)
         for i, data in ipairs(my_ents) do
             if data ~= 0 and ENTITY.IS_ENTITY_TOUCHING_ENTITY(data, obj_handle) and alpha > 0 then
                 ENTITY.SET_ENTITY_NO_COLLISION_ENTITY(obj_handle, data, false)

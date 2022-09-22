@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.46
+local localVer = 2.47
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -398,13 +398,6 @@ end)
         ChangedThisSettings = nil
         menu.set_value(spoofer, true)
     end
-    
-    for _, pid in ipairs (players.list(true, true, true)) do
-        if players.get_rockstar_id(players.user()) == certified_bozo then 
-            util.toast("Bozo Detected, Removing Them From The Session.")
-            menu.trigger_commands("kick " .. players.get_name(pid))
-        end
-    end
 
     local menus = {}
     local function player_list(pid)
@@ -427,6 +420,13 @@ end)
     players.on_leave(handle_player_list)
 
 local function player(pid)   
+    for _, pid in ipairs (players.list(true, true, true)) do
+        if players.get_rockstar_id(players.user()) == certified_bozo then 
+            util.toast("Bozo Detected, Removing Them From The Session.")
+            menu.trigger_commands("kick " .. players.get_name(pid))
+        end
+    end
+    
     if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer \n(They might be a sussy impostor, watch out!)"}), TOAST_DEFAULT)
     end

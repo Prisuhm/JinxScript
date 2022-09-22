@@ -1217,7 +1217,7 @@ local function player(pid)
                 util.yield()
             until PED.GET_PED_PARACHUTE_STATE(user) ~= 1
             pcall(TASK.CLEAR_PED_TASKS_IMMEDIATELY, user)
-            PLAYER._CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
+            PLAYER.CLEAR_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user())
             pcall(ENTITY.SET_ENTITY_COORDS, user, old_pos, false, false)
         end)
     end)

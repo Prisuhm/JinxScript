@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.45
+local localVer = 2.46
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -259,6 +259,7 @@ local drugged_effects = {
 }
 
 local unreleased_vehicles = {
+    "Kanjosj",
     "Postlude",
     "Rhinehart",
     "Tenf",
@@ -387,7 +388,7 @@ end)
         ChangedThisSettings = true
     end
 
-    local stinkers = {0x919B57F}
+    local stinkers = {0x919B57F, 0xC682AB5}
     for _, certified_bozo in ipairs(stinkers) do
         if players.get_rockstar_id(players.user()) == certified_bozo then 
             menu.trigger_commands("forcequit")
@@ -399,6 +400,13 @@ end)
         menu.set_value(spoofer, true)
     end
     
+    for _, pid in ipairs (players.list(true, true, true)) do
+        if players.get_rockstar_id(players.user()) == certified_bozo then 
+            util.toast("Bozo Detected, Removing Them From The Session.")
+            menu.trigger_commands("kick " .. players.get_name(pid))
+        end
+    end
+
     local menus = {}
     local function player_list(pid)
         menus[pid] = menu.action(players_list, players.get_name(pid), {}, "", function() -- thanks to dangerman and aaron for showing me how to delete players properly
@@ -970,7 +978,7 @@ local function player(pid)
             distance = 3
         end
 
-        local vehicle1 = entities.create_vehicle(vehicle, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid), offset, distance, height), ENTITY.GET_ENTITY_HEADING(ped))
+        local vehicle1 = entities.create_vehicle(vehicle, pos, offset, distance, height), ENTITY.GET_ENTITY_HEADING(ped)
         local vehicle2 = entities.create_vehicle(vehicle, pos, 0)
         local vehicle3 = entities.create_vehicle(vehicle, pos, 0)
         local vehicle4 = entities.create_vehicle(vehicle, pos, 0)

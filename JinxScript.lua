@@ -1199,7 +1199,7 @@ local function player(pid)
             local old_pos = ENTITY.GET_ENTITY_COORDS(user, false)
             WEAPON.GIVE_DELAYED_WEAPON_TO_PED(user, 0xFBAB5776, 100, false)
             PLAYER.SET_PLAYER_HAS_RESERVE_PARACHUTE(players.user())
-            PLAYER._SET_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user(), mdl)
+            PLAYER.SET_PLAYER_RESERVE_PARACHUTE_MODEL_OVERRIDE(players.user(), mdl)
             util.yield(50)
             local pos = players.get_position(pid)
             pos.z += 300

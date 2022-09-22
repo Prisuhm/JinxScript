@@ -420,11 +420,9 @@ end)
     players.on_leave(handle_player_list)
 
 local function player(pid)   
-    for _, pid in ipairs (players.list(true, true, true)) do
-        if players.get_rockstar_id(players.user()) == certified_bozo then 
-            util.toast("Bozo Detected, Removing Them From The Session.")
-            menu.trigger_commands("kick " .. players.get_name(pid))
-        end
+    if players.get_rockstar_id(players.user()) == certified_bozo then 
+        util.toast("Bozo Detected, Removing Them From The Session.")
+        menu.trigger_commands("kick " .. players.get_name(pid))
     end
     
     if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then

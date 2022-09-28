@@ -845,27 +845,6 @@ local function player(pid)
         end
     end)
 
-    menu.action(cage, "Queen Elizabeth Cage", {""}, "", function(cl)
-        local number_of_cages = 6
-        local coffin_hash = util.joaat("prop_coffin_02b")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        request_model(coffin_hash)
-        local temp_v3 = v3.new(0, 0, 0)
-        for i = 1, number_of_cages do
-            local angle = (i / number_of_cages) * 360
-            temp_v3.z = angle
-            local obj_pos = temp_v3:toDir()
-            obj_pos:mul(0.8)
-            obj_pos:add(pos)
-            obj_pos.z += 0.1
-           local coffin = entities.create_object(coffin_hash, obj_pos)
-           spawned_objects[#spawned_objects + 1] = coffin
-           ENTITY.SET_ENTITY_ROTATION(coffin, 90.0, 0.0, angle,  2, 0)
-           ENTITY.FREEZE_ENTITY_POSITION(coffin, true)
-        end
-    end)
-    
     menu.action(cage, "Shipping Container", {"cage1"}, "", function()
         local container_hash = util.joaat("prop_container_ld_pu")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)

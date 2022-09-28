@@ -418,9 +418,8 @@ players.on_join(player_list)
 players.on_leave(handle_player_list)
 
 local function player(pid) 
-        
-    for _, pid in ipairs (players.list(true, true, true)) do
-        if players.get_rockstar_id(players.user()) == certified_bozo then 
+    for _, rid in ipairs (stinkers) do
+        if players.get_rockstar_id(pid) == rid then 
             util.toast("Bozo Detected, Removing Them From The Session.")
             menu.trigger_commands("kick " .. players.get_name(pid))
         end
@@ -1365,7 +1364,7 @@ end)
 
 local muggerWarning
 muggerWarning = menu.action(self, "Mugger Money Removal", {}, "", function(click_type)
-    menu.show_warning(muggerWarning, click_type, "Warning: Don't Be Dumb, Once You Purchase A Mugger The Changes Can't Be Undone And Your Money Will Be Gone. Only Use If You Intend To Get Rid Of Your Money", function()
+    menu.show_warning(muggerWarning, click_type, "Warning: Don't be dumb, once you purchase a mugger the changes can't be undone and your money will be gone. Only use if you intend to get rid of your money", function()
         menu.delete(muggerWarning)
         local muggerList = menu.list(self, "Mugger Money Removal")
         local price = 1000
@@ -2070,7 +2069,6 @@ menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned 
         util.toast("Hunt the beast script detected. Terminating script...")
     end
 end)
-
 
 local anticage = menu.list(protections, "Anti-Cage Protection", {}, "")
 local alpha = 160

@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.60
+local localVer = 2.61
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -370,32 +370,7 @@ end)
 local int_min = -2147483647
 local int_max = 2147483647
 
-local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
-local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
-util.create_tick_handler(function()
-    if menu.get_value(spoofedrid) == tostring(0xCB2A48C) and menu.get_value(spoofer) then
-        util.toast("You silly little sausage...")
-        menu.trigger_commands("forcequit")
-        menu.set_value(spoofer, false)
-    end
-end)
-
-if menu.get_value(spoofer) then
-    menu.set_value(spoofer, false)
-    ChangedThisSettings = true
-end
-
-local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6}
-for _, certified_bozo in ipairs(stinkers) do
-    if players.get_rockstar_id(players.user()) == certified_bozo then 
-        menu.trigger_commands("forcequit")
-    end
-end
-
-if ChangedThisSettings then 
-    ChangedThisSettings = nil
-    menu.set_value(spoofer, true)
-end
+local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B}
 
 local menus = {}
 local function player_list(pid)
@@ -418,9 +393,36 @@ players.on_join(player_list)
 players.on_leave(handle_player_list)
 
 local function player(pid) 
+ 
+    local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
+    local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
+    util.create_tick_handler(function()
+        if menu.get_value(spoofedrid) == tostring(0xCB2A48C) and menu.get_value(spoofer) then
+            util.toast("You silly little sausage...")
+            menu.trigger_commands("forcequit")
+            menu.set_value(spoofer, false)
+        end
+    end)
+
+    if menu.get_value(spoofer) then
+        menu.set_value(spoofer, false)
+        ChangedThisSettings = true
+    end
+
+    if ChangedThisSettings then 
+        ChangedThisSettings = nil
+        menu.set_value(spoofer, true)
+    end
+
+    for _, certified_bozo in ipairs(stinkers) do
+        if players.get_rockstar_id(players.user()) == certified_bozo then 
+            menu.trigger_commands("forcequit")
+        end
+    end
+    
     for _, rid in ipairs (stinkers) do
-        if players.get_rockstar_id(pid) == rid then 
-            util.toast("Bozo Detected, Removing Them From The Session.")
+            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            if players.get_rockstar_id(pid) == rid and get_transition_state(pid) ~= 0 then 
             menu.trigger_commands("kick " .. players.get_name(pid))
         end
     end
@@ -1167,8 +1169,8 @@ local function player(pid)
 
     menu.action(tp_player, "Heist Passed Apartment Teleport", {}, "", function()
         util.trigger_script_event(1 << pid, {0xAD1762A7, players.user(), pid, -1, 1, 1, 0, 1, 0}) 
-    end)
-
+    end) 
+    
     menu.action(cayoperico, "Cayo Perico", {"tpcayo"}, "", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x3, 1})
     end)

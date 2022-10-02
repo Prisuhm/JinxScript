@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.61
+local localVer = 2.62
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -353,6 +353,7 @@ local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto S
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
+local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E}
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local players_list = menu.list(menu.my_root(), "Players", {}, "")
@@ -370,7 +371,27 @@ end)
 local int_min = -2147483647
 local int_max = 2147483647
 
-local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B}
+local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
+local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
+util.create_tick_handler(function()
+    if menu.get_value(spoofedrid) == tostring(0xCB2A48C) and menu.get_value(spoofer) then
+        util.toast("You silly little sausage...")
+        menu.trigger_commands("forcequit")
+        menu.set_value(spoofer, false)
+        util.stop_script()
+    end
+end)
+
+if menu.get_value(spoofer) then
+    menu.set_value(spoofer, false)
+    ChangedThisSettings = true
+end
+
+if ChangedThisSettings then 
+    ChangedThisSettings = nil
+    menu.set_value(spoofer, true)
+end
+
 
 local menus = {}
 local function player_list(pid)
@@ -393,27 +414,6 @@ players.on_join(player_list)
 players.on_leave(handle_player_list)
 
 local function player(pid) 
- 
-    local spoofedrid = menu.ref_by_path("Online>Spoofing>RID Spoofing>Spoofed RID")
-    local spoofer = menu.ref_by_path("Online>Spoofing>RID Spoofing>RID Spoofing")
-    util.create_tick_handler(function()
-        if menu.get_value(spoofedrid) == tostring(0xCB2A48C) and menu.get_value(spoofer) then
-            util.toast("You silly little sausage...")
-            menu.trigger_commands("forcequit")
-            menu.set_value(spoofer, false)
-        end
-    end)
-
-    if menu.get_value(spoofer) then
-        menu.set_value(spoofer, false)
-        ChangedThisSettings = true
-    end
-
-    if ChangedThisSettings then 
-        ChangedThisSettings = nil
-        menu.set_value(spoofer, true)
-    end
-
     for _, certified_bozo in ipairs(stinkers) do
         if players.get_rockstar_id(players.user()) == certified_bozo then 
             menu.trigger_commands("forcequit")
@@ -421,7 +421,6 @@ local function player(pid)
     end
     
     for _, rid in ipairs (stinkers) do
-            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             if players.get_rockstar_id(pid) == rid and get_transition_state(pid) ~= 0 then 
             menu.trigger_commands("kick " .. players.get_name(pid))
         end

@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.62
+local localVer = 2.63
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -260,8 +260,6 @@ local drugged_effects = {
 
 local unreleased_vehicles = {
     "Rhinehart",
-    "Tenf",
-    "Tenf2",
     "Sentinel4",
     "Weevil2",
 }
@@ -353,11 +351,10 @@ local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto S
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
-local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E}
+local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931}
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local players_list = menu.list(menu.my_root(), "Players", {}, "")
-local vehicle = menu.list(menu.my_root(), "Vehicle", {}, "")
 local visuals = menu.list(menu.my_root(), "Visuals", {}, "")
 local funfeatures = menu.list(menu.my_root(), "Fun Features", {}, "")
 local teleport = menu.list(menu.my_root(), "Teleport", {}, "")
@@ -382,17 +379,6 @@ util.create_tick_handler(function()
     end
 end)
 
-if menu.get_value(spoofer) then
-    menu.set_value(spoofer, false)
-    ChangedThisSettings = true
-end
-
-if ChangedThisSettings then 
-    ChangedThisSettings = nil
-    menu.set_value(spoofer, true)
-end
-
-
 local menus = {}
 local function player_list(pid)
     menus[pid] = menu.action(players_list, players.get_name(pid), {}, "", function() -- thanks to dangerman and aaron for showing me how to delete players properly
@@ -414,10 +400,20 @@ players.on_join(player_list)
 players.on_leave(handle_player_list)
 
 local function player(pid) 
+    if menu.get_value(spoofer) then
+        menu.set_value(spoofer, false)
+        ChangedThisSettings = true
+    end
+        
     for _, certified_bozo in ipairs(stinkers) do
         if players.get_rockstar_id(players.user()) == certified_bozo then 
             menu.trigger_commands("forcequit")
         end
+    end
+    
+    if ChangedThisSettings then 
+        ChangedThisSettings = nil
+        menu.set_value(spoofer, true)
     end
     
     for _, rid in ipairs (stinkers) do
@@ -937,9 +933,9 @@ local function player(pid)
             entitycount += 1
         end
         util.toast("Cleared " .. entitycount .. " Spawned Cage Objects")
-    end)
+    end) 
     
-    menu.click_slider(trolling, "Fake Mug", {}, "", 0, 2000000000, 0, 1000, function(amount)
+    menu.click_slider(trolling, "Fake Mug", {}, "", 0, 2147483647, 0, 1000, function(amount)
         util.trigger_script_event(1 << pid, {0xA4D43510, players.user(), 0xB2B6334F, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
         util.trigger_script_event(1 << players.user(), {0xA4D43510, players.user(), 0xB2B6334F, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
     end)
@@ -1343,8 +1339,7 @@ local ghostCmd = menu.toggle(self, "Auto Ghost Godmode Players", {}, "Auto ghost
     end
 end)
 
-
-menu.toggle_loop(self, "Anti-PvP Mode", {}, "", function()
+menu.toggle_loop(self, "Ghost Players Targetting You", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         if PLAYER.IS_PLAYER_FREE_AIMING(pid) then
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
@@ -1472,93 +1467,9 @@ util.create_tick_handler(function()
     end
 end)
 
-menu.toggle_loop(vehicle, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
+menu.toggle_loop(self, "Stealth Vehicle Godmode", {}, "Won't be detected as vehicle godmode by most menus", function()
     ENTITY.SET_ENTITY_PROOFS(entities.get_user_vehicle_as_handle(), true, true, true, true, true, 0, 0, true)
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(players.user(), false), false, false, false, false, false, 0, 0, false)
-end)
-
-menu.toggle_loop(vehicle, "Indicator Lights", {}, "", function()
-    if(PED.IS_PED_IN_ANY_VEHICLE(players.user_ped(), false)) then
-        local vehicle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-
-        local left = PAD.IS_CONTROL_PRESSED(34, 34)
-        local right = PAD.IS_CONTROL_PRESSED(35, 35)
-        local rear = PAD.IS_CONTROL_PRESSED(130, 130)
-
-        if left and not right and not rear then
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 1, true)
-        elseif right and not left and not rear then
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 0, true)
-        elseif rear and not left and not right then
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 1, true)
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 0, true)
-        else
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 0, false)
-            VEHICLE.SET_VEHICLE_INDICATOR_LIGHTS(vehicle, 1, false)
-        end
-    end
-end)
-
-menu.click_slider_float(vehicle, "Suspension Height", {"suspensionheight"}, "", -100, 100, 0, 1, function(value)
-    value/=100
-    local ped = players.user_ped()
-    local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
-    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-    if VehicleHandle == 0 then return end
-    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
-    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
-    memory.write_float(CHandlingData + 0x00D0, value)
-    pos.z += 2.8
-    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(VehicleHandle, pos, false, false, false) -- Dropping vehicle so the suspension updates
-end)
-
-menu.click_slider_float(vehicle, "Torque Multiplier", {"torque"}, "", 0, 1000, 100, 10, function(value)
-    value/=100
-    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-    if VehicleHandle == 0 then return end
-    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
-    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
-    memory.write_float(CHandlingData + 0x004C, value)
-end)
-
-menu.click_slider_float(vehicle, "Upshift Multiplier", {"upshift"}, "", 0, 500, 100, 10, function(value)
-    value/=100
-    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-    if VehicleHandle == 0 then return end
-    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
-    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
-    memory.write_float(CHandlingData + 0x0058, value)
-end)
-
-menu.click_slider_float(vehicle, "Downshift Multiplier", {"downshift"}, "", 0, 500, 100, 10, function(value)
-    value/=100
-    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-    if VehicleHandle == 0 then return end
-    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
-    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
-    memory.write_float(CHandlingData + 0x005C, value)
-end)
-
-menu.click_slider_float(vehicle, "Curve Ratio Multiplier", {"curve"}, "", 0, 500, 100, 10, function(value)
-    value/=100
-    local VehicleHandle = PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
-    if VehicleHandle == 0 then return end
-    local CAutomobile = entities.handle_to_pointer(VehicleHandle)
-    local CHandlingData = memory.read_long(CAutomobile + 0x0938)
-    memory.write_float(CHandlingData + 0x0094, value)
-end)
-
-menu.toggle_loop(vehicle, "Random Upgrades", {}, "", function()
-    local mod_types = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 14, 15, 16, 23, 24, 25, 27, 28, 30, 33, 35, 38, 48}
-    for _, vehicle in ipairs(entities.get_all_vehicles_as_handles()) do
-        if vehicle ~= PED.GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and DECORATOR.DECOR_GET_INT(vehicle, "Player_Vehicle") == 0 and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
-            for i, upgrades in ipairs(mod_types) do
-                VEHICLE.SET_VEHICLE_MOD_KIT(vehicle, 0)
-                VEHICLE.SET_VEHICLE_MOD(vehicle, upgrades, math.random(0, 49), false)
-            end
-        end
-    end
-    util.yield(100)
 end)
 
 menu.click_slider(visuals, "Drunk Mode", {}, "", 0, 5, 1, 1, function(val)
@@ -1609,13 +1520,7 @@ for id, data in pairs(drugged_effects) do
         end
     end)
 end
-local function request_animation(hash)
-    STREAMING.REQUEST_ANIM_DICT(hash)
-    while not STREAMING.HAS_ANIM_DICT_LOADED(hash) do
-        util.yield()
-    end
-end
-
+       
 menu.toggle(funfeatures, "Announce Sexual Acts", {}, "", function(toggled)
     local old_player_name
     local player_name
@@ -1818,16 +1723,6 @@ for index, data in pairs(interiors) do
     end)
 end
 
-local rapid_khanjali
-rapid_khanjali = menu.toggle_loop(vehicle, "Rapid Fire Khanjali", {}, "", function()
-    local player_veh = PED.GET_VEHICLE_PED_IS_USING(players.user_ped())
-    if ENTITY.GET_ENTITY_MODEL(player_veh) == util.joaat("khanjali") then
-        VEHICLE.SET_VEHICLE_MOD(player_veh, 10, math.random(-1, 0), false)
-    else
-        util.toast("Please get in a khanjali.")
-        menu.trigger_command(rapid_khanjali, "off")
-    end
-end)
 
 local finger_thing = menu.list(funfeatures, "Finger Gun", {}, "")
 for id, data in pairs(weapon_stuff) do
@@ -2072,6 +1967,16 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
     end
 end)
 
+menu.toggle_loop(protections, "Block Breakup Kicks", {}, "Fully blocks any variant of breakup kick.", function()
+    --sup idiot
+end)
+
+menu.toggle_loop(protections, "Block All Crashes", {}, "Fully blocks any crash", function()
+    util.toast("They can't crash you if GTA is closed.")
+    util.yield(5000)
+    PED.GET_CLOSEST_PED(players.user_ped(), false, false)
+end)
+
 local anti_mugger = menu.list(protections, "Block Muggers")
 menu.toggle_loop(anti_mugger, "Myself", {}, "Prevents you from being mugged.", function() -- thx nowiry for improving my method :D
     if NETWORK.NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
@@ -2281,3 +2186,4 @@ end)
 menu.action(credits, "d6b.", {}, "gifting nitro because he is such a super gamer gigachad", function()
 end)
 util.keep_running()
+

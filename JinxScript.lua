@@ -241,7 +241,6 @@ local drugged_effects = {
 }
 
 local unreleased_vehicles = {
-    "Rhinehart",
     "Sentinel4",
     "Weevil2",
 }
@@ -592,16 +591,16 @@ local function player(pid)
         request_model(object_hash)
         
         while glitchVeh do
+            if not players.exists(pid) then 
+                util.toast("Player doesn't exist. :/")
+                menu.set_value(glitchVehCmd, false);
+            util.stop_thread() end
+
             if v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) > 1000.0 
             and v3.distance(pos, players.get_cam_pos(players.user())) > 1000.0 then
                 util.toast("Player is too far. :/")
                 menu.set_value(glitchVehCmd, false);
             break end
-
-            if not players.exists(pid) then 
-                util.toast("Player doesn't exist. :/")
-                menu.set_value(glitchVehCmd, false);
-            util.stop_thread() end
 
             if not PED.IS_PED_IN_VEHICLE(ped, player_veh, false) then 
                 util.toast("Player isn't in a vehicle. :/")
@@ -660,19 +659,19 @@ local function player(pid)
         request_model(glitch_hash)
 
         while glitchForcefield do
+            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local playerpos = ENTITY.GET_ENTITY_COORDS(ped, false)
+            
             if not players.exists(pid) then 
                 util.toast("Player doesn't exist. :/")
                 menu.set_value(glitchPlayer_toggle, false)
             util.stop_thread() end
 
-            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-            local playerpos = ENTITY.GET_ENTITY_COORDS(ped, false)
-            
             if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
                 util.toast("Player is in a vehicle. :/")
                 menu.set_value(glitchforcefield_toggle, false)
             break end
-            
+
             local stupid_object = entities.create_object(glitch_hash, playerpos)
             ENTITY.SET_ENTITY_VISIBLE(stupid_object, false)
             util.yield()
@@ -708,27 +707,27 @@ local function player(pid)
         
     menu.action_slider(inf_loading, "Corrupted Phone Invite", {}, "Click to select a style", invites, function(index, name)
         pluto_switch name do
-            case 1:
+            case "Yacht":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x1})
                 util.toast("Yacht Invite Sent")
             break
-            case 2:
+            case "Office":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x2})
                 util.toast("Office Invite Sent")
             break
-            case 3:
+            case "Clubhouse":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x3})
                 util.toast("Clubhouse Invite Sent")
             break
-            case 4:
+            case "Office Garage":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x4})
                 util.toast("Office Garage Invite Sent")
             break
-            case 5:
+            case "Custom Auto Shop":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x5})
                 util.toast("Custom Auto Shop Invite Sent")
             break
-            case 6:
+            case "Apartment":
                 util.trigger_script_event(1 << pid, {0x4246AA25, pid, 0x6})
                 util.toast("Apartment Invite Sent")
             break
@@ -892,6 +891,28 @@ local function player(pid)
             end
         end
     end)
+
+    menu.action(cage, "Queen Elizabeth Cage", {""}, "", function(cl)
+        local number_of_cages = 6
+        local coffin_hash = util.joaat("prop_coffin_02b")
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = ENTITY.GET_ENTITY_COORDS(ped)
+        request_model(coffin_hash)
+        local temp_v3 = v3.new(0, 0, 0)
+        for i = 1, number_of_cages do
+            local angle = (i / number_of_cages) * 360
+            temp_v3.z = angle
+            local obj_pos = temp_v3:toDir()
+            obj_pos:mul(0.8)
+            obj_pos:add(pos)
+            obj_pos.z += 0.1
+           local coffin = entities.create_object(coffin_hash, obj_pos)
+           spawned_objects[#spawned_objects + 1] = coffin
+           ENTITY.SET_ENTITY_ROTATION(coffin, 90.0, 0.0, angle,  2, 0)
+           ENTITY.FREEZE_ENTITY_POSITION(coffin, true)
+        end
+    end)
+
 
     menu.action(cage, "Shipping Container", {"cage1"}, "", function()
         local container_hash = util.joaat("prop_container_ld_pu")

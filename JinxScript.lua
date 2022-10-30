@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.65
+local localVer = 2.70
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -69,6 +69,19 @@ local function clearBit(addr, bitIndex)
     memory.write_int(addr, memory.read_int(addr) & ~(1<<bitIndex))
 end
 
+function GetPlayerCurrentFmActivity(player)
+    if player ~= -1 then
+        return read_global.int(1892703 + (player * 599 + 1))
+    end
+    return -1
+end
+
+---@param player Player
+---@return boolean
+function IsPlayerTheBeast(player)
+    return GetPlayerCurrentFmActivity(player) == 146 and read_global.int(2815059 + 5120) == player
+end
+
 local function get_blip_coords(blipId)
     local blip = HUD.GET_FIRST_BLIP_INFO_ID(blipId)
     if blip ~= 0 then return HUD.GET_BLIP_COORDS(blip) end
@@ -109,6 +122,17 @@ local function request_model(hash, timeout)
     until STREAMING.HAS_MODEL_LOADED(hash) or os.time() >= end_time
     return STREAMING.HAS_MODEL_LOADED(hash)
 end
+
+local first_names = {"JAMES", "JOHN", "ROBERT", "MICHAEL", "WILLIAM", "DAVID", "RICHARD", "CHARLES", "JOSEPH", "THOMAS", "CHRISTOPHER", "DANIEL", "PAUL", "MARK", "DONALD", "GEORGE", "KENNETH", "STEVEN", "EDWARD", "BRIAN", "RONALD", "ANTHONY", "KEVIN", "JASON", "MATTHEW", "GARY", "TIMOTHY", "JOSE", "LARRY", "JEFFREY", "FRANK", "SCOTT", "ERIC", "STEPHEN", "ANDREW", "RAYMOND", "GREGORY", "JOSHUA", "JERRY", "DENNIS", "WALTER", "PATRICK", "PETER", "HAROLD", "DOUGLAS", "HENRY", "CARL", "ARTHUR", "RYAN", "ROGER", "JOE", "JUAN", "JACK", "ALBERT", "JONATHAN", "JUSTIN", "TERRY", "GERALD", "KEITH", "SAMUEL", "WILLIE", "RALPH", "LAWRENCE", "NICHOLAS", "ROY", "BENJAMIN", "BRUCE", "BRANDON", "ADAM", "HARRY", "FRED", "WAYNE", "BILLY", "STEVE", "LOUIS", "JEREMY", "AARON", "RANDY", "HOWARD", "EUGENE", "CARLOS", "RUSSELL", "BOBBY", "VICTOR", "MARTIN", "ERNEST", "PHILLIP", "TODD", "JESSE", "CRAIG", "ALAN", "SHAWN", "CLARENCE", "SEAN", "PHILIP", "CHRIS", "JOHNNY", "EARL", "JIMMY", "ANTONIO"}
+local last_names = {"smith" , "johnson" , "williams" , "brown" , "jones" , "miller" , "davis" , "garcia" , "rodriguez" , "wilson" , "martinez" , "anderson" , "taylor" , "thomas" , "hernandez" , "moore" , "martin" , "jackson" , "thompson" , "white" , "lopez" , "lee" , "gonzalez" , "harris" , "clark" , "lewis" , "robinson" , "walker" , "perez" , "hall" , "young" , "allen" , "sanchez" , "wright" , "king" , "scott" , "green" , "baker" , "adams" , "nelson" , "hill" , "ramirez" , "campbell" , "mitchell" , "roberts" , "carter" , "phillips" , "evans" , "turner" , "torres" , "parker" , "collins" , "edwards" , "stewart" , "flores" , "morris" , "nguyen" , "murphy" , "rivera" , "cook" , "rogers" , "morgan" , "peterson" , "cooper" , "reed" , "bailey" , "bell" , "gomez" , "kelly" , "howard" , "ward" , "cox" , "diaz" , "richardson" , "wood" , "watson" , "brooks" , "bennett" , "gray" , "james" , "reyes" , "cruz" , "hughes" , "price" , "myers" , "long" , "foster" , "sanders" , "ross" , "morales" , "powell" , "sullivan" , "russell" , "ortiz" , "jenkins" , "gutierrez" , "perry" , "butler" , "barnes" , "fisher"}
+local addresses = {"777 Brockton Avenue, Abington MA 2351" , "30 Memorial Drive, Avon MA 2322" , "250 Hartford Avenue, Bellingham MA 2019" , "700 Oak Street, Brockton MA 2301" , "66-4 Parkhurst Rd, Chelmsford MA 1824" , "591 Memorial Dr, Chicopee MA 1020" , "55 Brooksby Village Way, Danvers MA 1923" , "137 Teaticket Hwy, East Falmouth MA 2536" , "42 Fairhaven Commons Way, Fairhaven MA 2719" , "374 William S Canning Blvd, Fall River MA 2721" , "121 Worcester Rd, Framingham MA 1701" , "677 Timpany Blvd, Gardner MA 1440" , "337 Russell St, Hadley MA 1035" , "295 Plymouth Street, Halifax MA 2338" , "1775 Washington St, Hanover MA 2339" , "280 Washington Street, Hudson MA 1749" , "20 Soojian Dr, Leicester MA 1524" , "11 Jungle Road, Leominster MA 1453" , "301 Massachusetts Ave, Lunenburg MA 1462" , "780 Lynnway, Lynn MA 1905" , "70 Pleasant Valley Street, Methuen MA 1844" , "830 Curran Memorial Hwy, North Adams MA 1247" , "1470 S Washington St, North Attleboro MA 2760" , "506 State Road, North Dartmouth MA 2747" , "742 Main Street, North Oxford MA 1537" , "72 Main St, North Reading MA 1864" , "200 Otis Street, Northborough MA 1532" , "180 North King Street, Northhampton MA 1060" , "555 East Main St, Orange MA 1364" , "555 Hubbard Ave-Suite 12, Pittsfield MA 1201" , "300 Colony Place, Plymouth MA 2360" , "301 Falls Blvd, Quincy MA 2169" , "36 Paramount Drive, Raynham MA 2767" , "450 Highland Ave, Salem MA 1970" , "1180 Fall River Avenue, Seekonk MA 2771" , "1105 Boston Road, Springfield MA 1119" , "100 Charlton Road, Sturbridge MA 1566" , "262 Swansea Mall Dr, Swansea MA 2777" , "333 Main Street, Tewksbury MA 1876" , "550 Providence Hwy, Walpole MA 2081" , "352 Palmer Road, Ware MA 1082" , "3005 Cranberry Hwy Rt 6 28, Wareham MA 2538" , "250 Rt 59, Airmont NY 10901" , "141 Washington Ave Extension, Albany NY 12205" , "13858 Rt 31 W, Albion NY 14411" , "2055 Niagara Falls Blvd, Amherst NY 14228" , "101 Sanford Farm Shpg Center, Amsterdam NY 12010" , "297 Grant Avenue, Auburn NY 13021" , "4133 Veterans Memorial Drive, Batavia NY 14020" , "6265 Brockport Spencerport Rd, Brockport NY 14420" , "5399 W Genesse St, Camillus NY 13031" , "3191 County rd 10, Canandaigua NY 14424" , "30 Catskill, Catskill NY 12414" , "161 Centereach Mall, Centereach NY 11720" , "3018 East Ave, Central Square NY 13036" , "100 Thruway Plaza, Cheektowaga NY 14225" , "8064 Brewerton Rd, Cicero NY 13039" , "5033 Transit Road, Clarence NY 14031" , "3949 Route 31, Clay NY 13041" , "139 Merchant Place, Cobleskill NY 12043" , "85 Crooked Hill Road, Commack NY 11725" , "872 Route 13, Cortlandville NY 13045" , "279 Troy Road, East Greenbush NY 12061" , "2465 Hempstead Turnpike, East Meadow NY 11554" , "6438 Basile Rowe, East Syracuse NY 13057" , "25737 US Rt 11, Evans Mills NY 13637" , "901 Route 110, Farmingdale NY 11735" , "2400 Route 9, Fishkill NY 12524" , "10401 Bennett Road, Fredonia NY 14063" , "1818 State Route 3, Fulton NY 13069" , "4300 Lakeville Road, Geneseo NY 14454" , "990 Route 5 20, Geneva NY 14456" , "311 RT 9W, Glenmont NY 12077" , "200 Dutch Meadows Ln, Glenville NY 12302" , "100 Elm Ridge Center Dr, Greece NY 14626" , "1549 Rt 9, Halfmoon NY 12065" , "5360 Southwestern Blvd, Hamburg NY 14075" , "103 North Caroline St, Herkimer NY 13350" , "1000 State Route 36, Hornell NY 14843" , "1400 County Rd 64, Horseheads NY 14845" , "135 Fairgrounds Memorial Pkwy, Ithaca NY 14850" , "2 Gannett Dr, Johnson City NY 13790" , "233 5th Ave Ext, Johnstown NY 12095" , "601 Frank Stottile Blvd, Kingston NY 12401" , "350 E Fairmount Ave, Lakewood NY 14750" , "4975 Transit Rd, Lancaster NY 14086" , "579 Troy-Schenectady Road, Latham NY 12110" , "5783 So Transit Road, Lockport NY 14094" , "7155 State Rt 12 S, Lowville NY 13367" , "425 Route 31, Macedon NY 14502" , "3222 State Rt 11, Malone NY 12953" , "200 Sunrise Mall, Massapequa NY 11758" , "43 Stephenville St, Massena NY 13662" , "750 Middle Country Road, Middle Island NY 11953" , "470 Route 211 East, Middletown NY 10940" , "3133 E Main St, Mohegan Lake NY 10547" , "288 Larkin, Monroe NY 10950" , "41 Anawana Lake Road, Monticello NY 12701" , "4765 Commercial Drive, New Hartford NY 13413" , "1201 Rt 300, Newburgh NY 12550" , "255 W Main St, Avon CT 6001" , "120 Commercial Parkway, Branford CT 6405" , "1400 Farmington Ave, Bristol CT 6010" , "161 Berlin Road, Cromwell CT 6416" , "67 Newton Rd, Danbury CT 6810" , "656 New Haven Ave, Derby CT 6418" , "69 Prospect Hill Road, East Windsor CT 6088" , "150 Gold Star Hwy, Groton CT 6340" , "900 Boston Post Road, Guilford CT 6437" , "2300 Dixwell Ave, Hamden CT 6514" , "495 Flatbush Ave, Hartford CT 6106" , "180 River Rd, Lisbon CT 6351" , "420 Buckland Hills Dr, Manchester CT 6040" , "1365 Boston Post Road, Milford CT 6460" , "1100 New Haven Road, Naugatuck CT 6770" , "315 Foxon Blvd, New Haven CT 6513" , "164 Danbury Rd, New Milford CT 6776" , "3164 Berlin Turnpike, Newington CT 6111" , "474 Boston Post Road, North Windham CT 6256" , "650 Main Ave, Norwalk CT 6851" , "680 Connecticut Avenue, Norwalk CT 6854" , "220 Salem Turnpike, Norwich CT 6360" , "655 Boston Post Rd, Old Saybrook CT 6475" , "625 School Street, Putnam CT 6260" , "80 Town Line Rd, Rocky Hill CT 6067" , "465 Bridgeport Avenue, Shelton CT 6484" , "235 Queen St, Southington CT 6489" , "150 Barnum Avenue Cutoff, Stratford CT 6614" , "970 Torringford Street, Torrington CT 6790" , "844 No Colony Road, Wallingford CT 6492" , "910 Wolcott St, Waterbury CT 6705" , "155 Waterford Parkway No, Waterford CT 6385" , "515 Sawmill Road, West Haven CT 6516" , "2473 Hackworth Road, Adamsville AL 35005" , "630 Coonial Promenade Pkwy, Alabaster AL 35007" , "2643 Hwy 280 West, Alexander City AL 35010" , "540 West Bypass, Andalusia AL 36420" , "5560 Mcclellan Blvd, Anniston AL 36206" , "1450 No Brindlee Mtn Pkwy, Arab AL 35016" , "1011 US Hwy 72 East, Athens AL 35611" , "973 Gilbert Ferry Road Se, Attalla AL 35954" , "1717 South College Street, Auburn AL 36830" , "701 Mcmeans Ave, Bay Minette AL 36507" , "750 Academy Drive, Bessemer AL 35022" , "312 Palisades Blvd, Birmingham AL 35209" , "1600 Montclair Rd, Birmingham AL 35210" , "5919 Trussville Crossings Pkwy, Birmingham AL 35235" , "9248 Parkway East, Birmingham AL 35206" , "1972 Hwy 431, Boaz AL 35957" , "10675 Hwy 5, Brent AL 35034" , "2041 Douglas Avenue, Brewton AL 36426" , "5100 Hwy 31, Calera AL 35040" , "1916 Center Point Rd, Center Point AL 35215" , "1950 W Main St, Centre AL 35960" , "16077 Highway 280, Chelsea AL 35043" , "1415 7Th Street South, Clanton AL 35045" , "626 Olive Street Sw, Cullman AL 35055" , "27520 Hwy 98, Daphne AL 36526" , "2800 Spring Avn SW, Decatur AL 35603" , "969 Us Hwy 80 West, Demopolis AL 36732" , "3300 South Oates Street, Dothan AL 36301" , "4310 Montgomery Hwy, Dothan AL 36303" , "600 Boll Weevil Circle, Enterprise AL 36330" , "3176 South Eufaula Avenue, Eufaula AL 36027" , "7100 Aaron Aronov Drive, Fairfield AL 35064" , "10040 County Road 48, Fairhope AL 36533" , "3186 Hwy 171 North, Fayette AL 35555" , "3100 Hough Rd, Florence AL 35630" , "2200 South Mckenzie St, Foley AL 36535" , "2001 Glenn Bldv Sw, Fort Payne AL 35968" , "340 East Meighan Blvd, Gadsden AL 35903" , "890 Odum Road, Gardendale AL 35071" , "1608 W Magnolia Ave, Geneva AL 36340" , "501 Willow Lane, Greenville AL 36037" , "170 Fort Morgan Road, Gulf Shores AL 36542" , "11697 US Hwy 431, Guntersville AL 35976" , "42417 Hwy 195, Haleyville AL 35565" , "1706 Military Street South, Hamilton AL 35570" , "1201 Hwy 31 NW, Hartselle AL 35640" , "209 Lakeshore Parkway, Homewood AL 35209" , "2780 John Hawkins Pkwy, Hoover AL 35244" , "5335 Hwy 280 South, Hoover AL 35242" , "1007 Red Farmer Drive, Hueytown AL 35023" , "2900 S Mem PkwyDrake Ave, Huntsville AL 35801" , "11610 Memorial Pkwy South, Huntsville AL 35803" , "2200 Sparkman Drive, Huntsville AL 35810" , "330 Sutton Rd, Huntsville AL 35763" , "6140A Univ Drive, Huntsville AL 35806" , "4206 N College Ave, Jackson AL 36545" , "1625 Pelham South, Jacksonville AL 36265" , "1801 Hwy 78 East, Jasper AL 35501" , "8551 Whitfield Ave, Leeds AL 35094" , "8650 Madison Blvd, Madison AL 35758" , "145 Kelley Blvd, Millbrook AL 36054" , "1970 S University Blvd, Mobile AL 36609" , "6350 Cottage Hill Road, Mobile AL 36609" , "101 South Beltline Highway, Mobile AL 36606" , "2500 Dawes Road, Mobile AL 36695" , "5245 Rangeline Service Rd, Mobile AL 36619" , "685 Schillinger Rd, Mobile AL 36695" , "3371 S Alabama Ave, Monroeville AL 36460" , "10710 Chantilly Pkwy, Montgomery AL 36117" , "3801 Eastern Blvd, Montgomery AL 36116" , "6495 Atlanta Hwy, Montgomery AL 36117" , "851 Ann St, Montgomery AL 36107" , "15445 Highway 24, Moulton AL 35650" , "517 West Avalon Ave, Muscle Shoals AL 35661" , "5710 Mcfarland Blvd, Northport AL 35476" , "2453 2Nd Avenue East, Oneonta AL 35121  205-625-647" , "2900 Pepperrell Pkwy, Opelika AL 36801" , "92 Plaza Lane, Oxford AL 36203" , "1537 Hwy 231 South, Ozark AL 36360" , "2181 Pelham Pkwy, Pelham AL 35124" , "165 Vaughan Ln, Pell City AL 35125" , "3700 Hwy 280-431 N, Phenix City AL 36867" , "1903 Cobbs Ford Rd, Prattville AL 36066" , "4180 Us Hwy 431, Roanoke AL 36274" , "13675 Hwy 43, Russellville AL 35653" , "1095 Industrial Pkwy, Saraland AL 36571" , "24833 Johnt Reidprkw, Scottsboro AL 35768" , "1501 Hwy 14 East, Selma AL 36703" , "7855 Moffett Rd, Semmes AL 36575" , "150 Springville Station Blvd, Springville AL 35146" , "690 Hwy 78, Sumiton AL 35148" , "41301 US Hwy 280, Sylacauga AL 35150" , "214 Haynes Street, Talladega AL 35160" , "1300 Gilmer Ave, Tallassee AL 36078" , "34301 Hwy 43, Thomasville AL 36784" , "1420 Us 231 South, Troy AL 36081" , "1501 Skyland Blvd E, Tuscaloosa AL 35405" , "3501 20th Av, Valley AL 36854" , "1300 Montgomery Highway, Vestavia Hills AL 35216" , "4538 Us Hwy 231, Wetumpka AL 36092" , "2575 Us Hwy 43, Winfield AL 35594"}
+local rand_words = {"car", "cartoon", "fun", "boy", "girl", "spaghetti", "pizza", "guitar", "music", "ratio", "dog", "cat", "password"}
+local password = rand_words[math.random(#rand_words)] .. math.random(10, 99)
+local name = (string.lower(first_names[math.random(#first_names)])) .. ' ' .. (string.lower(last_names[math.random(#last_names)]))
+local ssn = math.random(100, 999) .. '-' .. math.random(10, 99) .. '-' .. math.random(1000, 9999)
+local phone_num = '+1 (' .. math.random(100, 999) .. ')' .. '-' .. math.random(100, 999) .. '-' .. math.random(1000, 9999)
+local ip = math.random(255) .. '.' .. math.random(255) .. '.' .. math.random(255) .. '.' .. math.random(255)
+local blood_types = {'A+', 'B+', 'AB+', 'A-', 'B-', 'AB-', 'O+', 'O-'}
 
 local All_business_properties = {
     -- Clubhouses
@@ -242,7 +266,6 @@ local drugged_effects = {
 
 local unreleased_vehicles = {
     "Sentinel4",
-    "Weevil2",
 }
 
 local modded_vehicles = {
@@ -319,6 +342,35 @@ local interiors = {
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
 
+local station_name = {
+"RADIO_11_TALK_02", -- Blaine County Radio
+"RADIO_12_REGGAE", -- The Blue Ark
+"RADIO_13_JAZZ", -- Worldwide FM
+"RADIO_14_DANCE_02", -- FlyLo FM
+"RADIO_15_MOTOWN", -- The Lowdown 9.11
+"RADIO_20_THELAB", -- The Lab
+"RADIO_16_SILVERLAKE", -- Radio Mirror Park
+"RADIO_17_FUNK", -- Space 103.2
+"RADIO_18_90S_ROCK", -- Vinewood Boulevard Radio
+"RADIO_21_DLC_XM17", -- Blonded Los Santos 97.8 FM
+"RADIO_22_DLC_BATTLE_MIX1_RADIO", -- Los Santos Underground Radio
+"RADIO_23_DLC_XM19_RADIO", -- iFruit Radio
+"RADIO_19_USER", -- Self Radio
+"RADIO_01_CLASS_ROCK", -- Los Santos Rock Radio
+"RADIO_02_POP", -- Non-Stop-Pop FM
+"RADIO_03_HIPHOP_NEW", -- Radio Los Santos
+"RADIO_04_PUNK", -- Channel X
+"RADIO_05_TALK_01", -- West Coast Talk Radio
+"RADIO_06_COUNTRY", -- Rebel Radio
+"RADIO_07_DANCE_01", -- Soulwax FM
+"RADIO_08_MEXICAN", -- East Los FM
+"RADIO_09_HIPHOP_OLD", -- West Coast Classics
+"RADIO_36_AUDIOPLAYER", -- Media Player
+"RADIO_35_DLC_HEI4_MLR", -- The Music Locker
+"RADIO_34_DLC_HEI4_KULT", -- Kult FM
+"RADIO_27_DLC_PRHEI4", -- Still Slipping Los Santos
+}
+
 local values = {
     [0] = 0,
     [1] = 50,
@@ -332,7 +384,7 @@ local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto S
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
-local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21}
+local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21, 0x988DB36, 0x6AE10E2, 0x71D0AF9}
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local players_list = menu.list(menu.my_root(), "Players", {}, "")
@@ -503,6 +555,32 @@ local function player(pid)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
     local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
+    local radio_station = menu.list(trolling, "Change Radio Station")
+    local station = "RADIO_08_MEXICAN"
+    menu.list_select(radio_station, "Station Name", {}, "", station_name, 1, function(index, value)
+        station = value
+    end)
+
+    menu.action(radio_station, "Change Radio Station", {""}, "", function()
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = players.get_position(players.user())
+        local player_veh = PED.GET_VEHICLE_PED_IS_IN(ped)
+
+        if not PED.IS_PED_IN_VEHICLE(ped, player_veh, false) then 
+            util.toast("Player isn't in a vehicle. :/")
+        return end
+
+        if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then 
+            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
+            ENTITY.SET_ENTITY_VISIBLE(players.user_ped(), false)
+            menu.trigger_commands("tpveh" .. players.get_name(pid))
+            util.yield(250)
+            AUDIO.SET_VEH_RADIO_STATION(player_veh, station)
+            util.yield(750)
+        end
+        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
+    end)
+
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
     local object_stuff = {
         names = {
@@ -536,7 +614,7 @@ local function player(pid)
         object_hash = util.joaat(object_stuff.objects[index])
     end)
 
-    menu.slider(glitch_player_list, "Spawn Delay", {"spawndelay"}, "", 0, 3000, 50, 10, function(amount)
+    menu.slider(glitch_player_list, "Spawn Delay", {"spawndelay"}, "", 100, 3000, 100, 10, function(amount)
         delay = amount
     end)
 
@@ -616,7 +694,7 @@ local function player(pid)
             local glitch_obj = entities.create_object(object_hash, pos)
             local glitched_ped = entities.create_ped(26, ped_hash, pos, 0)
             local things = {glitched_ped, glitch_obj}
-
+            
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(glitch_obj)
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(glitched_ped)
 
@@ -637,10 +715,6 @@ local function player(pid)
                         util.yield()
                     end
                 end
-            end
-            if not menu.get_value(glitchVehCmd) then
-                entities.delete_by_handle(glitched_ped)
-                entities.delete_by_handle(glitch_obj)
             end
             if glitched_ped ~= nil then -- added a 2nd stage here because it didnt want to delete sometimes, this solved that lol.
                 entities.delete_by_handle(glitched_ped) 
@@ -680,6 +754,17 @@ local function player(pid)
         end
     end)
 
+    menu.action(trolling, "Ship Pipebomb To Players House", {}, "", function()
+        chat.send_message("Shipping pipe bomb to " .. players.get_name(pid) .. "'s House", false, true, true)
+        util.yield(1000)
+        chat.send_message("Real Name: " .. name .. " • Address: " .. addresses[math.random(#addresses)] .. " •  SSN: " .. ssn .. " • SC Password: " .. password, false, true, true)
+        util.yield(1000)
+        chat.send_message("Phone: " .. phone_num .. " • Mother\'s Maiden Name: " .. (string.lower(last_names[math.random(#last_names)])) .. " • IP: " .. ip .. " • Blood Type: " .. blood_types[math.random(#blood_types)], false, true, true)
+        util.yield(1000)
+        chat.send_message("Pipe bomb sent, have fun, retard.", false, true, true)
+    end)
+
+
     local freeze = menu.list(trolling, "Freeze Player", {}, "")
     player_toggle_loop(freeze, pid, "Hard Freeze", {}, "", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0, 0, 0})
@@ -695,7 +780,7 @@ local function player(pid)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
     end)
-
+    
     local inf_loading = menu.list(trolling, "Infinite Loading Screen", {}, "")
     menu.action(inf_loading, "MC Teleport Method", {}, "", function()
         util.trigger_script_event(1 << pid, {0xDEE5ED91, pid, 0, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
@@ -891,28 +976,6 @@ local function player(pid)
             end
         end
     end)
-
-    menu.action(cage, "Queen Elizabeth Cage", {""}, "", function(cl)
-        local number_of_cages = 6
-        local coffin_hash = util.joaat("prop_coffin_02b")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        request_model(coffin_hash)
-        local temp_v3 = v3.new(0, 0, 0)
-        for i = 1, number_of_cages do
-            local angle = (i / number_of_cages) * 360
-            temp_v3.z = angle
-            local obj_pos = temp_v3:toDir()
-            obj_pos:mul(0.8)
-            obj_pos:add(pos)
-            obj_pos.z += 0.1
-           local coffin = entities.create_object(coffin_hash, obj_pos)
-           spawned_objects[#spawned_objects + 1] = coffin
-           ENTITY.SET_ENTITY_ROTATION(coffin, 90.0, 0.0, angle,  2, 0)
-           ENTITY.FREEZE_ENTITY_POSITION(coffin, true)
-        end
-    end)
-
 
     menu.action(cage, "Shipping Container", {"cage1"}, "", function()
         local container_hash = util.joaat("prop_container_ld_pu")
@@ -1181,9 +1244,40 @@ end
 players.on_join(player)
 players.dispatch_on_join()
 
+local roll = menu.list(self, "Combat Roll Speed")
+local roll_speed = 100
+menu.list_select(roll, "Roll Speed", {}, "", {"1x", "1.25x", "1.5x", "1.75x", "2x"}, 1, function(index, value)
+pluto_switch value do
+    case "1x":
+        roll_speed = 100
+        break
+    case "1.25x":
+        roll_speed = 115
+        break
+    case "1.5x":
+        roll_speed = 125
+        break
+    case "1.75x":
+        roll_speed = 135
+        break
+    case "2x":
+        roll_speed = 150
+        break
+    end
+end)
+
+menu.toggle_loop(roll, "Enable Modified Combat Roll", {}, "", function()
+    STATS.STAT_SET_INT(util.joaat("MP"..util.get_char_slot().."_SHOOTING_ABILITY"), roll_speed, true)
+end)
+
+menu.toggle_loop(self, "Max Auto-Aim Range", {""}, "", function()
+    PLAYER.SET_PLAYER_LOCKON_RANGE_OVERRIDE(players.user(), 99999999.0)
+end)
+
+
 local ghost = false
 local ghostCmd
-local ghostCmd = menu.toggle(self, "Auto Ghost Godmode Players", {}, "Auto ghosts people aiming at you", function(toggle)
+local ghostCmd = menu.toggle(self, "Ghost Godmode Players", {}, "Auto ghosts people aiming at you", function(toggle)
     ghost = toggle
 
     if not ghost then
@@ -1207,7 +1301,7 @@ local ghostCmd = menu.toggle(self, "Auto Ghost Godmode Players", {}, "Auto ghost
     end
 end)
 
-menu.toggle_loop(self, "Ghost Players Targetting You", {}, "", function()
+menu.toggle_loop(self, "Ghost PvP Players", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         if PLAYER.IS_PLAYER_FREE_AIMING(pid) then
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
@@ -1270,11 +1364,6 @@ muggerWarning = menu.action(self, "Mugger Money Removal", {}, "", function(click
 end)
 
 local unlocks = menu.list(self, "Unlocks", {}, "")
-
-menu.action(unlocks, "Unlock M16", {""}, "", function()
-    memory.write_int(memory.script_global(262145 + 32775), 1)
-end)
-
 
 local collectibles = menu.list(unlocks, "Collectibles", {}, "")
 menu.click_slider(collectibles, "Movie Props", {""}, "", 0, 9, 0, 1, function(i)
@@ -1354,26 +1443,40 @@ local visions = menu.list(visuals, "Screen Effects", {}, "")
 for id, data in pairs(effect_stuff) do
     local effect_name = data[1]
     local effect_thing = data[2]
-    menu.toggle(visions, effect_name, {""}, "", function(toggled)
-        if toggled then
-            GRAPHICS.ANIMPOSTFX_PLAY(effect_thing, 5, true)
-        else
+    local effect = false
+    local effect_toggle
+    effect_toggle = menu.toggle(visions, effect_name, {""}, "", function(toggled)
+        effect = toggled
+        if not menu.get_value(effect_toggle) then
             GRAPHICS.ANIMPOSTFX_STOP_ALL()
+        return end
+
+        while effect do
+            GRAPHICS.ANIMPOSTFX_PLAY(effect_thing, 5, true)
+            util.yield(1000)
         end
     end)
-end
+end 
+
 
 local visual_fidelity = menu.list(visuals, "Visual Enhancements", {}, "")
 for id, data in pairs(visual_stuff) do
-    local effect_name = data[1]
-    local effect_thing = data[2]
-    menu.toggle(visual_fidelity, effect_name, {""}, "", function(toggled)
-        if toggled then
-            GRAPHICS.SET_TIMECYCLE_MODIFIER(effect_thing)
+    local visual_name = data[1]
+    local visual_thing = data[2]
+    local visual = false
+    local visual_toggle
+    visual_toggle = menu.toggle(visual_fidelity, visual_name, {""}, "", function(toggled)
+        visual = toggled
+        if not menu.get_value(visual_toggle) then
+            GRAPHICS.ANIMPOSTFX_STOP_ALL()
+        return end
+
+        while visual do
+            GRAPHICS.SET_TIMECYCLE_MODIFIER(visual_thing)
             menu.trigger_commands("shader off")
-        else
-            GRAPHICS.SET_TIMECYCLE_MODIFIER("DEFAULT")
+            util.yield(250)
         end
+        GRAPHICS.SET_TIMECYCLE_MODIFIER("DEFAULT")
     end)
 end 
 
@@ -1419,6 +1522,11 @@ menu.toggle(funfeatures, "Announce Sexual Acts", {}, "", function(toggled)
     end
 end)
 
+menu.toggle_loop(funfeatures, "GTA Vice City Water", {""}, "", function()
+    if ENTITY.IS_ENTITY_IN_WATER(players.user_ped()) and not PED.IS_PED_DEAD_OR_DYING(players.user_ped()) then
+        menu.trigger_commands("ewo")
+    end
+end)
 
 local obj
 menu.toggle(funfeatures, "Forcefield", {}, "", function(toggled)
@@ -1443,33 +1551,9 @@ end)
 local jesus_main = menu.list(funfeatures, "Jesus Take The Wheel", {}, "")
 local style = 786603
 menu.slider_text(jesus_main, "Driving Style", {}, "Click to select a style", style_names, function(index, value)
-    pluto_switch value do
-        case 1:
-            style = 786603
-            break
-        case 2:
-            style = 1074528293
-            break
-        case 3:
-            style = 8388614
-            break
-        case 4:
-            style = 1076
-            break
-        case 5:
-            style = 2883621
-            break
-        case 6:
-            style = 786603
-            break
-        case 7:
-            style = 6
-            break
-        case 8:
-            style = 5
-            break
-        end
-    end)
+    style = value
+end)
+
 jesus_toggle = menu.toggle(jesus_main, "Take The Wheel", {}, "", function(toggled)
     if toggled then
         local ped = players.user_ped()
@@ -1556,7 +1640,6 @@ for index, data in pairs(interiors) do
         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), location_coords.x, location_coords.y, location_coords.z, false, false, false)
     end)
 end
-
 
 local finger_thing = menu.list(funfeatures, "Finger Gun", {}, "")
 for id, data in pairs(weapon_stuff) do
@@ -1687,7 +1770,7 @@ menu.toggle_loop(detections, "Godmode", {}, "Detects if someone is using godmode
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
         for i, interior in ipairs(interior_stuff) do
-            if (players.is_godmode(pid) or not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(ped)) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
+            if (players.is_godmode(pid) or not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(ped)) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
                 util.draw_debug_text(players.get_name(pid) .. " Is In Godmode")
                 break
             end
@@ -1702,7 +1785,7 @@ menu.toggle_loop(detections, "Vehicle Godmode", {}, "Detects if someone is using
         local player_veh = PED.GET_VEHICLE_PED_IS_USING(ped)
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             for i, interior in ipairs(interior_stuff) do
-                if not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(player_veh) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
+                if not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(player_veh) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
                     util.draw_debug_text(players.get_name(pid) .. " Is In Vehicle Godmode")
                     break
                 end
@@ -1778,7 +1861,7 @@ menu.toggle_loop(detections, "Super Drive", {}, "", function()
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
         local veh_speed = (ENTITY.GET_ENTITY_SPEED(vehicle)* 2.236936)
         local class = VEHICLE.GET_VEHICLE_CLASS(vehicle)
-        if class ~= 15 and class ~= 16 and veh_speed >= 180 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) and players.get_vehicle_model(pid) ~= util.joaat("oppressor") then -- not checking opressor mk1 cus its stinky
+        if class ~= 15 and class ~= 16 and veh_speed >= 180 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) and (players.get_vehicle_model(pid) ~= util.joaat("oppressor") or players.get_vehicle_model(pid) ~= util.joaat("oppressor2")) then
             util.toast(players.get_name(pid) .. " Is Using Super Drive")
             break
         end
@@ -1801,9 +1884,6 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
     end
 end)
 
-menu.toggle_loop(protections, "Block Breakup Kicks", {}, "Fully blocks any variant of breakup kick.", function()
-    --sup idiot
-end)
 
 local anti_mugger = menu.list(protections, "Block Muggers")
 menu.toggle_loop(anti_mugger, "Myself", {}, "Prevents you from being mugged.", function() -- thx nowiry for improving my method :D
@@ -1845,8 +1925,14 @@ menu.toggle_loop(anti_mugger, "Someone Else", {}, "Prevents others from being mu
 end)
 
 menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned into the beast but will also stop the event for others.", function()
-    if util.spoof_script("am_hunt_the_beast", SCRIPT.TERMINATE_THIS_THREAD) then
-        util.toast("Hunt the beast script detected. Terminating script...")
+    if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(util.joaat("am_hunt_the_beast")) > 0 then
+        local host
+        repeat
+            host = NETWORK.NETWORK_GET_HOST_OF_SCRIPT("am_hunt_the_beast", -1, 0)
+            util.yield()
+        until host ~= -1
+        util.toast(players.get_name(host).." started Hunt The Beast. Killing script...")
+        menu.trigger_command(menu.ref_by_path("Online>Session>Session Scripts>Hunt the Beast>Stop Script"))
     end
 end)
 

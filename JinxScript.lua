@@ -1,7 +1,8 @@
 util.require_natives("natives-1663599433-uno")
+
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.70
+local localVer = 2.80
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -22,7 +23,7 @@ async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScrip
             async_http.dispatch()
         end)
     end
-end, function() response = true end)
+end, function() response = true end) 
 async_http.dispatch()
 repeat 
     util.yield()
@@ -122,17 +123,6 @@ local function request_model(hash, timeout)
     until STREAMING.HAS_MODEL_LOADED(hash) or os.time() >= end_time
     return STREAMING.HAS_MODEL_LOADED(hash)
 end
-
-local first_names = {"JAMES", "JOHN", "ROBERT", "MICHAEL", "WILLIAM", "DAVID", "RICHARD", "CHARLES", "JOSEPH", "THOMAS", "CHRISTOPHER", "DANIEL", "PAUL", "MARK", "DONALD", "GEORGE", "KENNETH", "STEVEN", "EDWARD", "BRIAN", "RONALD", "ANTHONY", "KEVIN", "JASON", "MATTHEW", "GARY", "TIMOTHY", "JOSE", "LARRY", "JEFFREY", "FRANK", "SCOTT", "ERIC", "STEPHEN", "ANDREW", "RAYMOND", "GREGORY", "JOSHUA", "JERRY", "DENNIS", "WALTER", "PATRICK", "PETER", "HAROLD", "DOUGLAS", "HENRY", "CARL", "ARTHUR", "RYAN", "ROGER", "JOE", "JUAN", "JACK", "ALBERT", "JONATHAN", "JUSTIN", "TERRY", "GERALD", "KEITH", "SAMUEL", "WILLIE", "RALPH", "LAWRENCE", "NICHOLAS", "ROY", "BENJAMIN", "BRUCE", "BRANDON", "ADAM", "HARRY", "FRED", "WAYNE", "BILLY", "STEVE", "LOUIS", "JEREMY", "AARON", "RANDY", "HOWARD", "EUGENE", "CARLOS", "RUSSELL", "BOBBY", "VICTOR", "MARTIN", "ERNEST", "PHILLIP", "TODD", "JESSE", "CRAIG", "ALAN", "SHAWN", "CLARENCE", "SEAN", "PHILIP", "CHRIS", "JOHNNY", "EARL", "JIMMY", "ANTONIO"}
-local last_names = {"smith" , "johnson" , "williams" , "brown" , "jones" , "miller" , "davis" , "garcia" , "rodriguez" , "wilson" , "martinez" , "anderson" , "taylor" , "thomas" , "hernandez" , "moore" , "martin" , "jackson" , "thompson" , "white" , "lopez" , "lee" , "gonzalez" , "harris" , "clark" , "lewis" , "robinson" , "walker" , "perez" , "hall" , "young" , "allen" , "sanchez" , "wright" , "king" , "scott" , "green" , "baker" , "adams" , "nelson" , "hill" , "ramirez" , "campbell" , "mitchell" , "roberts" , "carter" , "phillips" , "evans" , "turner" , "torres" , "parker" , "collins" , "edwards" , "stewart" , "flores" , "morris" , "nguyen" , "murphy" , "rivera" , "cook" , "rogers" , "morgan" , "peterson" , "cooper" , "reed" , "bailey" , "bell" , "gomez" , "kelly" , "howard" , "ward" , "cox" , "diaz" , "richardson" , "wood" , "watson" , "brooks" , "bennett" , "gray" , "james" , "reyes" , "cruz" , "hughes" , "price" , "myers" , "long" , "foster" , "sanders" , "ross" , "morales" , "powell" , "sullivan" , "russell" , "ortiz" , "jenkins" , "gutierrez" , "perry" , "butler" , "barnes" , "fisher"}
-local addresses = {"777 Brockton Avenue, Abington MA 2351" , "30 Memorial Drive, Avon MA 2322" , "250 Hartford Avenue, Bellingham MA 2019" , "700 Oak Street, Brockton MA 2301" , "66-4 Parkhurst Rd, Chelmsford MA 1824" , "591 Memorial Dr, Chicopee MA 1020" , "55 Brooksby Village Way, Danvers MA 1923" , "137 Teaticket Hwy, East Falmouth MA 2536" , "42 Fairhaven Commons Way, Fairhaven MA 2719" , "374 William S Canning Blvd, Fall River MA 2721" , "121 Worcester Rd, Framingham MA 1701" , "677 Timpany Blvd, Gardner MA 1440" , "337 Russell St, Hadley MA 1035" , "295 Plymouth Street, Halifax MA 2338" , "1775 Washington St, Hanover MA 2339" , "280 Washington Street, Hudson MA 1749" , "20 Soojian Dr, Leicester MA 1524" , "11 Jungle Road, Leominster MA 1453" , "301 Massachusetts Ave, Lunenburg MA 1462" , "780 Lynnway, Lynn MA 1905" , "70 Pleasant Valley Street, Methuen MA 1844" , "830 Curran Memorial Hwy, North Adams MA 1247" , "1470 S Washington St, North Attleboro MA 2760" , "506 State Road, North Dartmouth MA 2747" , "742 Main Street, North Oxford MA 1537" , "72 Main St, North Reading MA 1864" , "200 Otis Street, Northborough MA 1532" , "180 North King Street, Northhampton MA 1060" , "555 East Main St, Orange MA 1364" , "555 Hubbard Ave-Suite 12, Pittsfield MA 1201" , "300 Colony Place, Plymouth MA 2360" , "301 Falls Blvd, Quincy MA 2169" , "36 Paramount Drive, Raynham MA 2767" , "450 Highland Ave, Salem MA 1970" , "1180 Fall River Avenue, Seekonk MA 2771" , "1105 Boston Road, Springfield MA 1119" , "100 Charlton Road, Sturbridge MA 1566" , "262 Swansea Mall Dr, Swansea MA 2777" , "333 Main Street, Tewksbury MA 1876" , "550 Providence Hwy, Walpole MA 2081" , "352 Palmer Road, Ware MA 1082" , "3005 Cranberry Hwy Rt 6 28, Wareham MA 2538" , "250 Rt 59, Airmont NY 10901" , "141 Washington Ave Extension, Albany NY 12205" , "13858 Rt 31 W, Albion NY 14411" , "2055 Niagara Falls Blvd, Amherst NY 14228" , "101 Sanford Farm Shpg Center, Amsterdam NY 12010" , "297 Grant Avenue, Auburn NY 13021" , "4133 Veterans Memorial Drive, Batavia NY 14020" , "6265 Brockport Spencerport Rd, Brockport NY 14420" , "5399 W Genesse St, Camillus NY 13031" , "3191 County rd 10, Canandaigua NY 14424" , "30 Catskill, Catskill NY 12414" , "161 Centereach Mall, Centereach NY 11720" , "3018 East Ave, Central Square NY 13036" , "100 Thruway Plaza, Cheektowaga NY 14225" , "8064 Brewerton Rd, Cicero NY 13039" , "5033 Transit Road, Clarence NY 14031" , "3949 Route 31, Clay NY 13041" , "139 Merchant Place, Cobleskill NY 12043" , "85 Crooked Hill Road, Commack NY 11725" , "872 Route 13, Cortlandville NY 13045" , "279 Troy Road, East Greenbush NY 12061" , "2465 Hempstead Turnpike, East Meadow NY 11554" , "6438 Basile Rowe, East Syracuse NY 13057" , "25737 US Rt 11, Evans Mills NY 13637" , "901 Route 110, Farmingdale NY 11735" , "2400 Route 9, Fishkill NY 12524" , "10401 Bennett Road, Fredonia NY 14063" , "1818 State Route 3, Fulton NY 13069" , "4300 Lakeville Road, Geneseo NY 14454" , "990 Route 5 20, Geneva NY 14456" , "311 RT 9W, Glenmont NY 12077" , "200 Dutch Meadows Ln, Glenville NY 12302" , "100 Elm Ridge Center Dr, Greece NY 14626" , "1549 Rt 9, Halfmoon NY 12065" , "5360 Southwestern Blvd, Hamburg NY 14075" , "103 North Caroline St, Herkimer NY 13350" , "1000 State Route 36, Hornell NY 14843" , "1400 County Rd 64, Horseheads NY 14845" , "135 Fairgrounds Memorial Pkwy, Ithaca NY 14850" , "2 Gannett Dr, Johnson City NY 13790" , "233 5th Ave Ext, Johnstown NY 12095" , "601 Frank Stottile Blvd, Kingston NY 12401" , "350 E Fairmount Ave, Lakewood NY 14750" , "4975 Transit Rd, Lancaster NY 14086" , "579 Troy-Schenectady Road, Latham NY 12110" , "5783 So Transit Road, Lockport NY 14094" , "7155 State Rt 12 S, Lowville NY 13367" , "425 Route 31, Macedon NY 14502" , "3222 State Rt 11, Malone NY 12953" , "200 Sunrise Mall, Massapequa NY 11758" , "43 Stephenville St, Massena NY 13662" , "750 Middle Country Road, Middle Island NY 11953" , "470 Route 211 East, Middletown NY 10940" , "3133 E Main St, Mohegan Lake NY 10547" , "288 Larkin, Monroe NY 10950" , "41 Anawana Lake Road, Monticello NY 12701" , "4765 Commercial Drive, New Hartford NY 13413" , "1201 Rt 300, Newburgh NY 12550" , "255 W Main St, Avon CT 6001" , "120 Commercial Parkway, Branford CT 6405" , "1400 Farmington Ave, Bristol CT 6010" , "161 Berlin Road, Cromwell CT 6416" , "67 Newton Rd, Danbury CT 6810" , "656 New Haven Ave, Derby CT 6418" , "69 Prospect Hill Road, East Windsor CT 6088" , "150 Gold Star Hwy, Groton CT 6340" , "900 Boston Post Road, Guilford CT 6437" , "2300 Dixwell Ave, Hamden CT 6514" , "495 Flatbush Ave, Hartford CT 6106" , "180 River Rd, Lisbon CT 6351" , "420 Buckland Hills Dr, Manchester CT 6040" , "1365 Boston Post Road, Milford CT 6460" , "1100 New Haven Road, Naugatuck CT 6770" , "315 Foxon Blvd, New Haven CT 6513" , "164 Danbury Rd, New Milford CT 6776" , "3164 Berlin Turnpike, Newington CT 6111" , "474 Boston Post Road, North Windham CT 6256" , "650 Main Ave, Norwalk CT 6851" , "680 Connecticut Avenue, Norwalk CT 6854" , "220 Salem Turnpike, Norwich CT 6360" , "655 Boston Post Rd, Old Saybrook CT 6475" , "625 School Street, Putnam CT 6260" , "80 Town Line Rd, Rocky Hill CT 6067" , "465 Bridgeport Avenue, Shelton CT 6484" , "235 Queen St, Southington CT 6489" , "150 Barnum Avenue Cutoff, Stratford CT 6614" , "970 Torringford Street, Torrington CT 6790" , "844 No Colony Road, Wallingford CT 6492" , "910 Wolcott St, Waterbury CT 6705" , "155 Waterford Parkway No, Waterford CT 6385" , "515 Sawmill Road, West Haven CT 6516" , "2473 Hackworth Road, Adamsville AL 35005" , "630 Coonial Promenade Pkwy, Alabaster AL 35007" , "2643 Hwy 280 West, Alexander City AL 35010" , "540 West Bypass, Andalusia AL 36420" , "5560 Mcclellan Blvd, Anniston AL 36206" , "1450 No Brindlee Mtn Pkwy, Arab AL 35016" , "1011 US Hwy 72 East, Athens AL 35611" , "973 Gilbert Ferry Road Se, Attalla AL 35954" , "1717 South College Street, Auburn AL 36830" , "701 Mcmeans Ave, Bay Minette AL 36507" , "750 Academy Drive, Bessemer AL 35022" , "312 Palisades Blvd, Birmingham AL 35209" , "1600 Montclair Rd, Birmingham AL 35210" , "5919 Trussville Crossings Pkwy, Birmingham AL 35235" , "9248 Parkway East, Birmingham AL 35206" , "1972 Hwy 431, Boaz AL 35957" , "10675 Hwy 5, Brent AL 35034" , "2041 Douglas Avenue, Brewton AL 36426" , "5100 Hwy 31, Calera AL 35040" , "1916 Center Point Rd, Center Point AL 35215" , "1950 W Main St, Centre AL 35960" , "16077 Highway 280, Chelsea AL 35043" , "1415 7Th Street South, Clanton AL 35045" , "626 Olive Street Sw, Cullman AL 35055" , "27520 Hwy 98, Daphne AL 36526" , "2800 Spring Avn SW, Decatur AL 35603" , "969 Us Hwy 80 West, Demopolis AL 36732" , "3300 South Oates Street, Dothan AL 36301" , "4310 Montgomery Hwy, Dothan AL 36303" , "600 Boll Weevil Circle, Enterprise AL 36330" , "3176 South Eufaula Avenue, Eufaula AL 36027" , "7100 Aaron Aronov Drive, Fairfield AL 35064" , "10040 County Road 48, Fairhope AL 36533" , "3186 Hwy 171 North, Fayette AL 35555" , "3100 Hough Rd, Florence AL 35630" , "2200 South Mckenzie St, Foley AL 36535" , "2001 Glenn Bldv Sw, Fort Payne AL 35968" , "340 East Meighan Blvd, Gadsden AL 35903" , "890 Odum Road, Gardendale AL 35071" , "1608 W Magnolia Ave, Geneva AL 36340" , "501 Willow Lane, Greenville AL 36037" , "170 Fort Morgan Road, Gulf Shores AL 36542" , "11697 US Hwy 431, Guntersville AL 35976" , "42417 Hwy 195, Haleyville AL 35565" , "1706 Military Street South, Hamilton AL 35570" , "1201 Hwy 31 NW, Hartselle AL 35640" , "209 Lakeshore Parkway, Homewood AL 35209" , "2780 John Hawkins Pkwy, Hoover AL 35244" , "5335 Hwy 280 South, Hoover AL 35242" , "1007 Red Farmer Drive, Hueytown AL 35023" , "2900 S Mem PkwyDrake Ave, Huntsville AL 35801" , "11610 Memorial Pkwy South, Huntsville AL 35803" , "2200 Sparkman Drive, Huntsville AL 35810" , "330 Sutton Rd, Huntsville AL 35763" , "6140A Univ Drive, Huntsville AL 35806" , "4206 N College Ave, Jackson AL 36545" , "1625 Pelham South, Jacksonville AL 36265" , "1801 Hwy 78 East, Jasper AL 35501" , "8551 Whitfield Ave, Leeds AL 35094" , "8650 Madison Blvd, Madison AL 35758" , "145 Kelley Blvd, Millbrook AL 36054" , "1970 S University Blvd, Mobile AL 36609" , "6350 Cottage Hill Road, Mobile AL 36609" , "101 South Beltline Highway, Mobile AL 36606" , "2500 Dawes Road, Mobile AL 36695" , "5245 Rangeline Service Rd, Mobile AL 36619" , "685 Schillinger Rd, Mobile AL 36695" , "3371 S Alabama Ave, Monroeville AL 36460" , "10710 Chantilly Pkwy, Montgomery AL 36117" , "3801 Eastern Blvd, Montgomery AL 36116" , "6495 Atlanta Hwy, Montgomery AL 36117" , "851 Ann St, Montgomery AL 36107" , "15445 Highway 24, Moulton AL 35650" , "517 West Avalon Ave, Muscle Shoals AL 35661" , "5710 Mcfarland Blvd, Northport AL 35476" , "2453 2Nd Avenue East, Oneonta AL 35121  205-625-647" , "2900 Pepperrell Pkwy, Opelika AL 36801" , "92 Plaza Lane, Oxford AL 36203" , "1537 Hwy 231 South, Ozark AL 36360" , "2181 Pelham Pkwy, Pelham AL 35124" , "165 Vaughan Ln, Pell City AL 35125" , "3700 Hwy 280-431 N, Phenix City AL 36867" , "1903 Cobbs Ford Rd, Prattville AL 36066" , "4180 Us Hwy 431, Roanoke AL 36274" , "13675 Hwy 43, Russellville AL 35653" , "1095 Industrial Pkwy, Saraland AL 36571" , "24833 Johnt Reidprkw, Scottsboro AL 35768" , "1501 Hwy 14 East, Selma AL 36703" , "7855 Moffett Rd, Semmes AL 36575" , "150 Springville Station Blvd, Springville AL 35146" , "690 Hwy 78, Sumiton AL 35148" , "41301 US Hwy 280, Sylacauga AL 35150" , "214 Haynes Street, Talladega AL 35160" , "1300 Gilmer Ave, Tallassee AL 36078" , "34301 Hwy 43, Thomasville AL 36784" , "1420 Us 231 South, Troy AL 36081" , "1501 Skyland Blvd E, Tuscaloosa AL 35405" , "3501 20th Av, Valley AL 36854" , "1300 Montgomery Highway, Vestavia Hills AL 35216" , "4538 Us Hwy 231, Wetumpka AL 36092" , "2575 Us Hwy 43, Winfield AL 35594"}
-local rand_words = {"car", "cartoon", "fun", "boy", "girl", "spaghetti", "pizza", "guitar", "music", "ratio", "dog", "cat", "password"}
-local password = rand_words[math.random(#rand_words)] .. math.random(10, 99)
-local name = (string.lower(first_names[math.random(#first_names)])) .. ' ' .. (string.lower(last_names[math.random(#last_names)]))
-local ssn = math.random(100, 999) .. '-' .. math.random(10, 99) .. '-' .. math.random(1000, 9999)
-local phone_num = '+1 (' .. math.random(100, 999) .. ')' .. '-' .. math.random(100, 999) .. '-' .. math.random(1000, 9999)
-local ip = math.random(255) .. '.' .. math.random(255) .. '.' .. math.random(255) .. '.' .. math.random(255)
-local blood_types = {'A+', 'B+', 'AB+', 'A-', 'B-', 'AB-', 'O+', 'O-'}
 
 local All_business_properties = {
     -- Clubhouses
@@ -308,8 +298,8 @@ local interiors = {
     {"Martin Madrazos House", {x=1395.2512, y=1141.6833, z=114.63437}},
     {"Floyds Apartment", {x=-1156.5099, y=-1519.0894, z=10.632717}},
     {"Michaels House", {x=-813.8814, y=179.07889, z=72.15914}},
-    {"Franklins House (Old)", {x=-14.239959, y=-1439.6913, z=31.101551}},
-    {"Franklins House (New)", {x=7.3125067, y=537.3615, z=176.02803}},
+    {"Franklins House (Strawberry)", {x=-14.239959, y=-1439.6913, z=31.101551}},
+    {"Franklins House (Vinewood Hills)", {x=7.3125067, y=537.3615, z=176.02803}},
     {"Trevors House", {x=1974.1617, y=3819.032, z=33.436287}},
     {"Lesters House", {x=1273.898, y=-1719.304, z=54.771}},
     {"Lesters Warehouse", {x=713.5684, y=-963.64795, z=30.39534}},
@@ -330,7 +320,6 @@ local interiors = {
     {"Fort Zancudo Tower", {x=-2357.9187, y=3249.689, z=101.45073}},
     {"Agency Interior", {x=-1118.0181, y=-77.93254, z=-98.99977}},
     {"Agency Garage", {x=-1071.0494, y=-71.898506, z=-94.59982}},
-    {"Avenger Interior", {x=518.6444, y=4750.4644, z=-69.3235}},
     {"Terrobyte Interior", {x=-1421.015, y=-3012.587, z=-80.000}},
     {"Bunker Interior", {x=899.5518,y=-3246.038, z=-98.04907}},
     {"IAA Office", {x=128.20, y=-617.39, z=206.04}},
@@ -338,39 +327,37 @@ local interiors = {
     {"FIB Floor 47", {x=134.5835, y=-766.486, z=234.152}},
     {"FIB Floor 49", {x=134.635, y=-765.831, z=242.152}},
     {"Big Fat White Cock", {x=-31.007448, y=6317.047, z=40.04039}},
-    {"Marijuana Shop", {x=-1170.3048, y=-1570.8246, z=4.663622}},
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
 
 local station_name = {
-"RADIO_11_TALK_02", -- Blaine County Radio
-"RADIO_12_REGGAE", -- The Blue Ark
-"RADIO_13_JAZZ", -- Worldwide FM
-"RADIO_14_DANCE_02", -- FlyLo FM
-"RADIO_15_MOTOWN", -- The Lowdown 9.11
-"RADIO_20_THELAB", -- The Lab
-"RADIO_16_SILVERLAKE", -- Radio Mirror Park
-"RADIO_17_FUNK", -- Space 103.2
-"RADIO_18_90S_ROCK", -- Vinewood Boulevard Radio
-"RADIO_21_DLC_XM17", -- Blonded Los Santos 97.8 FM
-"RADIO_22_DLC_BATTLE_MIX1_RADIO", -- Los Santos Underground Radio
-"RADIO_23_DLC_XM19_RADIO", -- iFruit Radio
-"RADIO_19_USER", -- Self Radio
-"RADIO_01_CLASS_ROCK", -- Los Santos Rock Radio
-"RADIO_02_POP", -- Non-Stop-Pop FM
-"RADIO_03_HIPHOP_NEW", -- Radio Los Santos
-"RADIO_04_PUNK", -- Channel X
-"RADIO_05_TALK_01", -- West Coast Talk Radio
-"RADIO_06_COUNTRY", -- Rebel Radio
-"RADIO_07_DANCE_01", -- Soulwax FM
-"RADIO_08_MEXICAN", -- East Los FM
-"RADIO_09_HIPHOP_OLD", -- West Coast Classics
-"RADIO_36_AUDIOPLAYER", -- Media Player
-"RADIO_35_DLC_HEI4_MLR", -- The Music Locker
-"RADIO_34_DLC_HEI4_KULT", -- Kult FM
-"RADIO_27_DLC_PRHEI4", -- Still Slipping Los Santos
+    ["Blaine County Radio"] = "RADIO_11_TALK_02", 
+    ["The Blue Ark"] = "RADIO_12_REGGAE",
+    ["Worldwide FM"] = "RADIO_13_JAZZ",
+    ["FlyLo FM"] = "RADIO_14_DANCE_02",
+    ["The Lowdown 9.11"] = "RADIO_15_MOTOWN",
+    ["The Lab"] = "RADIO_20_THELAB",
+    ["Radio Mirror Park"] = "RADIO_16_SILVERLAKE",
+    ["Space 103.2"] = "RADIO_17_FUNK",
+    ["Vinewood Boulevard Radio"] = "RADIO_18_90S_ROCK",
+    ["Blonded Los Santos 97.8 FM"] = "RADIO_21_DLC_XM17",
+    ["Los Santos Underground Radio"] = "RADIO_22_DLC_BATTLE_MIX1_RADIO",
+    ["iFruit Radio"] = "RADIO_23_DLC_XM19_RADIO",
+    ["Motomami Lost Santos"] = "RADIO_19_USER",
+    ["Los Santos Rock Radio"] = "RADIO_01_CLASS_ROCK",
+    ["Non-Stop-Pop FM"] = "RADIO_02_POP",
+    ["Radio Los Santos"] = "RADIO_03_HIPHOP_NEW",
+    ["Channel X"] = "RADIO_04_PUNK",
+    ["West Coast Talk Radio"] = "RADIO_05_TALK_01",
+    ["Rebel Radio"] = "RADIO_06_COUNTRY", 
+    ["Soulwax FM"] = "RADIO_07_DANCE_01",
+    ["East Los FM"] = "RADIO_08_MEXICAN",
+    ["West Coast Classics"] = "RADIO_09_HIPHOP_OLD",
+    ["Media Player"] = "RADIO_36_AUDIOPLAYER",
+    ["The Music Locker"] = "RADIO_35_DLC_HEI4_MLR",
+    ["Kult FM"] = "RADIO_34_DLC_HEI4_KULT",
+    ["Still Slipping Los Santos"] = "RADIO_27_DLC_PRHEI4",
 }
-
 local values = {
     [0] = 0,
     [1] = 50,
@@ -384,7 +371,7 @@ local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto S
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
-local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21, 0x988DB36, 0x6AE10E2, 0x71D0AF9}
+local stinkers = {0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21, 0x988DB36, 0x6AE10E2, 0x71D0AF9, 0xB93038B}
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local players_list = menu.list(menu.my_root(), "Players", {}, "")
@@ -403,12 +390,12 @@ local int_max = 2147483647
 
 local menus = {}
 local function player_list(pid)
-    menus[pid] = menu.action(players_list, players.get_name(pid), {}, "", function() -- thanks to dangerman and aaron for showing me how to delete players properly
+    menus[pid] = menu.list(players_list, players.get_name(pid), {}, "", function()
         menu.trigger_commands("jinxscript " .. players.get_name(pid))
     end)
 end
 
-local function handle_player_list(pid)
+local function handle_player_list(pid) -- thanks to dangerman and aaron for showing me how to delete players properly
     local ref = menus[pid]
     if not players.exists(pid) then
         if ref then
@@ -469,18 +456,8 @@ local function player(pid)
         end
     end)
 
-    local halloween_loop = menu.list(friendly, "Halloween Collectible Loop", {}, "")
-    local halloween_delay = 500
-    menu.slider(halloween_loop, "Delay", {}, "", 0, 2500, 500, 10, function(amount)
-        halloween_delay = amount
-    end)
-    player_toggle_loop(halloween_loop, pid, "Enable Loop", {}, "Should give them quite a bit of money and some other stuff", function()
-        util.trigger_script_event(1 << pid, {0xB9BA4D30, pid, 0x8, -1, 1, 1, 1})
-        util.yield(halloween_delay)
-    end)
-
     local rpwarning
-     rpwarning = menu.action(friendly, "Collectible RP Loop", {}, "", function(click_type)
+     rpwarning = menu.action(friendly, "Collectible RP Loop", {}, "Loops a bad collectible, don't use on legit players.", function(click_type)
         menu.show_warning(rpwarning, click_type, "Warning: This will kick legit players and hasn't been fully tested yet. Proceed with caution.", function()
             local rp_loop = menu.list(friendly, "Collectible RP Loop", {}, "")
             menu.delete(rpwarning)
@@ -555,32 +532,6 @@ local function player(pid)
 
     menu.hyperlink(funfeatures_player, "Label List", "https://gist.githubusercontent.com/aaronlink127/afc889be7d52146a76bab72ede0512c7/raw")
     local trolling = menu.list(bozo, "Trolling & Griefing", {}, "")
-    local radio_station = menu.list(trolling, "Change Radio Station")
-    local station = "RADIO_08_MEXICAN"
-    menu.list_select(radio_station, "Station Name", {}, "", station_name, 1, function(index, value)
-        station = value
-    end)
-
-    menu.action(radio_station, "Change Radio Station", {""}, "", function()
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = players.get_position(players.user())
-        local player_veh = PED.GET_VEHICLE_PED_IS_IN(ped)
-
-        if not PED.IS_PED_IN_VEHICLE(ped, player_veh, false) then 
-            util.toast("Player isn't in a vehicle. :/")
-        return end
-
-        if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then 
-            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
-            ENTITY.SET_ENTITY_VISIBLE(players.user_ped(), false)
-            menu.trigger_commands("tpveh" .. players.get_name(pid))
-            util.yield(250)
-            AUDIO.SET_VEH_RADIO_STATION(player_veh, station)
-            util.yield(750)
-        end
-        ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
-    end)
-
     local glitch_player_list = menu.list(trolling, "Glitch Player", {"glitchdelay"}, "")
     local object_stuff = {
         names = {
@@ -614,13 +565,13 @@ local function player(pid)
         object_hash = util.joaat(object_stuff.objects[index])
     end)
 
-    menu.slider(glitch_player_list, "Spawn Delay", {"spawndelay"}, "", 100, 3000, 100, 10, function(amount)
+    menu.slider(glitch_player_list, "Spawn Delay", {"spawndelay"}, "", 150, 3000, 150, 10, function(amount)
         delay = amount
     end)
 
     local glitchPlayer = false
     local glitchPlayer_toggle
-    glitchPlayer_toggle = menu.toggle(glitch_player_list, "Glitch Player", {}, "", function(toggled)
+    glitchPlayer_toggle = menu.toggle(glitch_player_list, "Glitch Player", {"glitchplayer"}, "Blocked by menus with entity spam protections.", function(toggled)
         glitchPlayer = toggled
 
         while glitchPlayer do
@@ -657,7 +608,7 @@ local function player(pid)
 
     local glitchVeh = false
     local glitchVehCmd
-    glitchVehCmd = menu.toggle(trolling, "Glitch Vehicle", {"glitchvehicle"}, "", function(toggle) -- credits to soul reaper for base concept
+    glitchVehCmd = menu.toggle(trolling, "Glitch Vehicle", {"glitchvehicle"}, "Works on all menus and isn't detected by any.", function(toggle) -- credits to soul reaper for base concept
         glitchVeh = toggle
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
@@ -716,7 +667,7 @@ local function player(pid)
                     end
                 end
             end
-            if glitched_ped ~= nil then -- added a 2nd stage here because it didnt want to delete sometimes, this solved that lol.
+            if glitched_ped ~= nil then
                 entities.delete_by_handle(glitched_ped) 
             end
             if glitch_obj ~= nil then 
@@ -727,7 +678,7 @@ local function player(pid)
 
     local glitchForcefield = false
     local glitchforcefield_toggle
-    glitchforcefield_toggle = menu.toggle(trolling, "Glitched Forcefield", {"forcefield"}, "", function(toggled)
+    glitchforcefield_toggle = menu.toggle(trolling, "Glitched Forcefield", {"forcefield"}, "Blocked by menus with entity spam protections.", function(toggled)
         glitchForcefield = toggled
         local glitch_hash = util.joaat("p_spinning_anus_s")
         request_model(glitch_hash)
@@ -754,39 +705,68 @@ local function player(pid)
         end
     end)
 
-    menu.action(trolling, "Ship Pipebomb To Players House", {}, "", function()
-        chat.send_message("Shipping pipe bomb to " .. players.get_name(pid) .. "'s House", false, true, true)
-        util.yield(1000)
-        chat.send_message("Real Name: " .. name .. " • Address: " .. addresses[math.random(#addresses)] .. " •  SSN: " .. ssn .. " • SC Password: " .. password, false, true, true)
-        util.yield(1000)
-        chat.send_message("Phone: " .. phone_num .. " • Mother\'s Maiden Name: " .. (string.lower(last_names[math.random(#last_names)])) .. " • IP: " .. ip .. " • Blood Type: " .. blood_types[math.random(#blood_types)], false, true, true)
-        util.yield(1000)
-        chat.send_message("Pipe bomb sent, have fun, retard.", false, true, true)
+    local gravity = menu.list(trolling, "Gravitate Player") -- hi 2t1 luatards
+    local force = 1.00
+    menu.slider_float(gravity, "Gravitational Force", {"force"}, "", 0, 100, 100, 10, function(value)
+        force = value / 100
     end)
 
+    player_toggle_loop(gravity, pid, "Gravitate Player", {"gravitate"}, "Works on all menus but can be detected. Also doesn't work on players with good godmode", function()
+        FIRE.ADD_EXPLOSION(players.get_position(pid), 29, force, false, true, 0.0, true)
+    end)
 
+    local radio = menu.list(trolling, "Change Radio Station", {}, "")
+    local stations = {}
+    for station, name in pairs(station_name) do
+        stations[#stations + 1] = station
+    end
+    menu.list_select(radio, "Radio Station", {}, "", stations, 1, function(index, value)
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = players.get_position(players.user())
+        local player_veh = PED.GET_VEHICLE_PED_IS_IN(ped)
+
+        if not PED.IS_PED_IN_VEHICLE(ped, player_veh, false) then
+            util.toast("Player isn't in a vehicle. :/")
+        return end
+        local radio_name = station_name[value]
+        if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then 
+            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
+            ENTITY.SET_ENTITY_VISIBLE(players.user_ped(), false)
+            if not PED.IS_PED_IN_VEHICLE(players.user_ped(), player_veh, false) then
+                menu.trigger_commands("tpveh" .. players.get_name(pid))
+                util.yield(250)
+                AUDIO.SET_VEH_RADIO_STATION(player_veh, radio_name)
+                util.yield(750)
+                ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
+            else
+                util.yield(250)
+                AUDIO.SET_VEH_RADIO_STATION(player_veh, radio_name)
+            end
+        end
+    end)
+    
     local freeze = menu.list(trolling, "Freeze Player", {}, "")
-    player_toggle_loop(freeze, pid, "Hard Freeze", {}, "", function()
+    player_toggle_loop(freeze, pid, "Hard Freeze", {"hardfreeze"}, "Freezes them along with their camera. Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0, 0, 0})
         util.yield(500)
     end)
 
-    player_toggle_loop(freeze, pid, "Blinking Freeze", {}, "", function()
+    player_toggle_loop(freeze, pid, "Blinking Freeze", {"blinkingfreeze"}, "Acts like hard freeze but blinks occasionally. Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x7EFC3716, pid, 0, 1, 0, 0})
         util.yield(500)
     end)
 
-    player_toggle_loop(freeze, pid, "Clear Ped Tasks", {}, "", function()
+    player_toggle_loop(freeze, pid, "Clear Ped Tasks", {}, "Basic freeze method. Blocked by most menus.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         TASK.CLEAR_PED_TASKS_IMMEDIATELY(ped)
     end)
     
     local inf_loading = menu.list(trolling, "Infinite Loading Screen", {}, "")
-    menu.action(inf_loading, "MC Teleport Method", {}, "", function()
+    menu.action(inf_loading, "MC Teleport Method", {}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0xDEE5ED91, pid, 0, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
     end)
 
-    menu.action(inf_loading, "Apartment Method", {}, "", function()
+    menu.action(inf_loading, "Apartment Method", {}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x7EFC3716, pid, 0, 1, id})
     end)
         
@@ -820,7 +800,7 @@ local function player(pid)
     end)
 
         
-    player_toggle_loop(trolling, pid, "Black Screen", {"blackscreen"}, "", function()
+    player_toggle_loop(trolling, pid, "Black Screen", {"blackscreen"}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0xDEE5ED91, pid, math.random(1, 0x20), 0x20, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
         util.yield(1000)
     end)
@@ -883,7 +863,7 @@ local function player(pid)
         end
     end)
 
-    menu.action(trolling, "Launch Player", {}, "", function()
+    menu.action(trolling, "Launch Player", {"launch"}, "Works on most menus.", function()
         local mdl = util.joaat("boxville3")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
@@ -914,7 +894,7 @@ local function player(pid)
         end
     end)
     
-    menu.action_slider(trolling, "Launch Player Vehicle", {}, "", launch_vehicle, function(index, value)
+    menu.action_slider(trolling, "Launch Player Vehicle", {"launchvehicle"}, "Blocked by most menus.", launch_vehicle, function(index, value)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local veh = PED.GET_VEHICLE_PED_IS_IN(ped, false)
         if not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
@@ -953,7 +933,7 @@ local function player(pid)
         end)
     
     local cage = menu.list(trolling, "Cage Player", {}, "")
-    menu.action(cage, "Electric Cage", {"electriccage"}, "", function(cl)
+    menu.action(cage, "Electric Cage", {"electriccage"}, "", function()
         local number_of_cages = 6
         local elec_box = util.joaat("prop_elecbox_12")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -977,7 +957,7 @@ local function player(pid)
         end
     end)
 
-    menu.action(cage, "Shipping Container", {"cage1"}, "", function()
+    menu.action(cage, "Shipping Container", {"containercage"}, "", function()
         local container_hash = util.joaat("prop_container_ld_pu")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
@@ -988,7 +968,7 @@ local function player(pid)
         ENTITY.FREEZE_ENTITY_POSITION(container, true)
     end)
 
-    menu.action(cage, "Vehicle Cage", {"cage"}, "", function()
+    menu.action(cage, "Vehicle Cage", {"vehiclecage"}, "", function()
         local container_hash = util.joaat("boxville3")
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
@@ -1016,7 +996,7 @@ local function player(pid)
         util.trigger_script_event(1 << players.user(), {0xA4D43510, players.user(), 0xB2B6334F, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
     end)
 
-    menu.action(trolling, "Kill Player Inside Interior", {}, "Will not work in apartments", function()
+    menu.action(trolling, "Kill Player Inside Interior", {}, "Works in casino and nightclubs.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
 
@@ -1030,7 +1010,7 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(trolling, pid, "Taser Loop", {}, "", function()
+    player_toggle_loop(trolling, pid, "Taser Loop", {"tase"}, "", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
         for i = 1, 50 do
@@ -1039,7 +1019,7 @@ local function player(pid)
         util.yield()
     end)
 
-    menu.action(trolling, "Send To Jail", {}, "", function()
+    menu.action(trolling, "Send To Jail", {"arrest"}, "Blocked by most menus.", function()
         local my_pos = ENTITY.GET_ENTITY_COORDS(PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid))
         local my_ped = PLAYER.GET_PLAYER_PED(players.user())
         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(my_ped, 1628.5234, 2570.5613, 45.56485, true, false, false, false)
@@ -1053,30 +1033,17 @@ local function player(pid)
         ENTITY.SET_ENTITY_COORDS_NO_OFFSET(my_ped, my_pos)
     end)
 
-    player_toggle_loop(trolling, pid, "Sound Spam", {}, "", function()
+    player_toggle_loop(trolling, pid, "Sound Spam", {}, "Blocked by some menus.", function()
         util.trigger_script_event(1 << pid, {0x4246AA25, pid, math.random(1, 0x6)})
         util.yield()
     end)
 
-    menu.action(trolling, "Force Interior State", {}, "Can Be Undone By Rejoining. Player Must Be In An Apartment", function(s)
+    menu.action(trolling, "Force Interior State", {}, "Can be undone by rejoining. Player must be in an apartment. Works on most menus.", function(s)
         if players.is_in_interior(pid) then
             util.trigger_script_event(1 << pid, {0xB031BD16, pid, pid, pid, pid, math.random(int_min, int_max), pid})
         else
             util.toast("Player isn't in an interior. :/")
         end
-    end)
-
-    menu.action(trolling, "Look For Who Asked", {}, "", function()
-        local radar = util.joaat("prop_air_bigradar")
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = ENTITY.GET_ENTITY_COORDS(ped)
-        request_model(radar)
-
-        local radar_dish = entities.create_object(radar, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(PLAYER.GET_PLAYER_PED(pid), 0, 20, -3))
-        NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(radar_dish)
-        chat.send_message("using nasa satellites to find who asked", false, true, true)
-        util.yield(10000)
-        entities.delete_by_handle(radar_dish)
     end)
 
     local antimodder = menu.list(bozo, "Anti-Modder", {}, "")
@@ -1087,7 +1054,7 @@ local function player(pid)
         MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 99999, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
     end)
 
-    menu.slider_text(kill_godmode, "Squish", {}, "", {"Khanjali", "APC"}, function(index, veh)
+    menu.slider_text(kill_godmode, "Squish", {}, "Works on most shitty menus and some popualr menus.", {"Khanjali", "APC"}, function(index, veh)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
         local vehicle = util.joaat(veh)
@@ -1125,7 +1092,7 @@ local function player(pid)
         end
     end)   
 
-    player_toggle_loop(kill_godmode, pid, "Explode", {}, "Blocked By Most Menus", function()
+    player_toggle_loop(kill_godmode, pid, "Explode", {}, "Blocked by most menus.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
         if not PED.IS_PED_DEAD_OR_DYING(ped) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) then
@@ -1134,18 +1101,18 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked By Most Menus", function()
+    player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0xAD36AA57, pid, 0x96EDB12F, math.random(0, 0x270F)})
     end)
 
-    player_toggle_loop(antimodder, pid, "Remove Godmode Gun", {}, "", function()
+    player_toggle_loop(antimodder, pid, "Remove Godmode Gun", {}, "Blocked by most menus.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if PLAYER.IS_PLAYER_FREE_AIMING_AT_ENTITY(players.user(), ped) and players.is_godmode(pid) then
             util.trigger_script_event(1 << pid, {0xAD36AA57, pid, 0x96EDB12F, math.random(0, 0x270F)})
         end
     end)
 
-    player_toggle_loop(antimodder, pid, "Remove Vehicle Godmode", {"removevgm"}, "", function()
+    player_toggle_loop(antimodder, pid, "Remove Vehicle Godmode", {}, "Blocked by most menus.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) and not PED.IS_PED_DEAD_OR_DYING(ped) then
             local veh = PED.GET_VEHICLE_PED_IS_IN(ped, false)
@@ -1155,7 +1122,7 @@ local function player(pid)
         end
     end)
 
-    local tp_player = menu.list(bozo, "Teleport Player", {}, "")
+    local tp_player = menu.list(bozo, "Teleport Player", {}, "Blocked by most menus.")
     local clubhouse = menu.list(tp_player, "Clubhouse", {}, "")
     local facility = menu.list(tp_player, "Facility", {}, "")
     local arcade = menu.list(tp_player, "Arcade", {}, "")
@@ -1200,37 +1167,25 @@ local function player(pid)
         end)
     end
 
-    menu.action(tp_player, "Heist Passed Apartment Teleport", {}, "", function()
+    menu.action(tp_player, "Heist Passed Apartment Teleport", {}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0xAD1762A7, players.user(), pid, -1, 1, 1, 0, 1, 0}) 
     end) 
     
-    menu.action(cayoperico, "Cayo Perico", {"tpcayo"}, "", function()
+    menu.action(cayoperico, "Cayo Perico", {"tpcayo"}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x3, 1})
     end)
 
-    menu.action(cayoperico, "Cayo Perico (No Cutscene)", {"tpcayo2"}, "", function()
+    menu.action(cayoperico, "Cayo Perico (No Cutscene)", {"tpcayo2"}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x4, 1})
     end)
 
-    menu.action(cayoperico, "Leaving Cayo Perico", {"cayoleave"}, "Player Must Be At Cayo Perico To Trigger This Event", function()
+    menu.action(cayoperico, "Leaving Cayo Perico", {"cayoleave"}, "Blocked by most menus. Player must be at cayo perico to trigger this.", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x3})
     end)
 
-    menu.action(cayoperico, "Kicked From Cayo Perico", {"cayokick"}, "", function()
+    menu.action(cayoperico, "Kicked From Cayo Perico", {"cayokick"}, "Blocked by most menus.", function()
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x4, 0})
     end)
-
-    local player_removals = menu.list(bozo, "Player Removals", {}, "")
-    menu.action(player_removals, "Freemode Death", {"freemodedeath"}, "Will kill their freemode and send them back to story mode", function()
-        util.trigger_script_event(1 << pid, {111242367, pid, memory.script_global(2689235 + 1 + (pid * 453) + 318 + 7)})
-    end)
-    
-    if menu.get_edition() >= 2 then 
-        menu.action(player_removals, "Block Join Kick", {"blast"}, "Will add them to blocked joins list, alternative to people who don't want to use block joins from every kicked player", function()
-            menu.trigger_commands("historyblock " .. players.get_name(pid))
-            menu.trigger_commands("breakup" .. players.get_name(pid))
-        end)
-    end
 
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
@@ -1243,6 +1198,22 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
+
+menu.toggle(self, "AI Bot", {}, "", function(toggled)
+    local ped = players.user_ped()
+    local cop = util.joaat("s_m_y_cop_01")
+    request_model(cop)
+    if toggled then
+        ai = entities.create_ped(26, cop, players.get_position(players.user()), 0)
+        PLAYER.CHANGE_PLAYER_PED(players.user(), ai, 0, false)
+        TASK.TASK_WANDER_STANDARD(ai, 10.0, 10)
+    else
+        PLAYER.CHANGE_PLAYER_PED(players.user(), ped, 0, false)
+        if ai ~= nil then 
+            entities.delete_by_handle(ai)
+        end
+    end
+end)
 
 local roll = menu.list(self, "Combat Roll Speed")
 local roll_speed = 100
@@ -1291,7 +1262,7 @@ local ghostCmd = menu.toggle(self, "Ghost Godmode Players", {}, "Auto ghosts peo
             local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
             local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
             for i, interior in ipairs(interior_stuff) do
-                if (players.is_godmode(pid) or not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(ped)) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
+                if players.is_godmode(pid) and (not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped)) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
                     NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
                     break
                 end
@@ -1301,9 +1272,10 @@ local ghostCmd = menu.toggle(self, "Ghost Godmode Players", {}, "Auto ghosts peo
     end
 end)
 
-menu.toggle_loop(self, "Ghost PvP Players", {}, "", function()
+menu.toggle_loop(self, "Ghost Armed Players", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
-        if PLAYER.IS_PLAYER_FREE_AIMING(pid) then
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        if WEAPON.IS_PED_ARMED(ped, 7) then
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else 
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
@@ -1315,7 +1287,7 @@ menu.toggle_loop(self, "Auto Accept Joining Games", {}, "Will auto accept join s
     local message_hash = HUD.GET_WARNING_SCREEN_MESSAGE_HASH()
     if message_hash == 15890625 or message_hash == -398982408 or message_hash == -587688989 then
         PAD.SET_CONTROL_VALUE_NEXT_FRAME(2, 201, 1.0)
-        util.yield(200)
+        util.yield(50)
     end
 end)
 
@@ -1365,7 +1337,7 @@ end)
 
 local unlocks = menu.list(self, "Unlocks", {}, "")
 
-local collectibles = menu.list(unlocks, "Collectibles", {}, "")
+local collectibles = menu.list(unlocks, "Collectibles", {}, "Fully safe and not bannable.")
 menu.click_slider(collectibles, "Movie Props", {""}, "", 0, 9, 0, 1, function(i)
     util.trigger_script_event(1 << players.user(), {0xB9BA4D30, 0, 0x0, i, 1, 1, 1})
 end)
@@ -1429,16 +1401,6 @@ menu.toggle_loop(self, "Stealth Vehicle Godmode", {}, "Won't be detected as vehi
     end, function() ENTITY.SET_ENTITY_PROOFS(PED.GET_VEHICLE_PED_IS_IN(players.user(), false), false, false, false, false, false, 0, 0, false)
 end)
 
-menu.click_slider(visuals, "Drunk Mode", {}, "", 0, 5, 1, 1, function(val)
-    if val > 0 then
-        CAM.SHAKE_GAMEPLAY_CAM("DRUNK_SHAKE", val)
-        GRAPHICS.SET_TIMECYCLE_MODIFIER("Drunk")
-    else
-        GRAPHICS.SET_TIMECYCLE_MODIFIER("DEFAULT")
-        CAM.SHAKE_GAMEPLAY_CAM("DRUNK_SHAKE", 0)
-    end
-end)
-
 local visions = menu.list(visuals, "Screen Effects", {}, "")
 for id, data in pairs(effect_stuff) do
     local effect_name = data[1]
@@ -1457,7 +1419,6 @@ for id, data in pairs(effect_stuff) do
         end
     end)
 end 
-
 
 local visual_fidelity = menu.list(visuals, "Visual Enhancements", {}, "")
 for id, data in pairs(visual_stuff) do
@@ -1770,7 +1731,7 @@ menu.toggle_loop(detections, "Godmode", {}, "Detects if someone is using godmode
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
         for i, interior in ipairs(interior_stuff) do
-            if (players.is_godmode(pid) or not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(ped)) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
+            if players.is_godmode(pid) and (not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped)) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
                 util.draw_debug_text(players.get_name(pid) .. " Is In Godmode")
                 break
             end
@@ -1785,7 +1746,7 @@ menu.toggle_loop(detections, "Vehicle Godmode", {}, "Detects if someone is using
         local player_veh = PED.GET_VEHICLE_PED_IS_USING(ped)
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             for i, interior in ipairs(interior_stuff) do
-                if not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(player_veh) and not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
+                if not ENTITY.GET_ENTITY_CAN_BE_DAMAGED(player_veh) and (not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped)) and get_transition_state(pid) == 99 and get_interior_player_is_in(pid) == interior then
                     util.draw_debug_text(players.get_name(pid) .. " Is In Vehicle Godmode")
                     break
                 end
@@ -1861,13 +1822,12 @@ menu.toggle_loop(detections, "Super Drive", {}, "", function()
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
         local veh_speed = (ENTITY.GET_ENTITY_SPEED(vehicle)* 2.236936)
         local class = VEHICLE.GET_VEHICLE_CLASS(vehicle)
-        if class ~= 15 and class ~= 16 and veh_speed >= 180 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) and (players.get_vehicle_model(pid) ~= util.joaat("oppressor") or players.get_vehicle_model(pid) ~= util.joaat("oppressor2")) then
+        if class ~= 15 and class ~= 16 and veh_speed >= 200 and VEHICLE.GET_PED_IN_VEHICLE_SEAT(vehicle, -1) and (players.get_vehicle_model(pid) ~= util.joaat("oppressor") or players.get_vehicle_model(pid) ~= util.joaat("oppressor2")) then
             util.toast(players.get_name(pid) .. " Is Using Super Drive")
             break
         end
     end
 end)
-
 
 menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating you.", function()
     for _, pid in ipairs(players.list(false, true, true)) do
@@ -1883,7 +1843,6 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
         end
     end
 end)
-
 
 local anti_mugger = menu.list(protections, "Block Muggers")
 menu.toggle_loop(anti_mugger, "Myself", {}, "Prevents you from being mugged.", function() -- thx nowiry for improving my method :D
@@ -1938,7 +1897,7 @@ end)
 
 local anticage = menu.list(protections, "Anti-Cage Protection", {}, "")
 local alpha = 160
-menu.slider(anticage, "Cage Alpha", {"cagealpha"}, "The ammount of transparency that objects will have. Set to 0 to auto delete cages.", 0, #values, 3, 1, function(amount)
+menu.slider(anticage, "Cage Alpha", {"cagealpha"}, "The amount of transparency that objects will have. Set to 0 to auto delete cages.", 0, #values, 3, 1, function(amount)
     alpha = values[amount]
 end)
 

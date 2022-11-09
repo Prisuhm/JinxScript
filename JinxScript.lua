@@ -2,7 +2,7 @@ util.require_natives("natives-1663599433-uno")
 
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.80
+local localVer = 2.81
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -1198,22 +1198,6 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
-
-menu.toggle(self, "AI Bot", {}, "", function(toggled)
-    local ped = players.user_ped()
-    local cop = util.joaat("s_m_y_cop_01")
-    request_model(cop)
-    if toggled then
-        ai = entities.create_ped(26, cop, players.get_position(players.user()), 0)
-        PLAYER.CHANGE_PLAYER_PED(players.user(), ai, 0, false)
-        TASK.TASK_WANDER_STANDARD(ai, 10.0, 10)
-    else
-        PLAYER.CHANGE_PLAYER_PED(players.user(), ped, 0, false)
-        if ai ~= nil then 
-            entities.delete_by_handle(ai)
-        end
-    end
-end)
 
 local roll = menu.list(self, "Combat Roll Speed")
 local roll_speed = 100

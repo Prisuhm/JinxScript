@@ -2,7 +2,7 @@ util.require_natives("natives-1663599433-uno")
 
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.81
+local localVer = 2.82
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -705,13 +705,13 @@ local function player(pid)
         end
     end)
 
-    local gravity = menu.list(trolling, "Gravitate Player") -- hi 2t1 luatards
+    local gravity = menu.list(trolling, "Gravitate Player", {}, "Works on all menus but can be detected. Also doesn't work on players with godmode.") -- hi 2t1 luatards
     local force = 1.00
     menu.slider_float(gravity, "Gravitational Force", {"force"}, "", 0, 100, 100, 10, function(value)
         force = value / 100
     end)
 
-    player_toggle_loop(gravity, pid, "Gravitate Player", {"gravitate"}, "Works on all menus but can be detected. Also doesn't work on players with good godmode", function()
+    player_toggle_loop(gravity, pid, "Gravitate Player", {"gravitate"}, "", function()
         FIRE.ADD_EXPLOSION(players.get_position(pid), 29, force, false, true, 0.0, true)
     end)
 
@@ -805,14 +805,25 @@ local function player(pid)
         util.yield(1000)
     end)
 
-    local control_veh = false
-    local control_veh_cmd
-    control_veh_cmd = menu.toggle(trolling, "Control Players Vehicle", {}, "Player must be in a land vehicle for this to work.", function(toggle)
-        control_veh = toggle
-
-        while control_veh do 
-            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-            local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
+    local rc_ped_hash = util.joaat("s_m_m_movalien_01")
+    local rc = false
+    local rc_toggle
+    local rc_ped
+    rc_toggle = menu.toggle(trolling, "Control Players Vehicle", {}, "Player must be in a land vehicle for this to work.", function(on)
+        rc = on
+        if on then
+            if not request_model(rc_ped_hash, 2) then
+                util.toast("Failed to load a model.")
+                menu.set_value(rc_toggle, false)
+                rc = false
+                return
+            end
+            rc_ped = entities.create_ped(26, rc_ped_hash, players.get_position(pid), 0)
+            ENTITY.SET_ENTITY_INVINCIBLE(rc_ped, true)
+            ENTITY.SET_ENTITY_VISIBLE(rc_ped, false)
+            ENTITY.FREEZE_ENTITY_POSITION(rc_ped, true)
+        end
+        while rc do
             local player_veh = PED.GET_VEHICLE_PED_IS_IN(ped)
             local class = VEHICLE.GET_VEHICLE_CLASS(player_veh)
             if not players.exists(pid) then util.stop_thread() end
@@ -833,33 +844,38 @@ local function player(pid)
                 menu.set_value(control_veh_cmd, false)
             return end
 
-            if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
-                if PAD.IS_CONTROL_PRESSED(0, 34) then
-                    while not PAD.IS_CONTROL_RELEASED(0, 34) do
-                        TASK.TASK_VEHICLE_TEMP_ACTION(ped, PED.GET_VEHICLE_PED_IS_IN(ped), 7, 100)
-                        util.yield()
-                    end
-                elseif PAD.IS_CONTROL_PRESSED(0, 35) then
-                    while not PAD.IS_CONTROL_RELEASED(0, 35) do
-                        TASK.TASK_VEHICLE_TEMP_ACTION(ped, PED.GET_VEHICLE_PED_IS_IN(ped), 8, 100)
-                        util.yield()
-                    end
-                elseif PAD.IS_CONTROL_PRESSED(0, 32) then
-                    while not PAD.IS_CONTROL_RELEASED(0, 32) do
-                        TASK.TASK_VEHICLE_TEMP_ACTION(ped, PED.GET_VEHICLE_PED_IS_IN(ped), 23, 100)
-                        util.yield()
-                    end
-                elseif PAD.IS_CONTROL_PRESSED(0, 33) then
-                    while not PAD.IS_CONTROL_RELEASED(0, 33) do
-                        TASK.TASK_VEHICLE_TEMP_ACTION(ped, PED.GET_VEHICLE_PED_IS_IN(ped), 28, 100)
-                        util.yield()
-                    end
+            if not players.exists(pid) then
+                rc = false
+                util.toast("Player doesn't exist. :/")
+                break
+            end
+            local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            ENTITY.SET_ENTITY_COORDS(rc_ped, ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0.0, 0.0, -5.0), false, false, false, false)
+            if PAD.IS_CONTROL_PRESSED(0, 32) then
+                while not PAD.IS_CONTROL_RELEASED(0, 32) do
+                    TASK.TASK_VEHICLE_TEMP_ACTION(rc_ped, PED.GET_VEHICLE_PED_IS_IN(ped), 23, 100)
+                    util.yield(100)
                 end
-            else
-                util.toast("Player is not in a vehicle. :/")
-                menu.set_value(control_veh_cmd, false)
+            elseif PAD.IS_CONTROL_PRESSED(0, 33) then
+                while not PAD.IS_CONTROL_RELEASED(0, 33) do
+                    TASK.TASK_VEHICLE_TEMP_ACTION(rc_ped, PED.GET_VEHICLE_PED_IS_IN(ped), 28, 100)
+                    util.yield(100)
+                end
+            elseif PAD.IS_CONTROL_PRESSED(0, 34) then
+                while not PAD.IS_CONTROL_RELEASED(0, 34) do
+                    TASK.TASK_VEHICLE_TEMP_ACTION(rc_ped, PED.GET_VEHICLE_PED_IS_IN(ped), 7, 100)
+                    util.yield(100)
+                end
+            elseif PAD.IS_CONTROL_PRESSED(0, 35) then
+                while not PAD.IS_CONTROL_RELEASED(0, 35) do
+                    TASK.TASK_VEHICLE_TEMP_ACTION(rc_ped, PED.GET_VEHICLE_PED_IS_IN(ped), 8, 100)
+                    util.yield(100)
+                end
             end
             util.yield()
+        end
+        if rc_ped ~= nil then 
+            entities.delete_by_handle(rc_ped)
         end
     end)
 
@@ -1187,6 +1203,31 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {0x4868BC31, pid, 0, 0, 0x4, 0})
     end)
 
+    local player_removals = menu.list(bozo, "Player Removals")
+    menu.action(player_removals, "Griefer Jesus", {"grief"}, "Inconsistent Garbage. Works on most menus.", function()
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+		local pos = players.get_position(pid)
+		local mdl = util.joaat("u_m_m_jesus_01")
+		local veh_mdl = util.joaat("oppressor")
+		util.request_model(veh_mdl)
+        util.request_model(mdl)
+			for i = 1, 10 do
+				if not players.exists(pid) then
+					return
+				end
+				local veh = entities.create_vehicle(veh_mdl, pos, 0)
+				local jesus = entities.create_ped(2, mdl, pos, 0)
+				PED.SET_PED_INTO_VEHICLE(jesus, veh, -1)
+				util.yield(100)
+				TASK.TASK_VEHICLE_HELI_PROTECT(jesus, veh, ped, 10.0, 0, 10, 0, 0)
+				util.yield(1000)
+				entities.delete_by_handle(jesus)
+				entities.delete_by_handle(veh)
+			end
+		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(mdl)
+		STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(veh_mdl)
+    end)
+
     if bailOnAdminJoin then
         if players.is_marked_as_admin(pid) then
             util.toast(players.get_name(pid) .. " Is a Rockstar Admin. Bailing from the session.")
@@ -1198,6 +1239,7 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
+
 
 local roll = menu.list(self, "Combat Roll Speed")
 local roll_speed = 100
@@ -1248,7 +1290,8 @@ local ghostCmd = menu.toggle(self, "Ghost Godmode Players", {}, "Auto ghosts peo
             for i, interior in ipairs(interior_stuff) do
                 if players.is_godmode(pid) and (not NETWORK.NETWORK_IS_PLAYER_FADING(pid) and ENTITY.IS_ENTITY_VISIBLE(ped)) and get_transition_state(pid) ~= 0 and get_interior_player_is_in(pid) == interior then
                     NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
-                    break
+                else
+                    NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
                 end
             end
         end 
@@ -1868,14 +1911,8 @@ menu.toggle_loop(anti_mugger, "Someone Else", {}, "Prevents others from being mu
 end)
 
 menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned into the beast but will also stop the event for others.", function()
-    if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(util.joaat("am_hunt_the_beast")) > 0 then
-        local host
-        repeat
-            host = NETWORK.NETWORK_GET_HOST_OF_SCRIPT("am_hunt_the_beast", -1, 0)
-            util.yield()
-        until host ~= -1
-        util.toast(players.get_name(host).." started Hunt The Beast. Killing script...")
-        menu.trigger_command(menu.ref_by_path("Online>Session>Session Scripts>Hunt the Beast>Stop Script"))
+    if util.spoof_script("am_hunt_the_beast", SCRIPT.TERMINATE_THIS_THREAD) then
+        util.toast("Hunt the beast script detected. Terminating script...")
     end
 end)
 

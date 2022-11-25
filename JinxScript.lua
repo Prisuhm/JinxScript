@@ -38,14 +38,6 @@ end
 
 local spawned_objects = {}
 
-local function IsPlayerUsingOrbitalCannon(player) -- thx wiri <3
-    if player ~= -1 then
-        local bits = read_global.int(2689235 + (player * 453 + 1) + 416)
-        return BitTest(bits, 0)
-    end
-    return false
-end
-
 local function get_transition_state(pid)
     return memory.read_int(memory.script_global(((0x2908D3 + 1) + (pid * 0x1C5)) + 230))
 end
@@ -1293,20 +1285,6 @@ menu.toggle_loop(self, "Ghost Armed Players", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if WEAPON.IS_PED_ARMED(ped, 7) or TASK.GET_IS_TASK_ACTIVE(ped, 199) or TASK.GET_IS_TASK_ACTIVE(ped, 128) then
-            NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
-        else
-            NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
-        end
-    end
-end, function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
-    end
-end)
-
-menu.toggle_loop(self, "Ghost Orbital Cannon Users", {}, "", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-       if IsPlayerUsingOrbitalCannon(pid) then
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)

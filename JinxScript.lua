@@ -2,7 +2,7 @@ util.require_natives("natives-1663599433-uno")
 
 util.toast("Welcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 2.90
+local localVer = 2.91
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
     response = true
@@ -37,7 +37,15 @@ local function player_toggle_loop(root, pid, menu_name, command_names, help_text
 end
 
 local spawned_objects = {}
-local ladder_objects = {}
+
+local function IsPlayerUsingOrbitalCannon(player) -- thx wiri <3
+    if player ~= -1 then
+        local bits = read_global.int(2689235 + (player * 453 + 1) + 416)
+        return BitTest(bits, 0)
+    end
+    return false
+end
+
 local function get_transition_state(pid)
     return memory.read_int(memory.script_global(((0x2908D3 + 1) + (pid * 0x1C5)) + 230))
 end
@@ -1284,7 +1292,21 @@ end)
 menu.toggle_loop(self, "Ghost Armed Players", {}, "", function()
     for _, pid in ipairs(players.list(false, true, true)) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if WEAPON.IS_PED_ARMED(ped, 7) or TASK.GET_IS_TASK_ACTIVE(ped, 199) TASK.GET_IS_TASK_ACTIVE(ped, 128) then
+        if WEAPON.IS_PED_ARMED(ped, 7) or TASK.GET_IS_TASK_ACTIVE(ped, 199) or TASK.GET_IS_TASK_ACTIVE(ped, 128) then
+            NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
+        else
+            NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
+        end
+    end
+end, function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+        NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)
+    end
+end)
+
+menu.toggle_loop(self, "Ghost Orbital Cannon Users", {}, "", function()
+    for _, pid in ipairs(players.list(false, true, true)) do
+       if IsPlayerUsingOrbitalCannon(pid) then
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
             NETWORK.SET_REMOTE_PLAYER_AS_GHOST(pid, false)

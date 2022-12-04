@@ -1,11 +1,11 @@
 util.require_natives("natives-1663599433-uno")
-local thing = memory.scan(memory.get_name_of_this_module(), "44 88 29 48 8D 0D ? ? ? ? 44 38 2E 74 23 49 8B D7 48 2B D6 90")
+--[[local thing = memory.scan(memory.get_name_of_this_module(), "44 88 29 48 8D 0D ? ? ? ? 44 38 2E 74 23 49 8B D7 48 2B D6 90")
 assert(thing ~= 0)
 local other_thing = memory.rip(thing + 6)
 
-util.toast("Hello, "  .. (memory.read_string(other_thing).."#"..memory.read_string(other_thing + 0x158)) .. "!\nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
+util.toast("Hello, "  .. (memory.read_string(other_thing).."#"..memory.read_string(other_thing + 0x158)) .. "!\nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") ]]
 local response = false
-local localVer = 3.00
+local localVer = 3.01
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)

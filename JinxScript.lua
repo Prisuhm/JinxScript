@@ -1,11 +1,7 @@
 util.require_natives("natives-1663599433-uno")
---[[local thing = memory.scan(memory.get_name_of_this_module(), "44 88 29 48 8D 0D ? ? ? ? 44 38 2E 74 23 49 8B D7 48 2B D6 90")
-assert(thing ~= 0)
-local other_thing = memory.rip(thing + 6)
-
-util.toast("Hello, "  .. (memory.read_string(other_thing).."#"..memory.read_string(other_thing + 0x158)) .. "!\nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") ]]
+util.toast("Hello " .. SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME() .. "! \nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 3.01
+local localVer = 3.02
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -510,7 +506,7 @@ local function player(pid)
     for station, name in pairs(station_name) do
         stations[#stations + 1] = station
     end
-    menu.list_select(radio, "Radio Station", {}, "", stations, 1, function(index, value)
+    menu.list_action(radio, "Radio Station", {}, "", stations, function(index, value)
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = players.get_position(players.user())
         local player_veh = PED.GET_VEHICLE_PED_IS_IN(ped)
@@ -520,9 +516,14 @@ local function player(pid)
         return end
         local radio_name = station_name[value]
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) then 
+
+            if not VEHICLE.ARE_ANY_VEHICLE_SEATS_FREE(player_veh) then
+                util.toast("Failed to change players radio. :/")
+            return end
+
             NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(player_veh)
-            ENTITY.SET_ENTITY_VISIBLE(players.user_ped(), false)
             if not PED.IS_PED_IN_VEHICLE(players.user_ped(), player_veh, false) then
+                ENTITY.SET_ENTITY_VISIBLE(players.user_ped(), false)
                 menu.trigger_commands("tpveh" .. players.get_name(pid))
                 util.yield(250)
                 AUDIO.SET_VEH_RADIO_STATION(player_veh, radio_name)
@@ -1175,11 +1176,46 @@ local function player(pid)
     end
 end
 
+local player_removals = menu.list(bozo, "Player Removals") 
+    -- In this example, the `on_join` function is defined inline.
+players.on_join(function(player_id)
+    -- This function will be called when a player joins the session.
+    -- You can put any code you want in here.
+
+    -- Call the `menu.player_root` function to get the player's root menu
+    local player_root = menu.player_root(player_id)
+
+    -- Now, call the `menu.action` function to create the action inside the player's root menu
+    menu.action(player_removals, "AI Generated Crash", {}, "crash sponsored by chat.openai.com", function()
+        -- This function will be called when the action is clicked.
+        -- You can put any code you want in here.
+
+        -- Get the player's position using the `players.get_position` function
+        local player_position = players.get_position(player_id)
+
+        -- Get the JOAAT hash of "prop_fragtest_cnst_04" using the `util.joaat` function
+        local joaat_hash = util.joaat("prop_fragtest_cnst_04")
+        
+        -- Requesting the model of "prop_fragtest_cnst_04" using the `util.request_model` function
+        util.request_model(joaat_hash)
+        
+        -- Use the `entities.create_object` function to create the object at the player's position
+        local object_handle = entities.create_object(joaat_hash, player_position)
+
+        -- Wait 1 second using the `util.yield` function
+        util.yield(1000)
+
+        -- Use the `entities.delete_by_handle` function to delete the object
+        entities.delete_by_handle(object_handle)
+    end)
+end)
+
 players.on_join(player)
 players.dispatch_on_join()
 
+local movement = menu.list(self, "Movement")
 local roll_speed = nil
-menu.list_select(self, "Roll Speed", {}, "", {"Default", "1.25x", "1.5x", "1.75x", "2x"}, 1, function(index, value)
+menu.list_select(movement, "Roll Speed", {}, "", {"Default", "1.25x", "1.5x", "1.75x", "2x"}, 1, function(index, value)
 roll_speed = index
 util.create_tick_handler(function()
     switch value do
@@ -1202,7 +1238,7 @@ end)
 
 
 local climb_speed = nil
-menu.list_select(self, "Climb Speed", {}, "", {"Default", "1.25x", "1.5x", "2x",}, 1, function(index, value)
+menu.list_select(movement, "Climb Speed", {}, "", {"Default", "1.25x", "1.5x", "2x",}, 1, function(index, value)
 climb_speed = index
 util.create_tick_handler(function()
     if TASK.GET_IS_TASK_ACTIVE(players.user_ped(), 1) then
@@ -1225,17 +1261,25 @@ util.create_tick_handler(function()
     end)
 end)
 
-menu.toggle_loop(self, "Fast Hands", {"fasthands"}, "Swaps your weapons faster.", function()
+
+menu.toggle_loop(movement, "Fast Hands", {"fasthands"}, "Swaps your weapons faster.", function()
     if TASK.GET_IS_TASK_ACTIVE(players.user_ped(), 56) then
         PED.FORCE_PED_AI_AND_ANIMATION_UPDATE(players.user_ped())
     end
 end)
 
-menu.toggle_loop(self, "Fast Melee", {"fastmelee"}, "Melee faster.", function()
+menu.toggle_loop(movement, "Fast Melee", {"fastmelee"}, "Melee faster.", function()
     if TASK.GET_IS_TASK_ACTIVE(players.user_ped(), 130) then
         PED.FORCE_PED_AI_AND_ANIMATION_UPDATE(players.user_ped())
     end
 end)
+
+menu.toggle_loop(movement, "Fast Mount", {"fastmount"}, "Mount over stuff faster.", function()
+    if TASK.GET_IS_TASK_ACTIVE(players.user_ped(), 50) or TASK.GET_IS_TASK_ACTIVE(players.user_ped(), 51) then
+        PED.FORCE_PED_AI_AND_ANIMATION_UPDATE(players.user_ped())
+    end
+end)
+
 
 menu.toggle_loop(self, "Friendly AI", {""}, "AIs won't target you.", function()
     PED.SET_PED_RESET_FLAG(players.user_ped(), 124, true)
@@ -1370,7 +1414,7 @@ end)
 menu.toggle_loop(self, "Auto Claim Destroyed Vehicles", {}, "Automatically claims destroyed vehicles so you won't have to.", function()
     local count = memory.read_int(memory.script_global(1585857))
     for i = 0, count do
-        local canFix = (bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and bitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
+        local canFix = (BitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 1) and BitTest(memory.script_global(1585857 + 1 + (i * 142) + 103), 2))
         if canFix then
             clearBit(memory.script_global(1585857 + 1 + (i * 142) + 103), 1)
             clearBit(memory.script_global(1585857 + 1 + (i * 142) + 103), 3)
@@ -1836,6 +1880,7 @@ menu.toggle_loop(anti_mugger, "Someone Else", {}, "Prevents others from being mu
         end)
     end
 end)
+
 
 menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned into the beast but will also stop the event for others.", function()
     if util.spoof_script("am_hunt_the_beast", SCRIPT.TERMINATE_THIS_THREAD) then

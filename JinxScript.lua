@@ -1176,8 +1176,6 @@ local function player(pid)
     end
 
     local player_removals = menu.list(bozo, "Player Removals") 
--- In this example, the `on_join` function is defined inline.
--- You can put any code you want in here.
 -- Now, call the `menu.action` function to create the action inside the player's root menu
     menu.action(player_removals, "AI Generated Crash", {}, "crash sponsored by chat.openai.com", function()
         -- This function will be called when the action is clicked.

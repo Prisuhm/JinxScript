@@ -1183,7 +1183,7 @@ local function player(pid)
         -- This function will be called when the action is clicked.
         -- You can put any code you want in here.
         -- Get the player's position using the `players.get_position` function
-        local player_position = players.get_position(player_id)
+        local player_position = players.get_position(pid)
         -- Get the JOAAT hash of "prop_fragtest_cnst_04" using the `util.joaat` function
         local joaat_hash = util.joaat("prop_fragtest_cnst_04")
 

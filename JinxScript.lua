@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Hello " .. SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME() .. "! \nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 3.02
+local localVer = 3.01
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -1198,9 +1198,10 @@ players.on_join(function(player_id)
         
         -- Requesting the model of "prop_fragtest_cnst_04" using the `util.request_model` function
         util.request_model(joaat_hash)
-        
+
         -- Use the `entities.create_object` function to create the object at the player's position
         local object_handle = entities.create_object(joaat_hash, player_position)
+        OBJECT.BREAK_OBJECT_FRAGMENT_CHILD(object_handle, 3, false)
 
         -- Wait 1 second using the `util.yield` function
         util.yield(1000)

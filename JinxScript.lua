@@ -1174,30 +1174,30 @@ local function player(pid)
             return
         end
     end
-end
 
-local player_removals = menu.list(bozo, "Player Removals") 
+    local player_removals = menu.list(bozo, "Player Removals") 
 -- In this example, the `on_join` function is defined inline.
 -- You can put any code you want in here.
 -- Now, call the `menu.action` function to create the action inside the player's root menu
-menu.action(player_removals, "AI Generated Crash", {}, "crash sponsored by chat.openai.com", function()
-    -- This function will be called when the action is clicked.
-    -- You can put any code you want in here.
-    -- Get the player's position using the `players.get_position` function
-    local player_position = players.get_position(player_id)
-    -- Get the JOAAT hash of "prop_fragtest_cnst_04" using the `util.joaat` function
-    local joaat_hash = util.joaat("prop_fragtest_cnst_04")
-    
-    -- Requesting the model of "prop_fragtest_cnst_04" using the `util.request_model` function
-    util.request_model(joaat_hash)
-    -- Use the `entities.create_object` function to create the object at the player's position
-    local object_handle = entities.create_object(joaat_hash, player_position)
-    OBJECT.BREAK_OBJECT_FRAGMENT_CHILD(object_handle, 3, false)
-    -- Wait 1 second using the `util.yield` function
-    util.yield(1000)
-    -- Use the `entities.delete_by_handle` function to delete the object
-    entities.delete_by_handle(object_handle)
-end)
+    menu.action(player_removals, "AI Generated Crash", {}, "crash sponsored by chat.openai.com", function()
+        -- This function will be called when the action is clicked.
+        -- You can put any code you want in here.
+        -- Get the player's position using the `players.get_position` function
+        local player_position = players.get_position(player_id)
+        -- Get the JOAAT hash of "prop_fragtest_cnst_04" using the `util.joaat` function
+        local joaat_hash = util.joaat("prop_fragtest_cnst_04")
+
+        -- Requesting the model of "prop_fragtest_cnst_04" using the `util.request_model` function
+        util.request_model(joaat_hash)
+        -- Use the `entities.create_object` function to create the object at the player's position
+        local object_handle = entities.create_object(joaat_hash, player_position)
+        OBJECT.BREAK_OBJECT_FRAGMENT_CHILD(object_handle, 3, false)
+        -- Wait 1 second using the `util.yield` function
+        util.yield(1000)
+        -- Use the `entities.delete_by_handle` function to delete the object
+        entities.delete_by_handle(object_handle)
+    end)
+end
 
 players.on_join(player)
 players.dispatch_on_join()

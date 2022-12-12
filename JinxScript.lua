@@ -1,7 +1,7 @@
 util.require_natives("natives-1663599433-uno")
 util.toast("Hello " .. SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME() .. "! \nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv") 
 local response = false
-local localVer = 3.02
+local localVer = 3.03
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -376,7 +376,8 @@ local invites = {"Yacht", "Office", "Clubhouse", "Office Garage", "Custom Auto S
 local style_names = {"Normal", "Semi-Rushed", "Reverse", "Ignore Lights", "Avoid Traffic", "Avoid Traffic Extremely", "Sometimes Overtake Traffic"}
 local drivingStyles = {786603, 1074528293, 8388614, 1076, 2883621, 786468, 262144, 786469, 512, 5, 6}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169}
-local stinkers = {0xC76C9E2, 0xB7EC980, 0xC121CAD, 0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21, 0x988DB36, 0x6AE10E2, 0x71D0AF9, 0xB93038B}
+local stinkers = {0xCB7CFF2, 0x4A5C95B, 0xC76C9E2, 0xB7EC980, 0xC121CAD, 0x919B57F, 0xC682AB5, 0x3280B78, 0xC2590C9, 0xBB6BAE6, 0xA1FA84B, 0x101D84E, 0xCA6E931, 0x691AC07, 0xAA87C21, 0x988DB36, 0x6AE10E2, 0x71D0AF9, 0xB93038B}
+
 
 local self = menu.list(menu.my_root(), "Self", {}, "")
 local players_list = menu.list(menu.my_root(), "Players", {}, "")
@@ -1174,27 +1175,6 @@ local function player(pid)
             return
         end
     end
-
-    local player_removals = menu.list(bozo, "Player Removals") 
--- Now, call the `menu.action` function to create the action inside the player's root menu
-    menu.action(player_removals, "AI Generated Crash", {}, "crash sponsored by chat.openai.com", function()
-        -- This function will be called when the action is clicked.
-        -- You can put any code you want in here.
-        -- Get the player's position using the `players.get_position` function
-        local player_position = players.get_position(pid)
-        -- Get the JOAAT hash of "prop_fragtest_cnst_04" using the `util.joaat` function
-        local joaat_hash = util.joaat("prop_fragtest_cnst_04")
-
-        -- Requesting the model of "prop_fragtest_cnst_04" using the `util.request_model` function
-        util.request_model(joaat_hash)
-        -- Use the `entities.create_object` function to create the object at the player's position
-        local object_handle = entities.create_object(joaat_hash, player_position)
-        OBJECT.BREAK_OBJECT_FRAGMENT_CHILD(object_handle, 3, false)
-        -- Wait 1 second using the `util.yield` function
-        util.yield(1000)
-        -- Use the `entities.delete_by_handle` function to delete the object
-        entities.delete_by_handle(object_handle)
-    end)
 end
 
 players.on_join(player)

@@ -1,6 +1,6 @@
 util.require_natives("natives-1663599433-uno")
 local response = false
-local localVer = 3.3
+local localVer = 3.31
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -2014,12 +2014,14 @@ menu.toggle_loop(detections, "Spectate", {}, "Detects if someone is spectating y
 end)
 
 menu.toggle_loop(detections, "Thunder Join", {}, "Detects if someone is using thunder join.", function()
-    for _, pid in ipairs(players.list(false, true, true)) do
-        if not util.is_session_transition_active() and get_spawn_state(pid) == 0 and players.get_script_host() == pid  then
+    for _, pid in ipairs(players.list(true, true, true)) do
+        if get_spawn_state(players.user()) == 0 then return end
+        if get_spawn_state(pid) == 0 and players.get_script_host() == pid and not PLAYER.IS_PLAYER_PLAYING(pid) then
             util.toast(players.get_name(pid) .. " Triggered a detection (Thunder Join) and is now classified as a Modder")
         end
     end
 end)
+
 
 local anti_mugger = menu.list(protections, "Block Muggers")
 menu.toggle_loop(anti_mugger, "Myself", {}, "Prevents you from being mugged.", function() -- thx nowiry for improving my method :D

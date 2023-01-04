@@ -1254,10 +1254,6 @@ menu.toggle_loop(unlocks, "50 Car Garage", {}, "", function()
     end
 end)
 
-local function SetGlobal(scr_global: number, type: string, value)
-	return memory["write_"..type](memory.script_global(scr_global), value)
-end
-
 menu.toggle_loop(unlocks, "Taxi Missions", {}, "", function() -- credit to sapphire for all of this <3
     if memory.read_byte(memory.script_global(262145 + 33770)) ~= 1 then
         memory.write_byte(memory.script_global(262145 + 33770), 1)

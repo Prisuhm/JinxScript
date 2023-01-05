@@ -2018,9 +2018,14 @@ end)
 
 menu.toggle_loop(detections, "Thunder Join", {}, "Detects if someone is using thunder join.", function()
     for _, pid in ipairs(players.list(true, true, true)) do
+        local old_sh = players.get_script_host()
+        util.yield(100)
+        local new_sh = players.get_script_host()
         if get_spawn_state(players.user()) == 0 then return end
-        if get_spawn_state(pid) == 0 and players.get_script_host() == pid and not PLAYER.IS_PLAYER_PLAYING(pid) then
-            util.toast(players.get_name(pid) .. " Triggered a detection (Thunder Join) and is now classified as a Modder")
+        if old_sh ~= new_sh then
+            if get_spawn_state(players.get_script_host()) == 0 then
+                util.toast(players.get_name(pid) .. " Triggered a detection (Thunder Join) and is now classified as a Modder")
+            end
         end
     end
 end)

@@ -1,6 +1,6 @@
 util.require_natives("natives-1663599433-uno")
 local response = false
-local localVer = 3.31
+local localVer = 3.32
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -707,13 +707,13 @@ local function player(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped, false)
         if not players.exists(pid) then 
             util.toast("Player doesn't exist. :/")
-            menu.set_value(glitchPlayer_toggle, false)
+            menu.set_value(glitchPlayer, false)
         util.stop_thread() end
 
         if v3.distance(ENTITY.GET_ENTITY_COORDS(players.user_ped(), false), players.get_position(pid)) > 1000.0 
         and v3.distance(pos, players.get_cam_pos(players.user())) > 1000.0 then
             util.toast("Player is too far. :/")
-            menu.set_value(glitchPlayer_toggle, false)
+            menu.set_value(glitchPlayer, false)
         return end
 
         local glitch_hash = object_hash
@@ -1242,10 +1242,9 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
-
 local unlocks = menu.list(self, "Unlocks")
 menu.toggle_loop(unlocks, "50 Car Garage", {}, "", function()
-    if memory.read_byte(memory.script_global(262145 + 32688)) ~= 0 then
+    if memory.read_byte(memory.script_global(262145 + 32688)) ~= 0 then-- thx aero for this global <3
         memory.write_byte(memory.script_global(262145 + 32688), 0) 
     return end
 
@@ -1253,6 +1252,10 @@ menu.toggle_loop(unlocks, "50 Car Garage", {}, "", function()
         memory.write_byte(memory.script_global(262145 + 32702), 1)  
     end
 end)
+
+local function SetGlobal(scr_global: number, type: string, value)
+	return memory["write_"..type](memory.script_global(scr_global), value)
+end
 
 menu.toggle_loop(unlocks, "Taxi Missions", {}, "", function() -- credit to sapphire for all of this <3
     if memory.read_byte(memory.script_global(262145 + 33770)) ~= 1 then
@@ -1412,8 +1415,7 @@ menu.toggle_loop(self, "Friendly AI", {""}, "AIs won't target you.", function()
     PED.SET_PED_RESET_FLAG(players.user_ped(), 124, true)
 end)
 
-
-menu.toggle_loop(self, "Auto Accept Join Messages", {}, "Auto accepts join screens.", function() -- credits to soulreaper for sending me this :D
+menu.toggle_loop(self, "Auto Accept Joining Games", {}, "Auto accepts join screens.", function() -- credits to soulreaper for sending me this :D
     local message_hash = HUD.GET_WARNING_SCREEN_MESSAGE_HASH()
     if message_hash == 15890625 or message_hash == -398982408 or message_hash == -587688989 then
         PAD.SET_CONTROL_VALUE_NEXT_FRAME(2, 201, 1.0)
@@ -1651,6 +1653,7 @@ menu.toggle_loop(vehicles, "Bypass Anti-Lockon", {}, "", function()
     end
 end)
 
+
 local headlamp = menu.list(funfeatures, "Headlamp", {}, "Does not network with other players.")
 local distance = 25.0
 menu.slider_float(headlamp, "Distance", {"distance"}, "Distance that it will light up.", 100, 10000, 1500, 100, function(value)
@@ -1683,9 +1686,9 @@ menu.toggle(funfeatures, "Power Outage", {"poweroutage"}, "", function(toggled)
 end)
 
 menu.toggle(funfeatures, "Blackout", {"blackout"}, "", function(toggled)
+    menu.trigger_commands("time 1")
     GRAPHICS.SET_ARTIFICIAL_LIGHTS_STATE(toggled)
     if toggled then
-        menu.trigger_commands("time 1")
         GRAPHICS.SET_TIMECYCLE_MODIFIER("dlc_island_vault")
     else
         GRAPHICS.SET_TIMECYCLE_MODIFIER("DEFAULT")
@@ -2021,7 +2024,6 @@ menu.toggle_loop(detections, "Thunder Join", {}, "Detects if someone is using th
         end
     end
 end)
-
 
 local anti_mugger = menu.list(protections, "Block Muggers")
 menu.toggle_loop(anti_mugger, "Myself", {}, "Prevents you from being mugged.", function() -- thx nowiry for improving my method :D

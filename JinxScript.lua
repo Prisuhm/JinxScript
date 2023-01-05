@@ -1,6 +1,6 @@
 util.require_natives("natives-1663599433-uno")
 local response = false
-local localVer = 3.32
+local localVer = 3.31
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)

@@ -1151,13 +1151,6 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(antimodder, pid, "Remove Interior Godmode", {}, "Blocked by most menus.", function()
-        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        util.trigger_script_event(1 << pid, {113023613, pid, 1771544554, math.random(0, 9999)})
-        ENTITY.SET_ENTITY_CAN_BE_DAMAGED(ped, true)
-    end)
-
-
     player_toggle_loop(antimodder, pid, "Remove Vehicle Godmode", {}, "Blocked by most menus.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if PED.IS_PED_IN_ANY_VEHICLE(ped, false) and not PED.IS_PED_DEAD_OR_DYING(ped) then

@@ -1,6 +1,6 @@
 util.require_natives("natives-1672190175-uno")
 local response = false
-local localVer = 3.4
+local localVer = 3.41
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)
@@ -1833,18 +1833,6 @@ menu.toggle_loop(vehicles, "Spinbot", {"spinbot"}, "", function()
     end
     if vehicle ~= 0 and not PED.IS_PED_DEAD_OR_DYING(players.user_ped()) and NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
         ENTITY.APPLY_FORCE_TO_ENTITY(vehicle, 5, 0, 0, 150.0, 0, 0, 0, 0, true, false, true, false, true)
-    end
-end)
-
-menu.action(funfeatures, "Test", {""}, "", function()
-    local pos = ENTITY.GET_ENTITY_COORDS(players.user_ped(), false)
-    local peds = {}
-    for i = 0, 30 do
-        peds[i] = PED.CREATE_RANDOM_PED(ENTITY.GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(veh, 0.0, 0.0, 50.0))
-    end
-    util.yield(1000)
-    for _, ped in ipairs(peds) do
-        entities.delete_by_handle(ped)
     end
 end)
 

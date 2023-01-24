@@ -1,7 +1,6 @@
 util.require_natives("natives-1672190175-uno")
-ENTITY.APPLY_FORCE_TO_ENTITY(0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 1, 1, 1, 0, 1)
 local response = false
-local localVer = 3.43
+local localVer = 3.42
 local currentVer
 async_http.init("raw.githubusercontent.com", "/Prisuhm/JinxScript/main/JinxScriptVersion", function(output)
     currentVer = tonumber(output)

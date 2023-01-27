@@ -1107,7 +1107,7 @@ local function player(pid)
         MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 99999, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
     end)
     
-    menu.action(antimodder, "Squish", {"squish"}, "Squishes The Fuck Out Of Them Til' They Die. Works On Most Menus. (Note: Will not work if the target is using no ragdoll).", function()
+    menu.action(antimodder, "Kill Godmode Player", {"squish"}, "Squishes The Fuck Out Of Them Til' They Die. Works On Most Menus. (Note: Will not work if the target is using no ragdoll).", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = ENTITY.GET_ENTITY_COORDS(ped)
         local khanjali = util.joaat("khanjali")

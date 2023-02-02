@@ -1050,7 +1050,7 @@ local function player(pid)
 
     menu.action(griefing, "Glitch Interior State", {}, "Can be undone by rejoining. Player must be in an apartment. Works on most menus.", function(s)
         if players.is_in_interior(pid) then
-            util.trigger_script_event(1 << pid, {2956049686, pid, pid, pid, pid, math.random(int_min, int_max), pid}) -- possibly removed
+            util.trigger_script_event(1 << pid, {629813291, pid, pid, pid, pid, math.random(int_min, int_max), pid}) -- possibly removed
         else
             util.toast("Player isn't in an interior. :/")
         end

@@ -443,7 +443,7 @@ local function player(pid)
             end)
 
             menu.toggle_loop(rp_loop, "Enable RP Loop", {}, "Each collectible gives 1k RP", function()
-                util.trigger_script_event(1 << pid, {697566862, pid, 4, -1, 1, 1, 1})
+                util.trigger_script_event(1 << pid, {1839167950, pid, 4, -1, 1, 1, 1})
                 util.yield(rp_delay)
             end)
             menu.trigger_command(rp_loop)
@@ -766,12 +766,12 @@ local function player(pid)
     
     local freeze = menu.list(griefing, "Freeze Player", {}, "")
     player_toggle_loop(freeze, pid, "Hard Freeze", {"hardfreeze"}, "Freezes them along with their camera. Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-93722397, pid, 0, 0, 0, 0, 0})
+        util.trigger_script_event(1 << pid, {330622597, pid, 0, 0, 0, 0, 0})
         util.yield(500)
     end)
 
     player_toggle_loop(freeze, pid, "Blinking Freeze", {"blinkingfreeze"}, "Acts like hard freeze but blinks occasionally. Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {434937615, pid, 0, 1, 0, 0})
+        util.trigger_script_event(1 << pid, {-1796714618, pid, 0, 1, 0, 0})
         util.yield(500)
     end)
 
@@ -782,44 +782,44 @@ local function player(pid)
     
     local inf_loading = menu.list(griefing, "Infinite Loading Screen", {}, "")
     menu.action(inf_loading, "MC Teleport Method", {}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {879177392, pid, 0, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+        util.trigger_script_event(1 << pid, {891653640, pid, 0, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
     end)
 
     menu.action(inf_loading, "Apartment Method", {}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {434937615, pid, 0, 1, id})
+        util.trigger_script_event(1 << pid, {-1796714618, pid, 0, 1, id})
     end)
         
     menu.action_slider(inf_loading, "Corrupted Phone Invite", {}, "", invites, function(index, name)
         switch name do
             case "Yacht":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 1})
+                util.trigger_script_event(1 << pid, {36077543, pid, 1})
                 util.toast("Yacht Invite Sent")
             break
             case "Office":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 2})
+                util.trigger_script_event(1 << pid, {36077543, pid, 2})
                 util.toast("Office Invite Sent")
             break
             case "Clubhouse":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 3})
+                util.trigger_script_event(1 << pid, {36077543, pid, 3})
                 util.toast("Clubhouse Invite Sent")
             break
             case "Office Garage":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 4})
+                util.trigger_script_event(1 << pid, {36077543, pid, 4})
                 util.toast("Office Garage Invite Sent")
             break
             case "Custom Auto Shop":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 5})
+                util.trigger_script_event(1 << pid, {36077543, pid, 5})
                 util.toast("Custom Auto Shop Invite Sent")
             break
             case "Apartment":
-                util.trigger_script_event(1 << pid, {-1891171016, pid, 6})
+                util.trigger_script_event(1 << pid, {36077543, pid, 6})
                 util.toast("Apartment Invite Sent")
             break
         end
     end)
 
     player_toggle_loop(griefing, pid, "Black Screen", {"blackscreen"}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {879177392, pid, math.random(1, 32), 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+        util.trigger_script_event(1 << pid, {891653640, pid, math.random(1, 32), 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
         util.yield(1000)
     end)
 
@@ -1022,7 +1022,7 @@ local function player(pid)
                 util.toast("Player is not in any interior. :/")
             return end
             if get_interior_player_is_in(pid) ~= id then
-                util.trigger_script_event(1 << pid, {113023613, pid, 1771544554, math.random(0, 9999)})
+                util.trigger_script_event(1 << pid, {-1428749433, pid, 448051697, math.random(0, 9999)})
                 util.yield(100)
                 MISC.SHOOT_SINGLE_BULLET_BETWEEN_COORDS(pos.x, pos.y, pos.z + 1, pos.x, pos.y, pos.z, 1000, true, util.joaat("weapon_stungun"), players.user_ped(), false, true, 1.0)
             end
@@ -1044,13 +1044,13 @@ local function player(pid)
     end)
 
     player_toggle_loop(griefing, pid, "Sound Spam", {}, "Blocked by some menus.", function()
-        util.trigger_script_event(1 << pid, {-1891171016, pid, math.random(1, 6)})
+        util.trigger_script_event(1 << pid, {36077543, pid, math.random(1, 6)})
         util.yield()
     end)
 
     menu.action(griefing, "Glitch Interior State", {}, "Can be undone by rejoining. Player must be in an apartment. Works on most menus.", function(s)
         if players.is_in_interior(pid) then
-            util.trigger_script_event(1 << pid, {2956049686, pid, pid, pid, pid, math.random(int_min, int_max), pid})
+            util.trigger_script_event(1 << pid, {2956049686, pid, pid, pid, pid, math.random(int_min, int_max), pid}) -- possibly removed
         else
             util.toast("Player isn't in an interior. :/")
         end
@@ -1087,8 +1087,8 @@ local function player(pid)
     end)
     
     menu.click_slider(griefing, "Fake Mug", {}, "", 0, 2147483647, 0, 1000, function(amount)
-        util.trigger_script_event(1 << pid, {548471420, players.user(), 532932991, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
-        util.trigger_script_event(1 << players.user(), {548471420, players.user(), 532932991, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
+        util.trigger_script_event(1 << pid, {2041805809, players.user(), 244034214, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
+        util.trigger_script_event(1 << players.user(), {2041805809, players.user(), 244034214, amount, 0, 0, 0, 0, 0, 0, pid, players.user(), 0, 0})
     end)
 
     player_toggle_loop(griefing, pid, "Taser Loop", {"tase"}, "", function()
@@ -1135,7 +1135,7 @@ local function player(pid)
     end) 
 
     player_toggle_loop(antimodder, pid, "Remove Player Godmode", {}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {113023613, pid, 1771544554, math.random(0, 9999)})
+        util.trigger_script_event(1 << pid, {-1428749433, pid, 448051697, math.random(0, 9999)})
     end)
 
     player_toggle_loop(antimodder, pid, "Remove Vehicle Godmode", {}, "Blocked by most menus.", function()
@@ -1159,15 +1159,15 @@ local function player(pid)
     for id, name in pairs(All_business_properties) do
         if id <= 12 then
             menu.action(clubhouse, name, {}, "", function()
-                util.trigger_script_event(1 << pid, {879177392, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, math.random(1, 10)})
+                util.trigger_script_event(1 << pid, {891653640, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, math.random(1, 10)})
             end)
         elseif id > 12 and id <= 21 then
             menu.action(facility, name, {}, "", function()
-                util.trigger_script_event(1 << pid, {879177392, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+                util.trigger_script_event(1 << pid, {891653640, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
             end)
         elseif id > 21 then
             menu.action(arcade, name, {}, "", function() 
-                util.trigger_script_event(1 << pid, {879177392, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1})
+                util.trigger_script_event(1 << pid, {891653640, pid, id, 32, NETWORK.NETWORK_HASH_FROM_PLAYER_HANDLE(pid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1})
             end)
         end
     end
@@ -1178,44 +1178,44 @@ local function player(pid)
 
     for id, name in pairs(small_warehouses) do
         menu.action(small, name, {}, "", function()
-            util.trigger_script_event(1 << pid, {434937615, pid, 0, 1, id})
+            util.trigger_script_event(1 << pid, {-1796714618, pid, 0, 1, id})
         end)
     end
 
     for id, name in pairs(medium_warehouses) do
         menu.action(medium, name, {}, "", function()
-            util.trigger_script_event(1 << pid, {434937615, pid, 0, 1, id})
+            util.trigger_script_event(1 << pid, {-1796714618, pid, 0, 1, id})
         end)
     end
 
     for id, name in pairs(large_warehouses) do
         menu.action(large, name, {}, "", function()
-            util.trigger_script_event(1 << pid, {434937615, pid, 0, 1, id})
+            util.trigger_script_event(1 << pid, {-1796714618, pid, 0, 1, id})
         end)
     end
 
     menu.action(tp_player, "Heist Passed Apartment Teleport", {}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-168599209, players.user(), pid, -1, 1, 1, 0, 1, 0}) 
+        util.trigger_script_event(1 << pid, {-702866045, players.user(), pid, -1, 1, 1, 0, 1, 0}) 
     end) 
     
     menu.action(cayoperico, "Cayo Perico", {"tpcayo"}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-93722397, pid, 0, 0, 3, 1})
+        util.trigger_script_event(1 << pid, {330622597, pid, 0, 0, 3, 1})
     end)
 
     menu.action(cayoperico, "Cayo Perico v2", {"tpcayo2"}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-910497748, pid, 1})
+        util.trigger_script_event(1 << pid, {-369672308, pid, 1})
     end)
 
     menu.action(cayoperico, "Cayo Perico (No Cutscene)", {"tpcayo2"}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-93722397, pid, 0, 0, 4, 1})
+        util.trigger_script_event(1 << pid, {330622597, pid, 0, 0, 4, 1})
     end)
 
     menu.action(cayoperico, "Leaving Cayo Perico", {"cayoleave"}, "Blocked by most menus. Player must be at cayo perico to trigger this.", function()
-        util.trigger_script_event(1 << pid, {-93722397, pid, 0, 0, 3})
+        util.trigger_script_event(1 << pid, {330622597, pid, 0, 0, 3})
     end)
 
     menu.action(cayoperico, "Kicked From Cayo Perico", {"cayokick"}, "Blocked by most menus.", function()
-        util.trigger_script_event(1 << pid, {-93722397, pid, 0, 0, 4, 0})
+        util.trigger_script_event(1 << pid, {330622597, pid, 0, 0, 4, 0})
     end)
 
     local interior_tps = {
@@ -1238,7 +1238,7 @@ local function player(pid)
 
     for id, name in pairs(interior_tps) do
         menu.action(interiors, name, {""}, "Blocked by most menus.", function()
-            util.trigger_script_event(1 << pid, {1268038438, pid, id, 1, 0, 1, 1130429716, -1001012850, 1106067788, 0, 0, 1, 2123789977, 1, -1})
+            util.trigger_script_event(1 << pid, {1727896103, pid, id, 1, 0, 1, 1130429716, -1001012850, 1106067788, 0, 0, 1, 2123789977, 1, -1})
         end)
     end
 
@@ -1357,14 +1357,14 @@ menu.toggle_loop(self, "Unlock 50 Car Garage", {}, "", function()
 end)
 
 menu.toggle_loop(self, "Fast Respawn", {"fastrespawn"}, "", function()
-    local gwobaw = memory.script_global(2672505 + 1684 + 756) -- Global_2672505.f_1684.f_756
+    local gwobaw = memory.script_global(2672505 + 1685 + 756) -- Global_2672505.f_1685.f_756
     if PED.IS_PED_DEAD_OR_DYING(players.user_ped()) then
         GRAPHICS.ANIMPOSTFX_STOP_ALL()
         memory.write_int(gwobaw, memory.read_int(gwobaw) | 1 << 1)
     end
 end,
     function()
-    local gwobaw = memory.script_global(2672505 + 1684 + 756)
+    local gwobaw = memory.script_global(2672505 + 1685 + 756)
     memory.write_int(gwobaw, memory.read_int(gwobaw) &~ (1 << 1)) 
 end)
 

@@ -355,12 +355,6 @@ players.on_leave(handle_player_list)
 if not SCRIPT_SILENT_START and SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME() ~= "UNKNOWN" then
     util.toast("Hello, " .. SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME() .. "! \nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv")
 end
-
-local repo = menu.ref_by_path("Stand>Lua Scripts>Repository>JinxScript")
-if repo.value == false then 
-    util.toast("You are using an outdated version of JinxScript. Please subscribe to the version on the Stand Repository to get all of the latest updates :)")
-end
-
 local function player(pid) 
     if pid ~= players.user() and players.get_rockstar_id(pid) == 0xCB2A48C then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer"}), TOAST_DEFAULT)

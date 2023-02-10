@@ -1343,10 +1343,6 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
-menu.action(self, "Test", {}, "", function()
-    ENTITY.SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), players.get_cam_pos(players.user()), false, false, false)
-end)
-
 menu.toggle_loop(self, "Unlock 50 Car Garage", {}, "", function()
     if memory.read_byte(memory.script_global(262145 + 32688)) ~= 0 then -- Global_262145.f_32688
         memory.write_byte(memory.script_global(262145 + 32688), 0) 

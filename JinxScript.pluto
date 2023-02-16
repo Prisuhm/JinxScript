@@ -313,7 +313,6 @@ local values = {
 local unreleased_vehicles = {
     "virtue",
     "broadway",
-    "panthere",
     "everon2",
     "eudora",
     "boor"
@@ -736,7 +735,7 @@ local function player(pid)
                 end
                 util.yield()
                 pos = players.get_position(pid)
-            until pos.z > 10000.0
+            until pos.z > 2600.0
             util.yield(100)
             if boxville ~= 0 and ENTITY.DOES_ENTITY_EXIST(boxville) then 
                 entities.delete_by_handle(boxville)
@@ -965,6 +964,7 @@ local function player(pid)
 
     local control_veh
     control_veh = player_toggle_loop(griefing, pid, "Control Players Vehicle", {}, "Player must be in a normal vehicle for this to work.", function(toggle)
+        if StandUser(pid) then util.toast(lang.get_localised(1729001290)) end
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = players.get_position(pid)
         local vehicle = PED.GET_VEHICLE_PED_IS_IN(ped)
@@ -1303,8 +1303,10 @@ local function player(pid)
             util.yield(100)
             nuts.value = true
         else
-            nuts.value = false
-            outgoingSyncs.value = false
+            if players.exists(pid) then
+                nuts.value = false
+                outgoingSyncs.value = false
+            end
         end
     end)
 
@@ -1375,16 +1377,6 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
-menu.toggle_loop(self, "Unlock 50 Car Garage", {}, "", function()
-    if memory.read_byte(memory.script_global(262145 + 32688)) ~= 0 then -- Global_262145.f_32688
-        memory.write_byte(memory.script_global(262145 + 32688), 0) 
-    return end
-
-    if memory.read_byte(memory.script_global(262145 + 32702)) ~= 1 then -- Global_262145.f_32702
-        memory.write_byte(memory.script_global(262145 + 32702), 1)  
-    end
-end)
-
 menu.toggle_loop(self, "Fast Respawn", {"fastrespawn"}, "", function()
     local gwobaw = memory.script_global(2672505 + 1685 + 756) -- Global_2672505.f_1685.f_756
     if PED.IS_PED_DEAD_OR_DYING(players.user_ped()) then
@@ -2267,7 +2259,7 @@ menu.toggle_loop(modder_detections, "Modded Orbital Cannon", {}, "Detects if som
 end)
 
 menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone use driving a spawned vehicle.", function()
-    for _, pid in players.list(true, true, true) do
+    for _, pid in players.list(false, true, true) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = PED.GET_VEHICLE_PED_IS_USING(ped)
         local hash = players.get_vehicle_model(pid)
@@ -2491,6 +2483,7 @@ spoof_spec_syncs = menu.toggle_loop(spoof, "Spoof Spectator Syncs", {"spoofspect
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
         if cam_dist < 25.0 and ped_dist > 75.0 and not PED.IS_PED_DEAD_OR_DYING(ped) then
+            util.toast(players.get_name(pid) .. " is spectating you. spoofing your position...")
             outgoingSyncs = menu.ref_by_rel_path(menu.player_root(pid), "Outgoing Syncs>Block")
             menu.trigger_commands("spoofedposition " .. x .. "," .. y .. "," .. z)
             util.yield(100)
@@ -2499,12 +2492,11 @@ spoof_spec_syncs = menu.toggle_loop(spoof, "Spoof Spectator Syncs", {"spoofspect
             outgoingSyncs.value = true
             if v3.distance(v3(x, y, z), players.get_cam_pos(pid)) < 50.0 then
                 repeat
-                    util.toast(players.get_name(pid) .. " Is Watching Your Spoofed Position")
                     util.yield()
                 until v3.distance(v3(x, y, z), players.get_cam_pos(pid)) > 50.0
-                outgoingSyncs.value = false
-                spoofing.value = false
             end
+            outgoingSyncs.value = false
+            spoofing.value = false
         end
         
     end

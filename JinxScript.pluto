@@ -598,7 +598,7 @@ local function player(pid)
         repeat
             time += 1
             if time > 300 and not PED.IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
-                util.toast("Failed to hijack players vehicle. :/")
+                util.toast("Failed to hijack " .. players.get_name(pid) .. "'s vehicle. :/")
                 entities.delete_by_handle(spawned_ped)
                 time = 0
                 break 
@@ -619,6 +619,9 @@ local function player(pid)
             until TASK.GET_IS_TASK_ACTIVE(spawned_ped)
             VEHICLE.SET_VEHICLE_DOORS_LOCKED(vehicle, 2)
             util.yield(5000)
+        end
+        if spawned_ped ~= nil and not PED.IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
+            entities.delete_by_handle(spawned_ped)
         end
     end)
 
@@ -1291,7 +1294,7 @@ local function player(pid)
 
     local spectate_root = menu.ref_by_rel_path(menu.player_root(pid), "Spectate")
     local stealth
-    stealth = menu.toggle(spectate_root, "Bravo Six Method", {"bravo"}, "Bravo six, going dark.", function(toggled)
+    stealth = menu.toggle(spectate_root, "Bravo Six Method", {"bravo"}, "Bravo six, going dark. (Note: Most features such as trolling or griefing options will not work while you are spectating them with this method)", function(toggled)
         if pid == players.user() then 
             util.toast(lang.get_localised(-1974706693)) 
             stealth.value = false
@@ -1301,7 +1304,6 @@ local function player(pid)
         if toggled then
             outgoingSyncs = menu.ref_by_rel_path(menu.player_root(pid), "Outgoing Syncs>Block")
             nuts = menu.ref_by_rel_path(menu.player_root(pid), "Spectate>Nuts Method")
-
             outgoingSyncs.value = true
             util.yield(250)
             nuts.value = true
@@ -1378,10 +1380,9 @@ local function player(pid)
         end
     end)
 
-    menu.toggle_loop(misc, "Mk2 Aimbot", {"mk2aimbot"}, "", function()
+    menu.toggle_loop(misc, "Weaponized Rocket Aimbot", {"vehicleaimbot"}, "allows you to aimbot players using the weapons on your vehicle.", function()
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        if not PED.IS_PED_DEAD_OR_DYING(ped) and PAD.IS_CONTROL_PRESSED(0, 70) and ped_dist < 200.0 then
+        if not PED.IS_PED_DEAD_OR_DYING(ped) and PAD.IS_CONTROL_PRESSED(0, 70) then
             VEHICLE.SET_VEHICLE_SHOOT_AT_TARGET(players.user_ped(), ped, players.get_position(pid))
         end
     end)
@@ -1531,9 +1532,10 @@ end)
 
 menu.toggle_loop(lobby, "Lock All Vehicles", {"lockall"}, "", function()
     for _, pid in players.list(false, true, true) do
-        for _, vehicle in entities.get_all_vehicles_as_handles() do
-            VEHICLE.SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid, true) -- SET_VEHICLE_DOORS_LOCKED didn't want to work here
-            util.yield()
+        local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = PED.GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped)
+        if not VEHICLE.GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid) then
+            VEHICLE.SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid, true)
         end
     end
 end)
@@ -1774,7 +1776,7 @@ menu.toggle_loop(vehicles, "Bypass Anti-Lockon", {}, "", function()
     end
 end)
 
-menu.toggle_loop(vehicles, "Mk2 Aimbot", {"mk2aimbotall"}, "", function()
+menu.toggle_loop(vehicles, "Weaponized Rocket Aimbot", {"vehicleaimbotall"}, "allows you to aimbot players using the weapons on your vehicle.", function()
     for _, pid in players.list(false, true, true) do
         local ped = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
@@ -2345,7 +2347,7 @@ menu.toggle_loop(anticage, "Enable Anti-Cage", {"anticage"}, "", function()
                     ENTITY.SET_ENTITY_ALPHA(obj_handle, alpha, false)
                 end
                 if data ~= 0 and cleanup then
-                    entities.set_can_migrate(entities.handle_to_pointer(obj_ptr), true)
+                    entities.set_can_migrate(obj_ptr, true)
                     ENTITY.SET_ENTITY_ALPHA(obj_handle, 0, false)
                     entities.delete_by_handle(obj_handle)
                 end

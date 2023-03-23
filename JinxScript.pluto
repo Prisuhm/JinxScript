@@ -623,7 +623,7 @@ local function player(pid)
             end
             ENTITY.SET_ENTITY_COORDS_NO_OFFSET(pad, pos, false, false, false)
         else
-            if pad ~= nil or ENTITY.DOES_ENTITY_EXIST(pad) then
+            if pad ~= nil then
                 entities.delete_by_handle(pad)
             end
         end
@@ -1630,17 +1630,13 @@ block_orb_cam = menu.toggle_loop(lobby,  "Block Orbital Camera", {"orbcamblockal
             if IsPlayerUsingOrbitalCannon(pid) then
                 local camblock = menu.ref_by_rel_path(menu.player_root(pid), "JinxScript>Trolling & Griefing>Block Orbital Camera")
                 camblock.value = true
-            else
+                repeat
+                    util.yield()
+                until not IsPlayerUsingOrbitalCannon(pid)
                 camblock.value = false
             end
         end
     end 
-end, function() 
-    repeat
-        camblock = menu.ref_by_rel_path(menu.player_root(pid), "JinxScript>Trolling & Griefing>Block Orbital Camera")
-        camblock.value = false
-        util.yield()
-    until camblock.value == false
 end)
     
 menu.toggle_loop(lobby, "Annoy Weaponized Vehicle Users", {"annoy"}, "", function()

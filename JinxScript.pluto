@@ -794,14 +794,16 @@ local function player(pid)
         if not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             util.toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
         return end
-        repeat
-            if req_count >= 250 then
-                util.toast("Failed to get control of players vehicle. :/")
-            return end
-            NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
-            util.yield()
-            req_count += 1
-        until NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle)
+        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
+            repeat
+                if req_count >= 250 then
+                    util.toast("Failed to get control of players vehicle. :/")
+                return end
+                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
+                util.yield()
+                req_count += 1
+            until NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle)
+        end
         ENTITY.SET_ENTITY_ROTATION(vehicle, rot, 2, false)
     end)
 
@@ -814,6 +816,16 @@ local function player(pid)
         if not PED.IS_PED_IN_ANY_VEHICLE(ped, false) then
             util.toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
         return end
+        if not NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
+            repeat
+                if req_count >= 250 then
+                    util.toast("Failed to get control of players vehicle. :/")
+                return end
+                NETWORK.NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
+                util.yield()
+                req_count += 1
+            until NETWORK.NETWORK_HAS_CONTROL_OF_ENTITY(vehicle)
+        end
 
         if height < 5.0 and height > 0.1 then
             VEHICLE.SET_VEHICLE_ON_GROUND_PROPERLY(vehicle)

@@ -518,7 +518,7 @@ local function player(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         repeat
             if req_count >= 250 then
-                util.toast("Failed to get control of players  :/")
+                util.toast("Failed to get control of players vehicle. :/")
             return end
             NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
             util.yield()
@@ -897,7 +897,7 @@ local function player(pid)
         if not NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
             repeat
                 if count_thing >= 250 then
-                    util.toast("Failed to get control of players  :/")
+                    util.toast("Failed to get control of players vehicle. :/")
                 return end
                 NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
                 util.yield()
@@ -922,7 +922,7 @@ local function player(pid)
         if not NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
             repeat
                 if req_count >= 250 then
-                    util.toast("Failed to get control of players  :/")
+                    util.toast("Failed to get control of players vehicle. :/")
                 return end
                 NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
                 util.yield()
@@ -944,7 +944,7 @@ local function player(pid)
         if not NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
             repeat
                 if req_count >= 250 then
-                    util.toast("Failed to get control of players  :/")
+                    util.toast("Failed to get control of players vehicle. :/")
                 return end
                 NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
                 util.yield()
@@ -977,7 +977,7 @@ local function player(pid)
             repeat
                 hospitalize_count += 1
                 if hospitalize_count >= 300 then
-                    util.toast("Failed to hospitalize  :/")
+                    util.toast("Failed to hospitalize player. :/")
                     clearBit(memory.script_global(2657589 + 1 + (players.user() * 466) + 427), 0)
                     hospitalize_count = 0
                     return
@@ -1341,7 +1341,7 @@ local function player(pid)
         if not players.exists(pid) then util.stop_thread() end
 
         if not DOES_ENTITY_EXIST(ped) and IS_PED_IN_ANY_VEHICLE(ped, false) then
-            util.toast(players.get_name(pid) .. "Is too far or isn't in any  :/")
+            util.toast(players.get_name(pid) .. "Is too far or isn't in any vehicle. :/")
             control_veh.value = false
         util.stop_thread() end
 

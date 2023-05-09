@@ -2603,16 +2603,12 @@ menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone u
                 return 
             end
         end
-        if GET_SPAWN_STATE(pid) == 0 then
-            return 
-        end
         local detections = {
             [1] = bitset == 8 or plate_text == "46EEK572", -- thx to mike for telling me about this plate text
             [2] = plate_text == "X FORCE ",
             [3] = plate_text == " TERROR ",
             [4] = plate_text == " MXMENU ",
             [5] = bitset == 1024,
-            [6] = StandUserCoLoading(pid) and bitset == 1024,
         }
         local detection_index = 0
         for i, detection in ipairs(detections) do
@@ -2639,9 +2635,6 @@ menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone u
                     break
                 case 5:
                     util.draw_debug_text(players.get_name(driver) .. " Is likely a 2Take1 User")
-                    break
-                case 6:
-                    util.draw_debug_text(players.get_name(driver) .. " Is likely a 2Take1 User (Co-loading Stand)")
                     break
                 end
             end

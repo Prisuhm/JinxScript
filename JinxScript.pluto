@@ -8,8 +8,6 @@ local function player_toggle_loop(root, pid, menu_name, command_names, help_text
     end, callback_off)
 end
 
-
-
 local spawned_objects = {}
 
 local function BitTest(bits, place)
@@ -2515,7 +2513,7 @@ menu.toggle_loop(modder_detections, "Modded Weapon", {}, "Detects if someone is 
     end
 end)
 
-menu.toggle_loop(modder_detections, "Noclip", {}, "Detects if the player is using noclip aka levitation", function()
+menu.toggle_loop(modder_detections, "Noclip", {}, "Detects if the player is using noclip aka levitation.", function()
     for players.list(false, true, true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_ptr = entities.handle_to_pointer(ped)
@@ -2593,7 +2591,7 @@ menu.toggle_loop(modder_detections, "Orbital Cannon", {}, "Detects if someone is
     end
 end)
 
-menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone use driving a spawned ", function() -- this isnt the same as mikes, calm down, retards. I had this before him.
+menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone use driving a spawned vehicle.", function() -- this isnt the same as mikes, calm down, retards. I had this before him.
     for players.list(true, true, true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
@@ -2605,7 +2603,7 @@ menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone u
                 return 
             end
         end
-        if not IS_PED_IN_ANY_VEHICLE(ped, false) or GET_SPAWN_STATE(pid) == 0 then
+        if GET_SPAWN_STATE(pid) == 0 then
             return 
         end
         local detections = {

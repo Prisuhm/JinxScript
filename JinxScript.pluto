@@ -75,6 +75,23 @@ local function StandUserCoLoading(pid) -- credit to sapphire for this
     return false
 end
 
+local function LegitPlatePattern(plate)
+    if string.match(plate, "%d%d%a%a%a%d%d%d") then
+      return true
+    else
+      return false
+    end
+end
+
+local function load_weapon_asset(weapon_name)
+    local projectile = util.joaat(weapon_name)
+    while not HAS_WEAPON_ASSET_LOADED(projectile) do
+        REQUEST_WEAPON_ASSET(projectile, 31, false)
+        util.yield(10)
+    end
+    return projectile
+end
+
 local function GetOffsetFromPlayerCamera(player, distance)
     local pos = players.get_cam_pos(player)
     local direction = players.get_cam_rot(player):toDir()
@@ -234,9 +251,6 @@ local veh_things = {
     "terbyte",
     "minitank",
     "rcbandito",
-    "volatus",
-    "supervolito",
-    "supervolito2"
 }
 
 local doors = {
@@ -419,14 +433,11 @@ local weapons = menu.list(menu.my_root(), "Weapons")
 local funfeatures = menu.list(menu.my_root(), "Fun Features")
 local teleport = menu.list(menu.my_root(), "Teleport")
 local detections = menu.list(menu.my_root(), "Detections", {}, "Note: Enabling all detections may lead to a slight drop in fps.")
-local modder_detections = menu.list(detections, "Modder Detections", {}, "Note: Using reveal invisible players may lead to false positives.")
+local modder_detections = menu.list(detections, "Modder Detections")
 local normal_detections = menu.list(detections, "Normal Detections")
 local bailOnAdminJoin = false
 local protections = menu.list(menu.my_root(), "Protections")
 local misc = menu.list(menu.my_root(), "Miscellaneous", {}, "")
-
-local int_min = -2147483647
-local int_max = 2147483647
 
 local spoofing = menu.ref_by_path("Online>Spoofing>Position Spoofing>Position Spoofing")
 
@@ -686,7 +697,6 @@ local function player(pid)
         SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, -1, 1.0, 2|8|16)
-        GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid)
         repeat
             time += 1   
             if time > 300 and not IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
@@ -706,6 +716,7 @@ local function player(pid)
                 util.yield()
             until not GET_IS_TASK_ACTIVE(ped, 2) or IS_PED_IN_ANY_VEHICLE(spawned_ped, false)
             TASK_VEHICLE_DRIVE_WANDER(spawned_ped, vehicle, 9999.0, 6) 
+            GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid)
             SET_VEHICLE_DOORS_LOCKED(vehicle, 2) -- sometimes it doesnt lock
             util.toast("Bippity boppity their car is now your property :D")
             util.yield(1000)
@@ -808,7 +819,6 @@ local function player(pid)
             SET_PED_CAN_RAGDOLL(attacker, false)
             SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(attacker, true)
             entities.set_can_migrate(entities.handle_to_pointer(attacker), false)
-            util.toast(detonate_dist)
             TASK_PLAY_ANIM(attacker, dict, name, 5.0, 2.5, -1, 1|16|32, 1.0, false, false, false)
             repeat
                 TASK_GO_TO_ENTITY(attacker, ped,  -1, 1,  500.0, 0.0, 0)
@@ -1018,7 +1028,7 @@ local function player(pid)
         pos.z -= 0.50
         local whopper = util.joaat("xs_prop_hamburgher_wl")
         RequestModel(whopper)
-        local hamburger = entities.create_object(whopper, pos)
+        local hamburger = entities.create_object(dt1_22_ladder_07, pos)
         entities.set_can_migrate(entities.handle_to_pointer(hamburger), false)
         util.yield(60000)
         entities.delete_by_handle(hamburger)
@@ -1088,7 +1098,7 @@ local function player(pid)
     menu.action(griefing, "Glitch Interior State", {}, "Can be undone by rejoining. Player must be in an apartment. Works on most menus.", function()
         if StandUser(pid) then util.toast(stand_notif) return end
         if players.is_in_interior(pid) then
-            util.trigger_script_event(1 << pid, {629813291, players.user(), pid, pid, pid, math.random(int_min, int_max), pid})
+            util.trigger_script_event(1 << pid, {629813291, players.user(), pid, pid, pid, math.random(-2147483647, 2147483647), pid})
         else
             util.toast(players.get_name(pid) .. " isn't in an interior. :/")
         end
@@ -1987,18 +1997,14 @@ local weapon_thing = menu.list(weapons, "Change Bullet Projectile", {}, "Change 
 for id, data in weapon_stuff do
     local name = data[1]
     local weapon_name = data[2]
-    local a = false
+    local toggled = false
     menu.toggle(weapon_thing, name, {}, "", function(toggle)
-        a = toggle
-        while a do
-            local weapon = util.joaat(weapon_name)
-            projectile = weapon
-            while not HAS_WEAPON_ASSET_LOADED(projectile) do
-                REQUEST_WEAPON_ASSET(projectile, 31, false)
-                util.yield(10)
-            end
+        toggled = toggle
+        while toggled do
+            local weapon = load_weapon_asset(weapon_name)
+            local wpn = GET_SELECTED_PED_WEAPON(players.user_ped())
+            local delay = GET_WEAPON_TIME_BETWEEN_SHOTS(wpn)
             local inst = v3.new()
-            DISABLE_PLAYER_FIRING(players.user(), true) -- credits for wiri for these 2 lines (It looks much better with shooting disabled)
             if IS_DISABLED_CONTROL_PRESSED(0, 24) then
                 if not GET_PED_LAST_WEAPON_IMPACT_COORD(PLAYER_PED_ID(), memory.addrof(inst)) then
                     v3.set(inst,GET_FINAL_RENDERED_CAM_ROT(2))
@@ -2012,6 +2018,7 @@ for id, data in weapon_stuff do
                 local wpEnt = GET_CURRENT_PED_WEAPON_ENTITY_INDEX(PLAYER_PED_ID(), false)
                 local wpCoords = GET_ENTITY_BONE_POSTION(wpEnt, GET_ENTITY_BONE_INDEX_BY_NAME(wpEnt, "gun_muzzle"))
                 SHOOT_SINGLE_BULLET_BETWEEN_COORDS(wpCoords.x, wpCoords.y, wpCoords.z, x, y, z, 1, true, weapon, PLAYER_PED_ID(), true, false, 1000.0)
+                util.yield(delay * 1000)
             end
             util.yield()
         end
@@ -2019,7 +2026,6 @@ for id, data in weapon_stuff do
         CLEAR_AREA_OF_PROJECTILES(pos, 999999.0, 0)
     end)
 end
-
 menu.toggle_loop(weapons, "Fast Hands", {"fasthands"}, "Swaps your weapons faster.", function()
     if GET_IS_TASK_ACTIVE(players.user_ped(), 56) then
         FORCE_PED_AI_AND_ANIMATION_UPDATE(players.user_ped())
@@ -2389,11 +2395,8 @@ local finger_thing = menu.list(funfeatures, "Finger Gun", {}, "Shoot bullets fro
 for id, data in weapon_stuff do
     local name = data[1]
     local weapon_name = data[2]
-    local projectile = util.joaat(weapon_name)
-    while not HAS_WEAPON_ASSET_LOADED(projectile) do
-        REQUEST_WEAPON_ASSET(projectile, 31, false)
-        util.yield(10)
-    end
+    local projectile = load_weapon_asset(weapon_name)
+    local toggled = false
     menu.toggle(finger_thing, name, {}, "", function(state)
         toggled = state
         while toggled do
@@ -2505,8 +2508,8 @@ menu.toggle_loop(modder_detections, "Modded Weapon", {}, "Detects if someone is 
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         for i, hash in modded_weapons do
             local weapon_hash = util.joaat(hash)
-            if HAS_PED_GOT_WEAPON(ped, weapon_hash, false) and (IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 8) or GET_IS_TASK_ACTIVE(ped, 9)) then
-                util.draw_debug_text(players.get_name(pid) .. " is using a modded weapon " .. "(" .. hash .. ")")
+            if GET_SELECTED_PED_WEAPON(ped) == weapon_hash and (IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 8) or GET_IS_TASK_ACTIVE(ped, 9)) then
+                util.draw_debug_text(players.get_name(pid) .. " is using a modded weapon " .. "[Model: " .. hash .. "]")
                 break
             end
         end
@@ -2544,8 +2547,8 @@ menu.toggle_loop(modder_detections, "Super Drive", {}, "Detects if someone is us
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local veh_speed = (GET_ENTITY_SPEED(vehicle)* 2.236936)
         local veh_class = GET_VEHICLE_CLASS(vehicle)
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
         if veh_class ~= 15 and veh_class ~= 16 and veh_speed >= 200 and (players.get_vehicle_model(pid) ~= util.joaat("oppressor") and players.get_vehicle_model(pid) ~= util.joaat("oppressor2")) and pid == driver then
-            local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
             util.toast(players.get_name(driver) .. " is using super drive")
             break
         end
@@ -2567,20 +2570,6 @@ menu.toggle_loop(modder_detections, "Thunder Join", {}, "Detects if someone is u
     end
 end)
 
-menu.toggle_loop(modder_detections, "Spectate", {}, "Detects if someone is spectating you.", function()
-    for players.list(false, true, true) as pid do
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
-        local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        for interior_stuff as id do
-            if cam_dist < 20.0 and ped_dist > 75.0 and not IS_PED_DEAD_OR_DYING(ped) and not NETWORK_IS_PLAYER_FADING(pid) and GET_INTERIOR_FROM_PLAYER(pid) == id then
-                util.toast(players.get_name(pid) .. " is watching you (modded)")
-                break
-            end
-        end
-    end
-end)
-
 menu.toggle_loop(modder_detections, "Orbital Cannon", {}, "Detects if someone is using a modded orbital cannon.", function()
     for players.list(false, true, true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -2592,52 +2581,50 @@ menu.toggle_loop(modder_detections, "Orbital Cannon", {}, "Detects if someone is
 end)
 
 menu.toggle_loop(modder_detections, "Spawned Vehicle", {}, "Detects if someone use driving a spawned vehicle.", function() -- this isnt the same as mikes, calm down, retards. I had this before him.
-    for players.list(true, true, true) as pid do
+    for players.list(false, true, true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local hash = players.get_vehicle_model(pid)
         local plate_text = GET_VEHICLE_NUMBER_PLATE_TEXT(vehicle)
         local bitset = DECOR_GET_INT(vehicle, "MPBitset")
+        local plyveh = DECOR_GET_INT(vehicle, "Player_Vehicle")
+        local pegasusveh = DECOR_GET_BOOL(vehicle, "CreatedByPegasus")
         for veh_things as veh do -- because getting the decor int for them didnt want to work
             if hash == util.joaat(veh) and DECOR_GET_INT(vehicle, "MPBitset") == 8 then
                 return 
             end
         end
-        local detections = {
-            [1] = bitset == 8 or plate_text == "46EEK572", -- thx to mike for telling me about this plate text
-            [2] = plate_text == "X FORCE ",
-            [3] = plate_text == " TERROR ",
-            [4] = plate_text == " MXMENU ",
-            [5] = bitset == 1024,
-        }
-        local detection_index = 0
-        for i, detection in ipairs(detections) do
-            if detection then
-                detection_index = i
-                break
-            end
-        end
         if players.get_vehicle_model(pid) ~= 0 and not GET_IS_TASK_ACTIVE(ped, 160) and GET_SPAWN_STATE(players.user()) ~= 0 then
             local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
-            if players.get_name(driver) ~= "InvalidPlayer" and pid == driver then
-                switch detection_index do
-                case 1:
-                    util.draw_debug_text(players.get_name(driver) .. " is using a spawned vehicle " .. "(" .. util.reverse_joaat(players.get_vehicle_model(pid)) .. ")")
-                    break
-                case 2:
-                    util.draw_debug_text(players.get_name(driver) .. " Is an XForce User")
-                    break
-                case 3:
-                    util.draw_debug_text(players.get_name(driver) .. " Is a Terror User")
-                    break
-                case 4:
-                    util.draw_debug_text(players.get_name(driver) .. " Is an MXMenu User")
-                    break
-                case 5:
+            if players.get_name(driver) ~= "InvalidPlayer" and not pegasusveh and pid == driver then -- thx to mike for telling me about this plate text
+                if bitset == 1024 then
                     util.draw_debug_text(players.get_name(driver) .. " Is likely a 2Take1 User")
+                    break
+                elseif bitset == 8 or plate_text == "46EEK572" then
+                    util.draw_debug_text(players.get_name(driver) .. " is using a spawned vehicle " .. "[Model: " .. util.reverse_joaat(players.get_vehicle_model(pid)) .. "]")
                     break
                 end
             end
+        end
+    end
+end)
+
+menu.toggle_loop(modder_detections, "Modded License Plate", {}, "", function()
+    for players.list(false, true, true) as pid do
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local plate_text = GET_VEHICLE_NUMBER_PLATE_TEXT(vehicle)
+        local bitset = DECOR_GET_INT(vehicle, "MPBitset")
+        local pegasusveh = DECOR_GET_BOOL(vehicle, "CreatedByPegasus")
+        local plyveh = DECOR_GET_INT(vehicle, "Player_Vehicle")
+        for veh_things as veh do 
+            if hash == util.joaat(veh) and DECOR_GET_INT(vehicle, "MPBitset") == 8 then
+                return 
+            end
+        end
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        if plate_text ~= nil and players.get_name(driver) ~= "InvalidPlayer" and not LegitPlatePattern(plate_text) and plyveh == 0 and bitset ~= 11264 and bitset ~= 16777216 and bitset ~= 10240 and bitset ~= 3072 and not pegasusveh and pid == driver then
+            util.draw_debug_text(players.get_name(driver) .. " has a modded license plate " .. "[" .. plate_text .. "]")
         end
     end
 end)
@@ -2665,8 +2652,8 @@ menu.toggle_loop(normal_detections, "Spectate", {}, "Detects if someone is spect
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        if cam_dist < 20.0 and ped_dist > 75.0 and not IS_PED_DEAD_OR_DYING(ped) and not NETWORK_IS_PLAYER_FADING(pid) and players.is_in_interior(pid) then
-            util.toast(players.get_name(pid) .. " is watching you (legit)")
+        if cam_dist < 20.0 and ped_dist > 75.0 and not IS_PED_DEAD_OR_DYING(ped) and not NETWORK_IS_PLAYER_FADING(pid) then
+            util.toast(players.get_name(pid) .. " is watching you ")
             break
         end
     end
@@ -2687,39 +2674,6 @@ menu.toggle_loop(normal_detections, "Voice Chat", {}, "Detects who is talking in
             util.draw_debug_text(players.get_name(pid) .. " is talking")
         end
     end 
-end)
-
-
-local kick_count = 0
-local ignore = {}
-menu.toggle_loop(protections, "Vote Kick", {}, "Gives you the ability to choose whether or not you want to kick a modder.", function()
-    for players.list(false, true, true) as pid do
-        local ignored = ignore[pid]
-        if players.is_marked_as_modder(pid) and not StandUser(pid) and not ignored then
-            repeat
-                util.toast(players.get_name(pid) .. " is modding. Press Y to kick them or N to ignore.")
-                util.yield()
-            until IS_CONTROL_JUST_PRESSED(0, 246) or IS_CONTROL_JUST_PRESSED(0, 249)
-            if IS_CONTROL_JUST_PRESSED(0, 246) then
-                menu.trigger_commands("kick" .. players.get_name(pid))
-                local player_name = players.get_name(pid)
-                repeat
-                    if kick_count >= 300 then
-                        util.toast("Failed to kick  The host may be blocking your kick. :/")
-                        kick_count = 0
-                        return
-                    end
-                    util.yield()
-                    kick_count += 1
-                until not players.exists(pid)
-                util.toast(player_name .. " has been removed from the session. :D")
-            elseif IS_CONTROL_JUST_PRESSED(0, 249) then
-                ignore[pid] = true
-                util.toast(players.get_name(pid) .. " has been spared.")
-                return
-            end
-        end
-    end
 end)
 
 menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned into the beast but will also stop the event for others.", function()

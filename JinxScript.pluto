@@ -64,7 +64,18 @@ end
 local function StandUser(pid) -- credit to sapphire for this
     if players.exists(pid) and pid ~= players.user() then
         for menu.player_root(pid):getChildren() as cmd do
-            if cmd:getType() == COMMAND_LIST_CUSTOM_SPECIAL_MEANING and (cmd:refByRelPath("Stand User"):isValid() or cmd:refByRelPath("Stand User (Co-Loading)"):isValid()) then
+            if cmd:getType() == COMMAND_LIST_CUSTOM_SPECIAL_MEANING and cmd:refByRelPath("Stand User"):isValid() then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function IsDetectionPresent(pid, detection)
+    if players.exists(pid) then
+        for menu.player_root(pid):getChildren() as cmd do
+            if cmd:getType() == COMMAND_LIST_CUSTOM_SPECIAL_MEANING and cmd:refByRelPath(detection):isValid() then
                 return true
             end
         end
@@ -116,21 +127,6 @@ function GetControlOfEntity(vehicle)
         NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
         util.yield()
         ctr += 1
-    end
-end
-
-local function AddPlayerDetection(pid, detection)
-    if players.exists(pid) then
-        if not (menu.player_root(pid):getChildren()[2]:isValid() and detection) then
-            return
-        end
-        if menu.ref_by_rel_path(menu.player_root(pid):getChildren()[2], detection):isValid() then
-            return
-        end
-        util.toast(players.get_name(pid) .. " triggered a detection: " .. detection)
-        menu.action(menu.player_root(pid):getChildren()[2], detection, {}, -1339034666, function()
-            menu.ref_by_rel_path(menu.player_root(pid):getChildren()[2], detection):delete()
-        end)
     end
 end
 
@@ -484,6 +480,7 @@ end
 local function player(pid) 
     if pid ~= players.user() and players.get_name(pid) == "Prizuhm" then
         util.toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer"}), TOAST_DEFAULT)
+        players.add_detection(pid, "JinxScript Developer", TOAST_DEFAULT, 1)
     end
 
     menu.divider(menu.player_root(pid), "JinxScript")
@@ -734,7 +731,7 @@ local function player(pid)
         local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
         local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
         pos.z -= 50
-        if not IS_PED_IN_ANY_VEHICLE(ped, false) then
+        if vehicle == 0 then
             util.toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
         return end
 
@@ -752,7 +749,7 @@ local function player(pid)
             time += 1   
             if time > 300 and not IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
                 if players.get_name(driver) ~= "InvalidPlayer" then
-                    util.toast("Failed to hijack " .. players.get_name(driver) .. "'s  vehicle. :/")
+                    util.toast("Failed to hijack " .. players.get_name(driver) .. "'s vehicle. :/")
                 else
                     util.toast("Failed to hijack " .. players.get_name(pid) .. "'s vehicle. :/")
                 end
@@ -837,7 +834,7 @@ local function player(pid)
     end, function()
         fail_count = 0
     end)
-
+    
     local boost_veh
     local boost_notif = true
     boost_veh = player_toggle_loop(griefing, pid, "Boost Vehicle", {"boost"}, "Uses Newtons laws of physics to propell their vehicle forward.", function()
@@ -1719,8 +1716,9 @@ local function player(pid)
             util.stop_thread()
         end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local veh = GET_VEHICLE_PED_IS_IN(ped, false)
+        GetControlOfEntity(veh)
         if IS_PED_IN_ANY_VEHICLE(ped, false) and not IS_PED_DEAD_OR_DYING(ped) then
-            local veh = GET_VEHICLE_PED_IS_IN(ped, false)
             SET_ENTITY_CAN_BE_DAMAGED(veh, true)
             SET_ENTITY_INVINCIBLE(veh, false)
             SET_ENTITY_PROOFS(veh, false, false, false, false, false, 0, 0, false)
@@ -2719,7 +2717,7 @@ menu.action(funfeatures, "Find Jinx", {}, "", function()
     end
 end)
 
-
+local timer = 0
 menu.toggle_loop(modder_detections, "Godmode", {}, "Detects if someone is using godmode.", function()
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -2731,6 +2729,7 @@ menu.toggle_loop(modder_detections, "Godmode", {}, "Detects if someone is using 
         end
     end 
 end)
+
 
 menu.toggle_loop(modder_detections, "Vehicle Godmode", {}, "Detects if someone is using a vehicle that is in godmode.", function()
     for players.list_except(true) as pid do
@@ -2778,8 +2777,10 @@ menu.toggle_loop(modder_detections, "Noclip", {}, "Detects if the player is usin
             and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and not IS_PED_CLIMBING(ped)and not GET_IS_TASK_ACTIVE(ped, id) and height > 5.0 and ped_dist <= 395.0 -- 400 was causing false positives  
             and not IS_ENTITY_IN_AIR(ped) and oldpos.x ~= currentpos.x and oldpos.y ~= currentpos.y and oldpos.z ~= currentpos.z 
             and vel.x == 0.0 and vel.y == 0.0 and vel.z == 0.0 then
-                AddPlayerDetection(pid, "Noclip")
-                break
+                if not IsDetectionPresent(pid, "Noclip") then
+                    players.add_detection(pid, "Noclip", TOAST_DEFAULT, 100)
+                    break
+                end
             end
         end
     end
@@ -2793,22 +2794,26 @@ menu.toggle_loop(modder_detections, "Super Drive", {}, "Detects if someone is us
         local veh_class = GET_VEHICLE_CLASS(vehicle)
         local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
         if veh_class ~= 15 and veh_class ~= 16 and veh_speed >= 200 and (players.get_vehicle_model(pid) ~= util.joaat("oppressor") and players.get_vehicle_model(pid) ~= util.joaat("oppressor2")) and pid == driver then
-            AddPlayerDetection(driver, "Super Drive")
-            break
+            if not IsDetectionPresent(driver, "Super Drive") then
+                players.add_detection(driver, "Super Drive", TOAST_DEFAULT, 75)
+                break
+            end
         end
     end
 end)
 
 menu.toggle_loop(modder_detections, "Thunder Join", {}, "Detects if someone is using thunder join.", function()
     for players.list_except(true) as pid do
-        if GET_SPAWN_STATE(players.user()) == 0 then return end
+        if GET_SPAWN_STATE(players.user()) ~= 99 then return end
         local old_sh = players.get_script_host()
         util.yield(100)
         local new_sh = players.get_script_host()
         if old_sh ~= new_sh then
             if GET_SPAWN_STATE(pid) == 0 and players.get_script_host() == pid then
-                AddPlayerDetection(pid, "Thunder Join")
-                break
+                if not IsDetectionPresent(pid, "Thunder Join") then
+                    players.add_detection(pid, "Thunder Join", TOAST_DEFAULT, 100)
+                    break
+                end
             end
         end
     end
@@ -2818,8 +2823,10 @@ menu.toggle_loop(modder_detections, "Orbital Cannon", {}, "Detects if someone is
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) and not GET_IS_TASK_ACTIVE(ped, 135) and GET_SPAWN_STATE(pid) ~= 0 and not IS_PLAYER_DEAD(pid) then
-            AddPlayerDetection(pid, "Modded Orbital Cannon")
-            break
+            if not IsDetectionPresent(pid, "Modded Orbital Cannon") then
+                players.add_detection(pid, "Modded Orbital Cannon", TOAST_DEFAULT, 100)
+                break
+            end
         end
     end
 end)
@@ -2879,22 +2886,10 @@ menu.toggle_loop(modder_detections, "Vehicle Hijack", {}, "", function()
         for entities.get_all_peds_as_handles() as ped do
             if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and not IS_ENTITY_VISIBLE(ped) and IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and v3.distance(GET_ENTITY_COORDS(ped), players.get_position(players.user())) < 5.0 then
                 entities.delete_by_handle(ped)
-                AddPlayerDetection(pid, "Vehicle Hijack")
-                break
-            end
-        end
-    end
-end)
-
-menu.toggle_loop(modder_detections, "Fast Respawn", {""}, "", function()
-    for players.list_except() as pid do
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local killer = GET_PED_SOURCE_OF_DEATH(ped)
-        if IS_PLAYER_DEAD(pid) and IS_PED_A_PLAYER(killer) and killer ~= ped then
-            util.yield(2500)
-            if not IS_PLAYER_DEAD(pid) then
-                AddPlayerDetection(pid, "Fast Respawn")
-                break
+                if not IsDetectionPresent(pid, "Vehicle Hijack") then
+                    players.add_detection(pid, "Vehicle Hijack", TOAST_DEFAULT, 100)
+                    break
+                end
             end
         end
     end

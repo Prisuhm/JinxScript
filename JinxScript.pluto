@@ -3091,57 +3091,6 @@ menu.toggle_loop(normal_detections, "Voice Chat", {}, "Detects who is talking in
     end 
 end)
 
-
-local kick_count = 0
-local ignore = {}
-menu.toggle_loop(protections, "Kick Prompt", {}, "Gives you the ability to choose whether or not you want to kick a modder.", function()
-    for players.list_except() as pid do
-        local detections = ""
-        if players.exists(pid) and players.is_marked_as_modder(pid) then
-            for menu.player_root(pid):getChildren() as cmd do
-                if cmd:getType() == COMMAND_LIST_CUSTOM_SPECIAL_MEANING then
-                    for cmd:getChildren() as detection do detections ..= "• " .. lang.get_localised(detection.menu_name) .. "\n" end
-                end
-            end
-        end
-        detections = detections:sub(1, -2)
-        local ignored = ignore[pid]
-        if players.is_marked_as_modder(pid) and not ignored then
-            repeat
-                if (IS_CONTROL_JUST_PRESSED(0, 215) or IS_CONTROL_JUST_PRESSED(0, 202)) and menu.is_open() then
-                    util.toast("Please exit the menu to proceed.")
-                end
-                util.toast("[JinxScript Modder Kick Prompt]\nName: " .. players.get_name(pid) .. "\nDetections:\n" .. detections .. "\nEnter: Kick\nBackspace: Ignore")
-                util.yield()
-            until not menu.is_open() and (IS_CONTROL_JUST_PRESSED(0, 215) or IS_CONTROL_JUST_PRESSED(0, 202))
-            if not menu.is_open() then
-                if IS_CONTROL_JUST_PRESSED(0, 215) then
-                    menu.trigger_commands("kick" .. players.get_name(pid))
-                    local player_name = players.get_name(pid)
-                    repeat
-                        if kick_count >= 250 then
-                            if menu.get_edition() > 1 then
-                                util.toast("Failed to kick player. The host may be blocking your kick. :/")
-                            else
-                                util.toast("Failed to kick player. :/")
-                            end
-                            kick_count = 0
-                            return
-                        end
-                        util.yield()
-                        kick_count += 1
-                    until not players.exists(pid)
-                    util.toast(player_name .. " has been removed from the session. :D")
-                elseif IS_CONTROL_JUST_PRESSED(0, 202) then
-                    ignore[pid] = true
-                    util.toast(players.get_name(pid) .. " has been ignored.")
-                    return
-                end
-            end
-        end
-    end
-end)
-
 menu.toggle_loop(protections, "Anti-Beast", {}, "Prevents you from being turned into the beast but will also stop the event for others.", function()
     if util.spoof_script("am_hunt_the_beast", TERMINATE_THIS_THREAD) then
         util.toast("Hunt the beast script detected. Terminating...")

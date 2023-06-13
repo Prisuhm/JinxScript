@@ -275,15 +275,13 @@ local veh_things = {
 
 local unreleased_vehicles = {
     "conada2",
-    "streamer216",
-    "l35",
-    "monstrociti",
     "inductor",
     "inductor2",
     "buffalo5",
     "brigham",
     "gauntlet6",
     "squaddie",
+    "coureur"
 }
 
 local doors = {
@@ -1380,35 +1378,6 @@ local function player(pid)
         end
     end)
 
-    griefing:action("Send To Online Intro", {"intro"}, "Sends player to the GTA Online intro.", function()
-        if StandUser(pid) then util.toast(stand_notif) util.stop_thread() end
-        local int = memory.read_int(memory.script_global(1894573 + 1 + (pid * 608) + 510))
-        util.trigger_script_event(1 << pid, {-366707054, players.user(), 20, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
-        util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-    end)
-
-    local jobs = griefing:list("Send To Activity")
-    local activities = {
-        [192] = "Send To Darts",
-        [193] = "Send To Golf",
-    }
-
-    for id, name in activities do
-        jobs:action(name, {}, "Forces the player into an activity.", function()
-            if StandUser(pid) then util.toast(stand_notif) return end
-            local int = memory.read_int(memory.script_global(1894573 + 1 + (pid * 608) + 510))
-            util.trigger_script_event(1 << pid, {-366707054, players.user(), id, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
-            util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-        end)
-    end
-
-    griefing:action("Force Into 1v1", {"1v1"}, "Forces them into a 1v1.", function()
-        if StandUser(pid) then util.toast(stand_notif) return end
-        local int = memory.read_int(memory.script_global(1894573 + 1 + (pid * 608) + 510))
-        util.trigger_script_event(1 << pid, {-366707054, players.user(), 197, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
-        util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-    end)
-
     griefing:toggle_loop("Lock Out Of Vehicles", {"vehiclelock"}, "", function()
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped)
@@ -1480,7 +1449,6 @@ local function player(pid)
             APPLY_FORCE_TO_ENTITY(vehicle, 5, 0.0, 0.0, 500.0, 0, 0, 0, 0, true, false, true, false, true)
         end
     end)
-
     local hospitalize_count = 0
     local hospitalize_notif = true
     griefing:action("Hospitalize", {"hospitalize"}, "", function()
@@ -1491,17 +1459,17 @@ local function player(pid)
             end
         end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        SetBit(memory.script_global(2657589 + 1 + (players.user() * 466) + 427), 0)
+        SetBit(memory.script_global(2657704 + 1 + (players.user() * 466) + 424), 0)
         repeat 
             util.yield()
-        until memory.read_int(memory.script_global(2657589 + 1 + (players.user() * 466) + 427), 0)
+        until memory.read_int(memory.script_global(2657704 + 1 + (players.user() * 466) + 424), 0)
         menu.trigger_commands("kill" .. players.get_name(pid))
         if not IS_PED_DEAD_OR_DYING(ped) then
             repeat
                 hospitalize_count += 1
                 if hospitalize_count >= 300 then
                     util.toast("Failed to hospitalize player. :/")
-                    ClearBit(memory.script_global(2657589 + 1 + (players.user() * 466) + 427), 0)
+                    ClearBit(memory.script_global(2657704 + 1 + (players.user() * 466) + 424), 0)
                     hospitalize_count = 0
                     return
                 end
@@ -1512,11 +1480,11 @@ local function player(pid)
             repeat
                 util.yield()
             until not IS_PED_DEAD_OR_DYING(ped)
-            ClearBit(memory.script_global(2657589 + 1 + (players.user() * 466) + 427), 0)
+            ClearBit(memory.script_global(2657704 + 1 + (players.user() * 466) + 424), 0)
             hospitalize_count = 0
         end
     end)
- 
+
     local attack
     attack = player_toggle_loop(griefing, pid, "Angry Peds", {}, "Makes nearby peds hate the player and begin revolting against them.", function()
         local target = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -2067,7 +2035,7 @@ end, function()
 end)
 
 self:toggle_loop("Fast Respawn", {"fastrespawn"}, "", function()
-    local gwobaw = memory.script_global(2672505 + 1685 + 756) -- Global_2672505.f_1685.f_756
+    local gwobaw = memory.script_global(2672524 + 1685 + 756) -- Global_2672524.f_1685.f_756
     if IS_PED_DEAD_OR_DYING(players.user_ped()) then
         ANIMPOSTFX_STOP_ALL()
         memory.write_int(gwobaw, memory.read_int(gwobaw) | 1 << 1)
@@ -2329,10 +2297,10 @@ end)
 local horny = lobby:list("Anti-Horny")
 local horny_counter = 0
 horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to solicit a prostitute by killing them.", function()
-    for players.list_except(true) as pid do
+    for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if memory.read_int(memory.script_global(2657589 + 1 + (pid * 466) + 431)) == 1 then -- Global_2657589[PLAYER::PLAYER_ID() /*466*/].f_431
+        if memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 1 then -- Global_2657704[PLAYER::PLAYER_ID() /*463*/].f_428
             repeat
                 if horny_counter > 250 then
                     horny_counter = 0
@@ -2352,11 +2320,11 @@ horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying
     for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if memory.read_int(memory.script_global(2657589 + 1 + (pid * 466) + 431)) == 1 then
+        if memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 1 then
             chat.send_message(players.get_name(pid) .. " is horny and about to have sex with a prostitute. Lets make fun of this virgin! HAHA, loser!", false, true, true)
             repeat
                 util.yield()
-            until memory.read_int(memory.script_global(2657589 + 1 + (pid * 466) + 431)) == 0
+            until memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 0
         end
     end
 end)

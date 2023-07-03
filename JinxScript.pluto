@@ -766,9 +766,8 @@ local function player(pid)
         end
         local spawned_ped = CREATE_RANDOM_PED(pos)
         SET_ENTITY_INVINCIBLE(spawned_ped, true)
-        --SET_ENTITY_VISIBLE(spawned_ped, false)
+        SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
-        SET_PED_CONFIG_FLAG(spawned_ped, 366, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
         entities.give_control_by_handle(spawned_ped, pid)
         repeat
@@ -878,6 +877,7 @@ local function player(pid)
             return 
         end
         local spawned_ped = CREATE_RANDOM_PED(pos)
+        SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
         entities.give_control_by_handle(spawned_ped, pid)
@@ -1820,6 +1820,7 @@ end
 
 players.on_join(player)
 players.dispatch_on_join()
+
 
 self:toggle("Disable Death Ragdoll", {"nodeathragdoll"}, "Disables ragdoll upon death and makes you get up after being knocked down instead of just laying there for other people.", function(toggled)
     SET_PED_CONFIG_FLAG(players.user_ped(), 227, toggled)
@@ -2771,7 +2772,7 @@ god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone
         local blip = GET_BLIP_INFO_ID_TYPE(GET_BLIP_FROM_ENTITY(ped))
         local pos = players.get_position(pid)
         for interior_stuff as id do
-            if players.is_godmode(pid) and not players.is_in_interior(pid) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and GET_INTERIOR_FROM_PLAYER(pid) == id and not IS_PLAYER_RIDING_ROLLER_COASTER(pid) and blip != 0 then
+            if (players.is_godmode(pid) or not GET_ENTITY_CAN_BE_DAMAGED(ped)) and not players.is_in_interior(pid) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and GET_INTERIOR_FROM_PLAYER(pid) == id and not IS_PLAYER_RIDING_ROLLER_COASTER(pid) and blip != 0 then
                 util.draw_debug_text(players.get_name(pid) .. " is in godmode")
                 break
             end
@@ -2906,11 +2907,9 @@ end)
 modder_detections:toggle_loop("Orbital Cannon", {}, "Detects if someone is using a modded orbital cannon.", function()
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if IS_PLAYER_USING_ORBITAL_CANNON(pid) and not GET_IS_TASK_ACTIVE(ped, 135) and GET_SPAWN_STATE(pid) != 0 and not IS_PLAYER_DEAD(pid) then
-            if not IsDetectionPresent(pid, "Modded Orbital Cannon") then
-                players.add_detection(pid, "Modded Orbital Cannon", TOAST_DEFAULT, 100)
-                break
-            end
+        if IS_PLAYER_USING_ORBITAL_CANNON(pid) and not GET_IS_TASK_ACTIVE(ped, 135) and GET_SPAWN_STATE(pid) != 0 and not IS_PLAYER_DEAD(pid) and not IsDetectionPresent(pid, "Modded Orbital Cannon") then
+            players.add_detection(pid, "Modded Orbital Cannon", TOAST_DEFAULT, 100)
+            break
         end
     end
 end)
@@ -3005,9 +3004,9 @@ modder_detections:toggle_loop("Unreleased Vehicle", {}, "Detects if a player is 
 end)
 
 local lockon = 0
-modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-lockon. Note: syncs really weirdly with other players.", function()
+modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-lockon.", function()
     local block_blaming = menu.ref_by_path("Online>Protections>Block Blaming")
-    for players.list_except() as pid do
+    for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_IN(ped)
         local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))

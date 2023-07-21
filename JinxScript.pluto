@@ -271,8 +271,6 @@ local veh_things = {
 
 local unreleased_vehicles = {
     "conada2",
-    "inductor",
-    "inductor2",
     "brigham",
     "gauntlet6",
     "squaddie",

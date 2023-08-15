@@ -83,10 +83,6 @@ local function GET_SEAT_PED_IS_IN(ped) -- thanks rockstar for making me do this 
     end
 end
 
-local function GET_VEHICLE_GEAR(pid)
-    return memory.read_byte(entities.handle_to_pointer(entities.get_user_vehicle_as_handle()) + 2160) -- returns the gear the vehicle is currently in
-end
-
 local function IS_PLAYER_MOVING(pid)
     local oldpos = players.get_position(pid)
     yield(100)
@@ -274,7 +270,6 @@ local unreleased_vehicles = {
     "brigham",
     "gauntlet6",
     "squaddie",
-    "coureur"
 }
 
 local doors = {
@@ -350,6 +345,31 @@ local attackers = {
         "u_m_y_imporage",
         "ig_lestercrest"
     }
+}
+
+local vehicle_classes = {
+    "Compacts",
+    "Sedans",
+    "SUVs",
+    "Coupes",
+    "Muscle",
+    "Sports Classics",
+    "Sports",
+    "Super",
+    "Motorcycles",
+    "Off-road",
+    "Industrial",
+    "Utility",
+    "Vans",
+    "Cycles",
+    "Boats",
+    "Helicopters",
+    "Planes",
+    "Service",
+    "Emergency",
+    "Military",
+    "Commercial",
+    "Trains"
 }
 
 local interiors = {
@@ -546,6 +566,24 @@ local function player(pid)
         end)
     end)
   
+    friendly:toggle_loop("Give Vehicle Rockets", {""}, "", function()
+        local wpn = joaat("VEHICLE_WEAPON_TANK")
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local offset = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS
+        local leftStart = offset(vehicle, -1.25, 0.5, 0.35)
+        local leftEnd = offset(vehicle, -1.25, 100.0, 0.35)
+        local rightStart = offset(vehicle, 1.25, 0.5, 0.35)
+        local rightEnd = offset(vehicle, 1.25, 100.0, 0.35)
+        if not GET_IS_TASK_ACTIVE(ped, 199) and IS_PLAYER_PRESSING_HORN(pid) then
+            SHOOT_SINGLE_BULLET_BETWEEN_COORDS(leftStart, leftEnd, 0, true, wpn, 0, true, false, 5.0)
+            SHOOT_SINGLE_BULLET_BETWEEN_COORDS(rightStart, rightEnd, 0, true, wpn, 0, true, false, 5.0)
+            repeat
+                yield()
+            until not IS_PLAYER_PRESSING_HORN(pid)
+        end
+    end)
+
     friendly:action("Give Drift Tires", {"drifttires"}, "Adds drift tires to their vehicle.", function()
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
@@ -739,6 +777,20 @@ local function player(pid)
         entities.delete(obj) 
     end)
 
+    griefing:action("Tow Vehicle", {"tow"}, "", function()
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local veh = GET_VEHICLE_PED_IS_USING(ped)
+        local pos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(veh, 0.0, 6.0, 0.0)
+        local mdl = joaat("towtruck")
+        RequestModel(mdl)
+        local spawned_ped = CREATE_RANDOM_PED(pos)
+        local towtruck = entities.create_vehicle(mdl, pos, GET_ENTITY_HEADING(veh))
+        SET_PED_INTO_VEHICLE(spawned_ped, towtruck, -1)
+        ATTACH_VEHICLE_TO_TOW_TRUCK(towtruck, veh, false, 0, 0, 0)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
+        TASK_VEHICLE_DRIVE_WANDER(spawned_ped, towtruck, 9999.0, 6) 
+    end)
+
     local time = 0
     local hijack_veh_notif = true
     griefing:action("Hijack Vehicle", {"hijack"}, "Spawns a ped to take them out of their vehicle, lock it, and drive away. (Note: May also be inconsistent on higher ping players)", function()
@@ -768,7 +820,7 @@ local function player(pid)
         end
         local spawned_ped = CREATE_RANDOM_PED(pos)
         SET_ENTITY_INVINCIBLE(spawned_ped, true)
-        SET_ENTITY_VISIBLE(spawned_ped, false)
+        --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
         entities.give_control_by_handle(spawned_ped, pid)
@@ -839,7 +891,7 @@ local function player(pid)
         local spawned_ped = CREATE_RANDOM_PED(pos)
         entities.set_can_migrate(spawned_ped, false)
         SET_ENTITY_INVINCIBLE(spawned_ped, true)
-        SET_ENTITY_VISIBLE(spawned_ped, false)
+        --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         SET_PED_CONFIG_FLAG(spawned_ped, 366, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
@@ -885,7 +937,7 @@ local function player(pid)
             return 
         end
         local spawned_ped = CREATE_RANDOM_PED(pos)
-        SET_ENTITY_VISIBLE(spawned_ped, false)
+        --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
         entities.give_control_by_handle(spawned_ped, pid)
@@ -1398,6 +1450,22 @@ local function player(pid)
                 end
             end
         end
+    end)
+
+    griefing:action("Lochness Monster Mk2", {"lochnessmk2"}, "", function()
+        local pos = players.get_position(pid)
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_IN(ped, false)
+        local veh_class = GET_VEHICLE_CLASS(vehicle)
+        if players.get_vehicle_model(pid) != joaat("oppressor2") then
+            toast("Player is not on an oppressor mk2. :/")
+            return
+        end
+        local monster = joaat("h4_prop_h4_loch_monster")
+        RequestModel(monster)
+        obj = entities.create_object(monster, pos)
+        SET_ENTITY_COLLISION(obj, false, false)
+        ATTACH_ENTITY_TO_ENTITY(obj, vehicle, 0, -0.25, -1.0, 1.0, 0.0, 0.0, -90.0, true, false, false, false, 0, true)
     end)
 
     griefing:action( "Hamburger", {"hamburger"}, "Whopper, Whopper, Whopper, Whopper!", function()
@@ -1935,7 +2003,23 @@ self:toggle_loop("Auto Accept", {"autoaccept"}, "Auto accepts join screens.", fu
     end
 end)
 
-menu.toggle(online, "Create Ghost Session", {"ghostsession"}, "Creates a session within your session where you will not recieve other players syncs, and they will not recieve yours. (Note: some stand features may not work when using this.)", function(toggled)
+online:toggle_loop("Draw Orbital Cannon Position", {}, "", function()
+    for players.list_except() as pid do
+        if IS_PLAYER_USING_ORBITAL_CANNON(pid) then
+            local cam = players.get_cam_pos(pid)
+            local rot, dir =  v3(), v3()
+            local ground = false
+            repeat
+                ground, cam.z = util.get_ground_z(cam.x, cam.y)
+                yield()
+            until ground
+            local cam_dist = v3.distance(cam, players.get_cam_pos(pid))
+            DRAW_MARKER(28, cam, rot, dir, 1.0, 1.0, cam_dist, 255, 0, 255, 105, false, false)
+        end
+    end
+end)
+
+online:toggle("Create Ghost Session", {"ghostsession"}, "Creates a session within your session where you will not recieve other players syncs, and they will not recieve yours. (Note: some stand features may not work when using this.)", function(toggled)
     if toggled then
         NETWORK_START_SOLO_TUTORIAL_SESSION()
     else
@@ -2168,6 +2252,20 @@ lobby:action("Patty Wagon", {"pattywagonall"}, "Turns everyones vehicle into a p
     end
 end)
 
+local lochness_ctr = 0
+lobby:action("Lochness Monster Mk2", {"lochnessall"}, "Turns players oppressor mk2's into the lochness monster.", function()
+    for players.list_except(true) as pid do
+        if players.get_vehicle_model(pid) == joaat("oppressor2") then
+            menu.trigger_commands("lochnessmk2" .. players.get_name(pid))
+            lochness_ctr += 1
+        end
+    end
+    if lochness_ctr == 0 then
+        toast("No oppressor mk2's were found. :(")
+    end
+    lochness_ctr = 0
+end)
+
 local horny = lobby:list("Anti-Horny")
 local horny_counter = 0
 horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to solicit a prostitute by killing them.", function()
@@ -2244,18 +2342,6 @@ weapons:toggle_loop("Double Tap", {"doubletap"}, "Shoots two shots in the same t
     end
 end)
 
-weapons:toggle_loop("Bypass Imani Tech Anti-Lockon", {}, "", function()
-    for players.list_except() as pid do
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local vehicle = GET_VEHICLE_PED_IS_IN(ped)
-        if not IS_PED_IN_ANY_VEHICLE(ped) then 
-            continue 
-        end
-        if memory.read_byte(entities.handle_to_pointer(vehicle) + 0xA9E) == 0 then
-            memory.write_byte((entities.handle_to_pointer(vehicle) + 0xA9E), 1) 
-        end
-    end
-end)
 
 weapons:toggle_loop("Unfair Triggerbot", {"triggerbotall"}, "", function()
     local wpn = GET_SELECTED_PED_WEAPON(players.user_ped())
@@ -2276,6 +2362,19 @@ weapons:toggle_loop("Unfair Triggerbot", {"triggerbotall"}, "", function()
     end
 end)
 
+weapons:toggle_loop("Bypass Imani Tech Anti-Lockon", {}, "", function()
+    for players.list_except() as pid do
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_IN(ped)
+        if not IS_PED_IN_ANY_VEHICLE(ped) then 
+            continue 
+        end
+        if memory.read_byte(entities.handle_to_pointer(vehicle) + 0xA9E) == 0 then
+            memory.write_byte((entities.handle_to_pointer(vehicle) + 0xA9E), 1) 
+        end
+    end
+end)
+
 local modifier = 1.00
 weapons:slider_float("Melee Damage Modifier", {"meleedamage"}, "", 100, 1000, 100, 10, function(value)
     modifier = value / 100
@@ -2287,7 +2386,11 @@ weapons:toggle_loop("Max Homing Lockon Range", {}, "Sets your players lockon ran
 end)
 
 weapons:toggle_loop("Long Range Weapons", {}, "Extends weapon range to 250m.", function()
-    SET_PED_RESET_FLAG(players.user_ped(), 95, true)
+    if GET_MAX_RANGE_OF_CURRENT_PED_WEAPON(players.user_ped()) < 250.0 then
+        SET_PED_RESET_FLAG(players.user_ped(), 95, true)
+    else
+        SET_PED_RESET_FLAG(players.user_ped(), 95, false)
+    end
 end)
 
 local weapon_thing = weapons:list("Change Bullet Projectile", {}, "Change the bullet your gun shoots.")
@@ -2354,11 +2457,21 @@ if menu.get_edition() > 1 then
     end)
 end
 
-vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for players trying to enter the vehicle when access is set to no-one.", function() -- thx rockstar for the code :)
-    if util.stat_get_int64("mp" .. util.get_char_slot() .. "_personal_vehicle_access") == 5 and GET_SPAWN_STATE(players.user()) == 99 then
-        toast("Your vehicle access is not restricted. :/")
-        return
+vehicles:toggle_loop("Vehicle Rockets", {""}, "", function()
+    local wpn = joaat("VEHICLE_WEAPON_TANK")
+    local vehicle = GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
+    local offset = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS
+    local leftStart = offset(vehicle, -1.25, 0.5, 0.35)
+    local leftEnd = offset(vehicle, -1.25, 100.0, 0.35)
+    local rightStart = offset(vehicle, 1.25, 0.5, 0.35)
+    local rightEnd = offset(vehicle, 1.25, 100.0, 0.35)
+    if IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and not GET_IS_TASK_ACTIVE(players.user_ped(), 199) and IS_CONTROL_JUST_RELEASED(0, 69) and not IS_CONTROL_PRESSED(0, 68) then
+        SHOOT_SINGLE_BULLET_BETWEEN_COORDS(leftStart, leftEnd, 0, true, wpn, players.user_ped(), true, false, 5.0)
+        SHOOT_SINGLE_BULLET_BETWEEN_COORDS(rightStart, rightEnd, 0, true, wpn, players.user_ped(), true, false, 5.0)
     end
+end)
+
+vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for players trying to enter the vehicle when access is set to no-one.", function() -- thx rockstar for the code :)
     for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = entities.get_user_vehicle_as_handle()
@@ -2489,7 +2602,7 @@ end, function()
     CLEAR_PED_TASKS(players.user_ped())
 end)
 
-funfeatures:action("Broomstick Mk2", {""}, "Note: You will be invisible for other players.", function()
+funfeatures:action("Broomstick Mk2", {}, "Note: You will be invisible for other players.", function()
     local reveal_invis = menu.ref_by_path("Online>Reveal Invisible Players")
     if reveal_invis.value then
         toast("Please disable reveal invisible players.")
@@ -2507,12 +2620,7 @@ funfeatures:action("Broomstick Mk2", {""}, "Note: You will be invisible for othe
     ATTACH_ENTITY_TO_ENTITY(obj, veh, 0, 0, 0, 0.3, -80.0, 0, 0, true, false, false, false, 0, true) -- thanks to chaos mod for doing the annoying rotation work for me :P
 end)
 
-funfeatures:action("Lochness Monster Mk2", {""}, "Note: You will be invisible for other players.", function()
-    local reveal_invis = menu.ref_by_path("Online>Reveal Invisible Players")
-    if reveal_invis.value then
-        toast("Please disable reveal invisible players.")
-        return 
-        end
+funfeatures:action("Lochness Monster Mk2", {}, "", function()
     local pos = players.get_position(players.user())
     local monster = joaat("h4_prop_h4_loch_monster")
     local oppressor = joaat("oppressor2")
@@ -2522,7 +2630,7 @@ funfeatures:action("Lochness Monster Mk2", {""}, "Note: You will be invisible fo
     veh = entities.create_vehicle(oppressor, pos, 0)
     SET_ENTITY_COLLISION(obj, false, false)
     SET_PED_INTO_VEHICLE(players.user_ped(), veh, -1)
-    ATTACH_ENTITY_TO_ENTITY(obj, veh, 0, 0, 0, 1.0, 0.0, 0.0, -90.0, true, false, false, false, 0, true) -- thanks to chaos mod for doing the annoying rotation work for me :P
+    ATTACH_ENTITY_TO_ENTITY(obj, veh, 0, -0.25, -1.0, 1.0, 0.0, 0.0, -90.0, true, false, false, false, 0, true)
 end)
 
 
@@ -2798,7 +2906,7 @@ god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone
             draw_debug_text(players.get_name(pid) .. " is in godmode")
             break
         end
-        if not IS_PLAYER_IN_INTERIOR(pid)  and not players.is_in_interior(pid) and players.is_godmode(pid) and not players.is_in_interior(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and not IsDetectionPresent(pid, "Godmode") and pos.z > 0.0 then
+        if not IS_PLAYER_IN_INTERIOR(pid) and not players.is_in_interior(pid) and players.is_godmode(pid) and not players.is_in_interior(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and not IsDetectionPresent(pid, "Godmode") and pos.z > 0.0 then
             local spectate = menu.ref_by_rel_path(menu.player_root(pid), "Spectate>Nuts Method")
             local currentpos = players.get_position(pid)
             if not IS_PLAYER_MOVING(pid) and time_since_last_move >= 5 and currentpos.z > 0.0 then
@@ -2806,7 +2914,7 @@ god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone
                 godmode_ctr = 0     
             end
             if godmode_ctr >= 15 then
-                yield(2500) -- to prevent marking people as godmode whos freemode has died
+                yield(5000) -- to prevent marking people as godmode whos freemode has died
                 if players.exists(pid) and not IS_PLAYER_IN_INTERIOR(pid) and currentpos.z > 0.0 then
                     players.add_detection(pid, "Godmode", TOAST_DEFAULT, 100)
                     godmode_ctr = 0
@@ -2828,9 +2936,14 @@ modder_detections:toggle_loop("Vehicle Godmode", {}, "Detects if someone is usin
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        if not IS_PED_IN_ANY_VEHICLE(ped) then 
+            continue 
+        end
+        local vehicle_ptr = entities.get_user_vehicle_as_handle()
+        local is_veh_strong = (memory.read_byte(entities.handle_to_pointer(vehicle) + 2339) == 45)
         if IS_PED_IN_ANY_VEHICLE(ped, false) then
             local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
-            if not IS_PLAYER_IN_INTERIOR(pid) and not GET_ENTITY_CAN_BE_DAMAGED(vehicle) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) 
+            if not IS_PLAYER_IN_INTERIOR(pid) and (not GET_ENTITY_CAN_BE_DAMAGED(vehicle) or is_veh_strong) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) 
             and GET_SPAWN_STATE(pid) != 0 and pid == driver then
                 draw_debug_text(players.get_name(driver) ..  " is in vehicle godmode")
                 break
@@ -2989,20 +3102,6 @@ modder_detections:toggle_loop("Modded License Plate", {}, "Detects people with a
     end
 end)
 
-modder_detections:toggle_loop("Vehicle Hijack", {}, "Detects people that try to ped hijack your vehicle.", function()
-    for players.list_except(true) as pid do
-        for entities.get_all_peds_as_handles() as ped do
-            if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and not IS_ENTITY_VISIBLE(ped) and IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) and v3.distance(GET_ENTITY_COORDS(ped), players.get_position(players.user())) < 5.0 then
-                entities.delete(ped)
-                if not IsDetectionPresent(pid, "Vehicle Hijack") then
-                    players.add_detection(pid, "Vehicle Hijack", TOAST_DEFAULT, 100)
-                    break
-                end
-            end
-        end
-    end
-end)
-
 local unreleased_veh_ctr = 0
 modder_detections:toggle_loop("Unreleased Vehicle", {}, "Detects if a player is using a dripfed vehicle.", function()
     for players.list_except(true) as pid do
@@ -3055,6 +3154,48 @@ modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-loc
             end
         else
             lockon = 0
+        end
+    end
+end)
+
+local ignored_vehs = {}
+local speed_ctr = 0
+modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who have modified their engine power or top speed.", function()
+    for players.list_except() as pid do
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_IN(ped)
+        local veh_model = players.get_vehicle_model(pid)
+        local veh_class = GET_VEHICLE_CLASS(vehicle)
+        local est_speed = GET_VEHICLE_ESTIMATED_MAX_SPEED(vehicle)
+        local est_model_speed = GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(players.get_vehicle_model(pid))
+        local mdl_accel = GET_VEHICLE_MODEL_ACCELERATION(players.get_vehicle_model(pid))
+        local veh_accel = GET_VEHICLE_ACCELERATION(vehicle)
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        local veh_ptr = entities.handle_to_pointer(vehicle)
+        local owner = entities.get_owner(veh_ptr)
+        local ignored = ignored_vehs[vehicle]
+        local class = vehicle_classes[veh_class + 1]
+        if not ignored and owner != pid and driver == pid and est_speed > (est_model_speed + 6) then
+            ignored_vehs[vehicle] = true
+            break
+        end
+        if ignored and est_speed < (est_model_speed + 6) then
+            ignored_vehs[vehicle] = false
+            return
+        end
+        if IS_PED_IN_ANY_VEHICLE(ped, false) and not IsDetectionPresent(pid, "Modified Vehicle Speed") then
+            if est_model_speed > 1.0 and not ignored and est_speed > (est_model_speed + 6) and veh_accel > (mdl_accel * 1.3) and pid == driver then
+                repeat
+                    speed_ctr += 1
+                    yield(100)
+                until speed_ctr > 10 -- for some reason the game doesnt properly calculate speed for a while. this delay seems to be good
+                players.add_detection(pid, "Modified Vehicle Speed", TOAST_DEFAULT, 75)
+                --toast("[Debug Shit]" .. "\nEntity Owner: " .. players.get_name(driver) .. "\nVehicle Model: " .. util.reverse_joaat(veh_model) .. "\nVehicle Class: " .. class .. "\nEstimated Speed: " .. ROUND(est_speed * 2.236936) .. " MPH" .. "\nEstimated Model Speed: " .. ROUND(est_model_speed * 2.236936) .. " MPH" .. "\nVehicle Acceleration: " .. veh_accel .. "\nModel Acceleration: " .. mdl_accel)
+                speed_ctr = 0
+                break
+            else
+                speed_ctr = 0
+            end
         end
     end
 end)
@@ -3242,6 +3383,25 @@ end, function()
         if players.exists(pid) then
             local outgoingSyncs = menu.ref_by_rel_path(menu.player_root(pid), "Outgoing Syncs>Block")
             outgoingSyncs.value = false
+        end
+    end
+end)
+
+protections:toggle_loop("Block Ped Hijack", {}, "Detects people that try to ped hijack your vehicle.", function()
+    local vehicle = entities.get_user_vehicle_as_handle()
+    for entities.get_all_peds_as_handles() as ped do
+        local owner = entities.get_owner(ped)
+        if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped) == vehicle and owner != players.user() then
+            toast("Prevented a Vehicle Takeover (Ped Hijack), likely caused by " .. players.get_name(owner))
+            if not IsDetectionPresent(owner, "Vehicle Hijack") then
+                players.add_detection(owner, "Vehicle Hijack", TOAST_DEFAULT, 100)
+                break
+            end
+            entities.delete(ped)
+            repeat
+                SET_PED_INTO_VEHICLE(ped, vehicle, -1)
+                yield()
+            until GET_SEAT_PED_IS_IN(ped) == -1
         end
     end
 end)

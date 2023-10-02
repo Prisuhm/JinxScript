@@ -10,7 +10,6 @@ local function player_toggle_loop(root, pid, menu_name, command_names, help_text
 end
 
 local spawned_objects = {}
-
 local function BitTest(bits, place)
     return (bits & (1 << place)) != 0
 end
@@ -39,12 +38,16 @@ local function IS_PLAYER_USING_MISSILE_TURRET(pid)
     return BitTest(memory.read_int(memory.script_global(1853988 + 1 + (pid * 867) + 267 + 480)), 25) -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_267.f_480), 25)
 end
 
-local function IN_PLAYER_IN_RC_BANDITO(pid)
+local function IS_PLAYER_IN_RC_BANDITO(pid)
     return BitTest(memory.read_int(memory.script_global(1853988 + (pid * 867 + 1) + 267 + 366)), 29)  -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_267.f_366, 29)
 end
 
-local function IN_PLAYER_IN_RC_TANK(pid)
+local function IS_PLAYER_IN_RC_TANK(pid)
     return BitTest(memory.read_int(memory.script_global(1853988 + (pid * 867 + 1) + 267 + 429 + 2)), 16) -- Global_1853988[bParam0 /*867*/].f_267.f_429.f_2
+end
+
+local function IS_PLAYER_IN_REMOTE_VEHICLE(pid)
+    return IS_PLAYER_FLYING_ANY_DRONE(pid) or IS_PLAYER_USING_GUIDED_MISSILE(pid) or IS_PLAYER_IN_RC_BANDITO(pid) or IS_PLAYER_IN_RC_TANK(pid)
 end
 
 local function IS_PLAYER_RIDING_ROLLER_COASTER(pid)
@@ -132,16 +135,6 @@ local function LoadWeaponAsset(weapon_name)
     return projectile
 end
 
-local function RequestModel(hash, timeout)
-    timeout = timeout or 3
-    REQUEST_MODEL(hash)
-    local end_time = os.time() + timeout
-    repeat
-        yield()
-    until HAS_MODEL_LOADED(hash) or os.time() >= end_time
-    return HAS_MODEL_LOADED(hash)
-end
-
 local function RequestAnimation(hash)
     REQUEST_ANIM_DICT(hash)
     while not HAS_ANIM_DICT_LOADED(hash) do
@@ -149,34 +142,34 @@ local function RequestAnimation(hash)
     end
 end
 
-function GetControlOfEntity(vehicle)
+function GetControlOfEntity(entity)
     local ctr = 0
-    local migrate_ctr = 0
-    if vehicle != 0 then
-        if not entities.get_can_migrate(vehicle) then
-            repeat
-                if migrate_ctr >= 250 then
-                    toast("Failed to migrate players vehicle. :/")
-                    ctr = 0
-                    return
-                end
-                entities.set_can_migrate(vehicle, true)
-                migrate_ctr +=1 
-                yield()
-            until entities.get_can_migrate(vehicle)
-            migrate_ctr = 0
+    while not NETWORK_HAS_CONTROL_OF_ENTITY(entity) do
+        if ctr >= 250 then
+            ctr = 0
+            return
         end
-        while not NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) do
-            if ctr >= 250 then
-                toast("Failed to get control of players vehicle. :/")
-                ctr = 0
-                return
-            end
-            NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
-            yield()
-            ctr += 1
-        end
+        NETWORK_REQUEST_CONTROL_OF_ENTITY(entity)
+        yield()
+        ctr += 1
     end
+end
+
+local function DeletePed(ped)
+    local ctrl_ctr = 0
+    local del_ctr = 0
+    repeat
+        if del_ctr > 250 then
+            del_ctr = 0
+            toast("failed to delete ped")
+            return
+        end
+        GetControlOfEntity(ped)
+        entities.delete(ped)
+        del_ctr += 1
+        yield()
+    until ped == nil or not DOES_ENTITY_EXIST(ped)
+    toast("successfully deleted ped")
 end
 
 local function DOES_VEHICLE_HAVE_IMANI_TECH(vehicle_model)
@@ -198,6 +191,21 @@ local function DOES_VEHICLE_HAVE_IMANI_TECH(vehicle_model)
         return true
     end
     return false
+end
+
+local function RELEASE_PED_HANDLE(ped)
+    if ped ~= players.user_ped() and ped != spawned_ped then
+        RELEASE_SCRIPT_GUID_FROM_ENTITY(ped)
+    end
+end
+
+
+local function NullCheck(string)
+    if string == "NULL" or string == nil then
+        return ""
+    else
+        return string
+    end
 end
 
 local attack_weapons = {
@@ -263,13 +271,6 @@ local veh_things = {
     "minitank",
     "rcbandito",
     "phantom3"
-}
-
-local unreleased_vehicles = {
-    "conada2",
-    "brigham",
-    "gauntlet6",
-    "squaddie",
 }
 
 local doors = {
@@ -369,7 +370,8 @@ local vehicle_classes = {
     "Emergency",
     "Military",
     "Commercial",
-    "Trains"
+    "Trains",
+    "Openwheel"
 }
 
 local interiors = {
@@ -425,6 +427,31 @@ local interiors = {
     {"Big Fat White Cock", {x=-31.007448, y=6317.047, z=40.04039}},
     {"Strip Club DJ Booth", {x=121.398254, y=-1281.0024, z=29.480522}},
 }
+local tp_locations = {
+    [4] = "Sandy Shores",
+    [7] = "Tequi-La-La",
+    [8] = "LSIA (Bottom Level)",
+    [9] = "Yellow Jack Bar",
+    [10] = "Spitroasters Meat House",
+    [11] = "Up-n-Atom Burger",
+    [13] = "Alamo Fruit Market",
+    [25] = "Lesters Warehouse",
+    [28] = "Bennys Shop",
+    [31] = "Sandy Shores Boat House",
+    [42] = "Hookies Food Diner",
+    [56] = "Paleto Bay",
+    [58] = "Grapeseed Airfield",
+    [59] = "Paleto Bay Ammunation",
+    [60] = "LSIA (Top Level)",
+    [66] = "Obersvatory",
+    [68] = "Casino",
+    [72] = "Casino Roof",
+    [87] = "Martin Madrazos House",
+    [90] = "LS Docks",
+    [91] = "Del Perro Pier",
+    [97] = "Country Club",
+    [114] = "Mount Chiliad"
+}
 
 local station_name = {
     ["Blaine County Radio"] = "RADIO_11_TALK_02", 
@@ -471,6 +498,7 @@ local bones = {12844, 24816, 24817, 24818, 35731, 31086}
 local interior_stuff = {0, 233985, 169473, 169729, 169985, 170241, 177665, 177409, 185089, 184833, 184577, 163585, 167425, 167169, 138241}
 
 local self = menu.list(menu.my_root(), "Self")
+local audio = menu.list(menu.my_root(), "Audio")
 local online = menu.list(menu.my_root(), "Online")
 local players_list = menu.list(menu.my_root(), "Players")
 local lobby = menu.list(players_list, "All Players")
@@ -482,9 +510,8 @@ local teleport = menu.list(menu.my_root(), "Teleport")
 local detections = menu.list(menu.my_root(), "Detections", {}, "Note: Enabling all detections may lead to a slight drop in fps.")
 local modder_detections = menu.list(detections, "Modder Detections")
 local normal_detections = menu.list(detections, "Normal Detections")
-local bailOnAdminJoin = false
 local protections = menu.list(menu.my_root(), "Protections")
-local misc = menu.list(menu.my_root(), "Miscellaneous", {}, "")
+local credits = menu.list(menu.my_root(), "Credits", {}, "")
 
 speed = menu.get_value(menu.ref_by_path("Self>Movement>Levitation>Movement Speed"))
 sprint = menu.get_value(menu.ref_by_path("Self>Movement>Levitation>Sprint Multiplier"))
@@ -493,7 +520,7 @@ local menus = {}
 local function player_list(pid)
     if NETWORK_IS_SESSION_ACTIVE()then 
         menus[pid] = menu.list(players_list, players.get_name(pid), {}, "", function()
-            menu.trigger_commands("jinxscript " .. players.get_name(pid))
+            menu.trigger_commands($"jinxscript {players.get_name(pid)}")
         end)
     end
 end
@@ -512,13 +539,13 @@ players.on_join(player_list)
 players.on_leave(handle_player_list)
 
 if not SCRIPT_SILENT_START then
-    toast("Hello, " .. players.get_name(players.user()) .. "! \nWelcome To JinxScript!\n" .. "Official Discord: https://discord.gg/hjs5S93kQv")
+    toast($"Hello, {players.get_name(players.user())}! \nWelcome To JinxScript! \nOfficial Discord: https://discord.gg/hjs5S93kQv")
 end
 
 local function player(pid) 
     if pid != players.user() and (players.get_name(pid) == "Prizuhm" or players.get_name(pid) == "Iinustechtips") then
-        toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer"}), TOAST_DEFAULT)
-        players.add_detection(pid, "JinxScript Developer", TOAST_DEFAULT, 1)
+        toast(lang.get_string(0xD251C4AA, lang.get_current()):gsub("{(.-)}", {player = players.get_name(pid), reason = "JinxScript Developer"}))
+        players.add_detection(pid, "JinxScript Developer", TOAST_ALL, 1)
     end
 
     if not players.exists(players.user()) then
@@ -530,7 +557,7 @@ local function player(pid)
 
     local friendly = main:list("Friendly", {}, "")
     friendly:action("Rank Them Up", {}, "Gives them ~175k RP. Can boost a lvl 1 to lvl 30", function()
-        menu.trigger_commands("givecollectibles" .. players.get_name(pid))
+        menu.trigger_commands($"givecollectibles {players.get_name(pid)}")
     end)
 
     local jinx_pet_ply
@@ -538,7 +565,7 @@ local function player(pid)
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if not jinx_pet_plyr or not DOES_ENTITY_EXIST(jinx_pet_plyr) then
             local jinx = joaat("a_c_cat_01")
-            RequestModel(jinx)
+            util.request_model(jinx)
             local pos = players.get_position(pid)
             jinx_pet_plyr = entities.create_ped(28, jinx, pos, 0)
             entities.set_can_migrate(jinx_pet_plyr, false)
@@ -554,11 +581,11 @@ local function player(pid)
     tp = player_toggle_loop(friendly, pid, "Give Teleport Ability", {}, "Chat command is !waypoint. Player must be in a vehicle.", function()
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-
+        if not tp.value then return end
         chat.on_message(function(packet_sender, message_sender, text, team_chat)
             if string.contains(text, "!waypoint") and IS_PED_IN_VEHICLE(ped, vehicle, false) then  
                 if players.get_name(message_sender) == players.get_name(pid) and IS_PED_IN_ANY_VEHICLE(ped, false) then
-                    menu.trigger_commands("wptp" .. players.get_name(pid))
+                    menu.trigger_commands($"wptp {players.get_name(pid)}")
                 else
                     toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
                 end
@@ -613,7 +640,7 @@ local function player(pid)
         end
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local mdl = joaat("stt_prop_track_speedup")
-        RequestModel(mdl)
+        util.request_model(mdl)
         if IS_PLAYER_PRESSING_HORN(pid) then
             local boostpad = entities.create_object(mdl, GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(vehicle, 0.0, GET_ENTITY_SPEED(vehicle)/2, -3.0), false, false, false)
             SET_ENTITY_VISIBLE(boostpad, false)
@@ -623,8 +650,7 @@ local function player(pid)
             entities.delete(boostpad)
         end
     end)
-
-    local griefing = main:list("Trolling & Griefing", {}, "")
+    local griefing = main:list("Trolling & Griefing", {"jstg"}, "")
     local glitch_player_root = griefing:list("Glitch Player")
     local object_hash = joaat("prop_ld_ferris_wheel")
     glitch_player_root:list_select("Object", {"glitchplayerobj"}, "", object_stuff.names, 1, function(index)
@@ -648,14 +674,14 @@ local function player(pid)
         local pos = players.get_position(pid)
 
         if not DOES_ENTITY_EXIST(ped) then
-            toast(players.get_name(pid) .. " is too far. :/")
+            toast($"{players.get_name(pid)} is too far. :/")
             glitchvalue = false
         util.stop_thread() end
 
         local glitch_hash = object_hash
         local mdl = joaat("rallytruck")
-        RequestModel(glitch_hash)
-        RequestModel(mdl)
+        util.request_model(glitch_hash)
+        util.request_model(mdl)
         local obj = entities.create_object(glitch_hash, pos)
         local vehicle = entities.create_vehicle(mdl, pos, 0)
         SET_ENTITY_VISIBLE(obj, false)
@@ -688,10 +714,10 @@ local function player(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local veh_model = players.get_vehicle_model(pid)
         local seat_count = GET_VEHICLE_MODEL_NUMBER_OF_SEATS(veh_model)
-        RequestModel(glitch_hash)
+        util.request_model(glitch_hash)
         
         if not DOES_ENTITY_EXIST(ped) then
-            toast(players.get_name(pid) .. "Is too far. :/")
+            toast($"{players.get_name(pid)} is too far. :/")
             glitchveh.value = false
             util.stop_thread() 
         end
@@ -755,18 +781,18 @@ local function player(pid)
             end
         end
         local glitch_hash = joaat("p_spinning_anus_s")
-        RequestModel(glitch_hash)
+        util.request_model(glitch_hash)
 
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = players.get_position(pid)
         
         if not DOES_ENTITY_EXIST(ped) then
-            toast(players.get_name(pid) .. " is too far. :/")
+            toast($"{players.get_name(pid)} is too far. :/")
             glitchforcefield.value = false
         util.stop_thread() end
 
         if IS_PED_IN_ANY_VEHICLE(ped, false) then
-            toast(players.get_name(pid) .. " is in a vehicle. :/")
+            toast($"{players.get_name(pid)} is in a vehicle. :/")
             glitchforcefield.value = false
         util.stop_thread() end
 
@@ -777,20 +803,6 @@ local function player(pid)
         entities.delete(obj) 
     end)
 
-    griefing:action("Tow Vehicle", {"tow"}, "", function()
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local veh = GET_VEHICLE_PED_IS_USING(ped)
-        local pos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(veh, 0.0, 6.0, 0.0)
-        local mdl = joaat("towtruck")
-        RequestModel(mdl)
-        local spawned_ped = CREATE_RANDOM_PED(pos)
-        local towtruck = entities.create_vehicle(mdl, pos, GET_ENTITY_HEADING(veh))
-        SET_PED_INTO_VEHICLE(spawned_ped, towtruck, -1)
-        ATTACH_VEHICLE_TO_TOW_TRUCK(towtruck, veh, false, 0, 0, 0)
-        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
-        TASK_VEHICLE_DRIVE_WANDER(spawned_ped, towtruck, 9999.0, 6) 
-    end)
-
     local time = 0
     local hijack_veh_notif = true
     griefing:action("Hijack Vehicle", {"hijack"}, "Spawns a ped to take them out of their vehicle, lock it, and drive away. (Note: May also be inconsistent on higher ping players)", function()
@@ -798,52 +810,59 @@ local function player(pid)
             toast(lang.get_localised(-1974706693))
             return
         end
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = players.get_position(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
+        if vehicle == 0 then
+            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
+            return 
+        end
         if hijack_veh_notif then
             if StandUser(pid) then 
                 toast(lang.get_localised(1729001290))
                 hijack_veh_notif = false
             end
         end
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = players.get_position(pid)
-        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
-        local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
         pos.z -= 50
-        if vehicle == 0 then
-            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
-            return 
-        end
         if not IS_PED_A_PLAYER(GET_PED_IN_VEHICLE_SEAT(vehicle, -1)) then
             toast("Vehicle has already been hijacked. :D")
             return 
         end
-        local spawned_ped = CREATE_RANDOM_PED(pos)
+        spawned_ped = CREATE_RANDOM_PED(pos)
         SET_ENTITY_INVINCIBLE(spawned_ped, true)
         --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
-        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
+        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, -1, 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
+        SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid, true)
         entities.give_control_by_handle(spawned_ped, pid)
-        repeat
-            time += 1   
-            if time > 300 and not IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
-                toast("Failed to hijack " .. players.get_name(pid) .. "'s vehicle. :/")
-                entities.delete(spawned_ped)
-                time = 0
-                break 
-            end
-            yield()
-        until GET_IS_TASK_ACTIVE(ped, 2)
-        if GET_IS_TASK_ACTIVE(ped, 2) then
+        if GET_SEAT_PED_IS_IN(spawned_ped)!= -1 then
             repeat
+                time += 1 
+                if GET_IS_TASK_ACTIVE(ped, 2) and GET_SEAT_PED_IS_IN(spawned_ped) == -1 then
+                    repeat
+                        yield()
+                    until not GET_IS_TASK_ACTIVE(ped, 2)
+                end
+                if time > 300 and GET_SEAT_PED_IS_IN(spawned_ped) != -1 then
+                    toast($"Failed to hijack {players.get_name(pid)}'s vehicle. :/")
+                    DeletePed(spawned_ped)
+                    time = 0
+                    break 
+                end
                 yield()
-            until not GET_IS_TASK_ACTIVE(ped, 2) or IS_PED_IN_ANY_VEHICLE(spawned_ped, false)
-            TASK_VEHICLE_DRIVE_WANDER(spawned_ped, vehicle, 9999.0, 6) 
-            SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid, true)
-            toast("Bippity boppity their car is now your property :D")
-            yield(1000)
+            until GET_SEAT_PED_IS_IN(spawned_ped) == -1
         end
-        if not GET_IS_TASK_ACTIVE(spawned_ped) or GET_IS_TASK_ACTIVE(spawned_ped, 15) then
+        if GET_SEAT_PED_IS_IN(spawned_ped) == -1 then
+            TASK_VEHICLE_DRIVE_WANDER(spawned_ped, vehicle, 9999.0, 6) 
+            toast("Bippity boppity their car is now your property :D")
+            if not GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid) then
+                SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, pid, true)
+            end
+        end
+        yield(1000)
+        if not GET_IS_TASK_ACTIVE(spawned_ped) then
             repeat
                 TASK_VEHICLE_DRIVE_WANDER(spawned_ped, vehicle, 9999.0, 786468) -- giving task again cus doesnt work sometimes
                 yield()
@@ -851,25 +870,26 @@ local function player(pid)
         end
         yield(5000)
         if spawned_ped != nil and not IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then -- 2nd check cus sometimes doesnt delete the first time
-            if not NETWORK_HAS_CONTROL_OF_ENTITY(spawned_ped) then
-                repeat
-                    NETWORK_REQUEST_CONTROL_OF_ENTITY(spawned_ped)
-                    yield()
-                until NETWORK_HAS_CONTROL_OF_ENTITY(spawned_ped)
-                repeat 
-                    entities.delete(spawned_ped)
-                    yield()
-                until not DOES_ENTITY_EXIST(spawned_ped)
-            end
+            DeletePed(spawned_ped)
         end
     end)
 
     local time = 0
     local drag_notif = true
-    griefing:action("Kick From Vehicle", {"drag"}, "Spawns a ped to forcefully drag them out of their vehicle.", function()
+    griefing:action("Kick From Vehicle", {"vehiclekick"}, "Spawns a ped to forcefully drag them out of their vehicle.", function()
         if pid == players.user() then 
             toast(lang.get_localised(-1974706693))
             return
+        end
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = players.get_position(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
+        local seat = GET_SEAT_PED_IS_IN(ped)
+        if vehicle == 0 then
+            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
+            return 
         end
         if drag_notif then
             if StandUser(pid) then 
@@ -877,48 +897,119 @@ local function player(pid)
                 drag_notif = false
             end
         end
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = players.get_position(pid)
-        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
-        local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
         pos.z -= 50
-        if vehicle == 0 then
-            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
-            return 
-        end
-
-        local spawned_ped = CREATE_RANDOM_PED(pos)
+        spawned_ped = CREATE_RANDOM_PED(pos)
         entities.set_can_migrate(spawned_ped, false)
         SET_ENTITY_INVINCIBLE(spawned_ped, true)
         --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
         SET_PED_CONFIG_FLAG(spawned_ped, 366, true)
-        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
-        repeat
-            time += 1   
-            if time > 300 and not IS_PED_IN_ANY_VEHICLE(spawned_ped, false) then
-                toast("Failed to drag " .. players.get_name(pid) .. " from their vehicle. :/")
-                entities.delete(spawned_ped)
-                time = 0
-                break 
-            end
-            yield()
-        until GET_IS_TASK_ACTIVE(ped, 2)
-        if GET_IS_TASK_ACTIVE(ped, 2) then
+        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, seat, 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
+        if GET_SEAT_PED_IS_IN(spawned_ped)!= -1 then
             repeat
+                time += 1 
+                if GET_IS_TASK_ACTIVE(ped, 2) and GET_SEAT_PED_IS_IN(spawned_ped) == seat then
+                    repeat
+                        yield()
+                    until not GET_IS_TASK_ACTIVE(ped, 2)
+                end
+                if time > 300 and GET_SEAT_PED_IS_IN(spawned_ped) != seat then
+                    toast($"Failed to kick {players.get_name(pid)} from the vehicle. :/")
+                    DeletePed(spawned_ped)
+                    time = 0
+                    break 
+                end
                 yield()
-            until not GET_IS_TASK_ACTIVE(ped, 2) or IS_PED_IN_ANY_VEHICLE(spawned_ped, false)
-            entities.delete(spawned_ped)
+            until GET_SEAT_PED_IS_IN(spawned_ped) == seat
+            DeletePed(spawned_ped)
+            time = 0
         end
     end)
     
-    local takeover_timer = 0
-    local takeover_notif = true
-    griefing:action("Takeover Vehicle", {"takeover"}, "Spawns a ped to kick them out of their seat then warps you into it.", function()
+    local time = 0
+    local seat = 0
+    local seat_notif = true
+    griefing:action("Kick From Seat", {"seatkick"}, "Spawns a ped to forcefully drag them out of their seat and put you in it.", function()
         if pid == players.user() then 
             toast(lang.get_localised(-1974706693))
             return
+        end
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local pos = players.get_position(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        local passenger = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -2))
+        local seat = GET_SEAT_PED_IS_IN(ped)
+        if vehicle == 0 then
+            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
+            return 
+        end
+        if seat_notif then
+            if StandUser(pid) then 
+                toast(lang.get_localised(1729001290))
+                seat_notif = false
+            end
+        end
+        pos.z -= 50
+        spawned_ped = CREATE_RANDOM_PED(pos)
+        entities.set_can_migrate(spawned_ped, false)
+        SET_ENTITY_INVINCIBLE(spawned_ped, true)
+        --SET_ENTITY_VISIBLE(spawned_ped, false)
+        SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
+        SET_PED_CONFIG_FLAG(spawned_ped, 366, true)
+        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, seat, 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
+        if GET_SEAT_PED_IS_IN(spawned_ped)!= -1 then
+            repeat
+                time += 1 
+                if GET_IS_TASK_ACTIVE(ped, 2) and GET_SEAT_PED_IS_IN(spawned_ped) == seat then
+                    repeat
+                        yield()
+                    until not GET_IS_TASK_ACTIVE(ped, 2)
+                end
+                if time > 300 and GET_SEAT_PED_IS_IN(spawned_ped) != seat then
+                    toast($"Failed to kick {players.get_name(pid)} from the vehicle. :/")
+                    DeletePed(spawned_ped)
+                    time = 0
+                    break 
+                end
+                yield()
+            until GET_SEAT_PED_IS_IN(spawned_ped) == seat
+            if GET_SEAT_PED_IS_IN(spawned_ped) == seat then
+                DeletePed(spawned_ped)
+                repeat
+                    if seat > 250 then
+                        toast("Failed to warp into seat. :/")
+                        seat = 0
+                        break
+                    end
+                    SET_PED_INTO_VEHICLE(players.user_ped(), vehicle, seat)
+                    seat += 1
+                until GET_SEAT_PED_IS_IN(players.user_ped()) == seat or GET_VEHICLE_PED_IS_IN(players.user_ped(), false) == vehicle
+                toast($"Successfully kicked {players.get_name(pid)} from the vehicle and warped into their seat. :D")
+                seat = 0
+            end
+        end
+    end)
+    
+
+    local takeover_timer = 0
+    local takeover_notif = true
+    local tp = false
+    griefing:action("Takeover Vehicle", {"takeover"}, "Spawns a ped to kick them out of their seat then warps you into it. (Note: May not work on strict nat types or high ping players.)", function()
+        if pid == players.user() then 
+            toast(lang.get_localised(-1974706693))
+            return
+        end
+        local otr = menu.ref_by_path("Online>Off The Radar")
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local local_pos = players.get_position(players.user())
+        local pos = players.get_position(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local cam_pos = players.get_cam_pos(pid)
+        local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
+        if vehicle == 0 then
+            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
+            return 
         end
         if takeover_notif then
             if StandUser(pid) then 
@@ -926,42 +1017,73 @@ local function player(pid)
                 takeover_notif = false
             end
         end
-        local spectate = menu.ref_by_rel_path(menu.player_root(pid), "Spectate>Nuts Method")
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local pos = players.get_position(pid)
-        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         pos.z -= 50
-
-        if vehicle == 0 then
-            toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
-            return 
+        if ped_dist > 100.0 then
+            otr.value = true
+            FREEZE_ENTITY_POSITION(players.user_ped(), true)
+            SET_ENTITY_VISIBLE(players.user_ped(), false)
+            SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), cam_pos, false, false, false)
+            tp = true
         end
-        local spawned_ped = CREATE_RANDOM_PED(pos)
+        spawned_ped = CREATE_RANDOM_PED(pos)
         --SET_ENTITY_VISIBLE(spawned_ped, false)
         SET_BLOCKING_OF_NON_TEMPORARY_EVENTS(spawned_ped, true)
-        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, GET_SEAT_PED_IS_IN(ped), 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
+        TASK_ENTER_VEHICLE(spawned_ped, vehicle, 1000, -1, 1.0, (1 << 1) | (1 << 3) | (1 << 4) | (1 << 9))
         entities.give_control_by_handle(spawned_ped, pid)
-        if not GET_IS_TASK_ACTIVE(ped, 2) then
+        if GET_SEAT_PED_IS_IN(spawned_ped) != -1 then
             repeat
-                takeover_timer +=1
-                if takeover_timer > 300 then
-                    entities.delete(spawned_ped)
-                    toast("Failed to pull them out of their vehicle. :/")
+                local cam_pos = players.get_cam_pos(pid)
+                SET_PED_INTO_VEHICLE(spawned_ped, vehicle, -1)
+                if tp then
+                    SET_ENTITY_COLLISION(players.user_ped(), false, false)
+                    SET_ENTITY_VISIBLE(players.user_ped(), false)
+                    SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), cam_pos, false, false, false)
+                end
+                if GET_IS_TASK_ACTIVE(ped, 2) then
+                    takeover_timer = 0
+                end
+                if takeover_timer > 250 then
+                    if DECOR_GET_INT(vehicle, "Player_Vehicle") != 0 then
+                        toast("Failed to pull them out due to personal vehicle permissions. :/")
+                    else 
+                        toast("Failed to pull them out of their vehicle. :/")
+                    end
+                    if tp then
+                        FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                        SET_ENTITY_COLLISION(players.user_ped(), true, true)
+                        SET_ENTITY_VISIBLE(players.user_ped(), true)
+                        SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), local_pos, false, false, false)
+                        tp = false
+                    end
+                    otr.value = false
+                    DeletePed(spawned_ped)
                     takeover_timer = 0
                     return
                 end
+                takeover_timer +=1 
                 yield()
-            until GET_IS_TASK_ACTIVE(ped, 2)
+            until GET_SEAT_PED_IS_IN(spawned_ped) == -1
+            DeletePed(spawned_ped)
         end
-        entities.delete(spawned_ped)
+        takeover_timer = 0
+        SET_PED_INTO_VEHICLE(players.user_ped(), vehicle, -1)
         repeat
-            if not GET_IS_TASK_ACTIVE(ped, 2) then
-                if takeover_timer > 100 then
-                    spectate.value = true
-                end
+            if not IS_PED_IN_ANY_VEHICLE(ped, false) and GET_SEAT_PED_IS_IN(ped) != -1 then
                 if takeover_timer > 250 then
-                    toast("Failed to warp into player vehicle. :/")   
-                    spectate.value = false 
+                    if DECOR_GET_INT(vehicle, "Player_Vehicle") != 0 then
+                        toast("Failed to warp into vehicle due to personal vehicle permissions. :/")
+                    else 
+                        toast("Failed to warp into player vehicle. :/")
+                    end
+                    if tp then
+                        SET_ENTITY_COLLISION(players.user_ped(), true, true)
+                        FREEZE_ENTITY_POSITION(players.user_ped(), false)
+                        SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), local_pos, false, false, false)
+                        SET_ENTITY_VISIBLE(players.user_ped(), true)
+                        tp = false
+                    end
+                    otr.value = false
+                    DeletePed(spawned_ped)
                     takeover_timer = 0
                     return
                 end
@@ -969,13 +1091,12 @@ local function player(pid)
                 takeover_timer +=1
             end
             yield()
-        until GET_VEHICLE_PED_IS_IN(players.user_ped(), false) == vehicle and IS_PED_IN_ANY_VEHICLE(players.user_ped(), false)
-        spectate.value = false 
+        until GET_VEHICLE_PED_IS_IN(players.user_ped(), false) == vehicle
+        SET_ENTITY_COLLISION(players.user_ped(), true, true)
+        FREEZE_ENTITY_POSITION(players.user_ped(), false)
+        SET_ENTITY_VISIBLE(players.user_ped(), true)
+        otr.value = false
         toast("Bippity boppity their car is now your property :D")
-        yield(500)
-        if not NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
-            GetControlOfEntity(vehicle)
-        end
         takeover_timer = 0
     end)
     
@@ -1033,7 +1154,7 @@ local function player(pid)
         end
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local mdl = joaat("stt_prop_track_speedup")
-        RequestModel(mdl)
+        util.request_model(mdl)
         if boostpad == nil or not DOES_ENTITY_EXIST(boostpad) then
             boostpad = entities.create_object(mdl, GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(vehicle, 0.0, 5.0, -3.0))
             SET_ENTITY_VISIBLE(boostpad, false)
@@ -1066,7 +1187,7 @@ local function player(pid)
         end
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local mdl = joaat("stt_prop_track_slowdown")
-        RequestModel(mdl)
+        util.request_model(mdl)
         if brakepad == nil or not DOES_ENTITY_EXIST(brakepad) then
             brakepad = entities.create_object(mdl, GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(vehicle, 0.0, 5.0, -3.0))
             SET_ENTITY_VISIBLE(brakepad, false)
@@ -1093,7 +1214,7 @@ local function player(pid)
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local mdl = joaat("mule5")
         local pos = players.get_position(pid)
-        RequestModel(mdl)
+        util.request_model(mdl)
                     
         mule_veh = entities.create_vehicle(mdl, GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0.0, 1.0, -3.0), GET_ENTITY_HEADING(ped))
         entities.set_can_migrate(mule_veh, false)
@@ -1122,7 +1243,7 @@ local function player(pid)
         local mdl = joaat("prop_roofvent_06a")
         local pos = players.get_position(pid)
         pos.z -= 2.4
-        RequestModel(mdl)
+        util.request_model(mdl)
         local temp_v3 = v3.new(0, 0, 0)
         local middle_vent = entities.create_object(mdl, v3(pos.x, pos.y, pos.z))
         SET_ENTITY_VISIBLE(middle_vent, false)
@@ -1182,7 +1303,7 @@ local function player(pid)
         local vehicle = GET_VEHICLE_PED_IS_IN(ped)
 
         if IS_PLAYER_IN_INTERIOR(pid) and players.is_godmode(pid) and (not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped)) and GET_SPAWN_STATE(pid) != 0 then
-            toast(players.get_name(pid) .. " is in godmode. :/")
+            toast($"{players.get_name(pid)} is in godmode. :/")
             gravitate.value = false
         util.stop_thread() end
         
@@ -1213,7 +1334,7 @@ local function player(pid)
         local dict = "swimming@scuba"
         local name = "dive_glide"
         RequestAnimation(dict)
-        RequestModel(attacker_mdl)
+        util.request_model(attacker_mdl)
         pos.x += 15
         pos.y += math.random(-25, 25)
         if attacker == nil or not DOES_ENTITY_EXIST(attacker) then
@@ -1269,7 +1390,21 @@ local function player(pid)
         end
     end)
     
-    
+    griefing:toggle_loop("Black Screen", {}, "", function()
+        local handle = NETWORK_HASH_FROM_PLAYER_HANDLE(pid)
+        util.trigger_script_event(1 << pid, {-1604421397, players.user(), 1, 4, handle, handle, handle, handle, 1, 1})
+        yield(10000)
+    end)
+     
+    griefing:toggle_loop("Cutscene Loop", {}, "", function()
+        local handle = NETWORK_HASH_FROM_PLAYER_HANDLE(pid)
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        util.trigger_script_event(1 << pid, {-1604421397, players.user(), math.random(0, 114), 4, handle, handle, handle, handle, 1, 1})
+        repeat
+            yield()
+        until IS_ENTITY_VISIBLE(ped)
+    end)
+
     griefing:action("Send To Online Intro", {"intro"}, "Sends player to the GTA Online intro.", function()
         if StandUser(pid) then toast(stand_notif) util.stop_thread() end
         local int = memory.read_int(memory.script_global(1895156 + 1 + (pid * 609) + 511)) --Global_1895156[PLAYER::PLAYER_ID() /*609*/].f_511;
@@ -1277,14 +1412,14 @@ local function player(pid)
         util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
      end)
 
-    local tp_timer = 0
+    local tp_timer1 = 0
     griefing:action("Send To Cayo Scope Out Cutscene", {}, "", function()
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " on") 
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} on") 
         repeat
-            if tp_timer > 10 then
+            if tp_timer1 > 10 then
                 return
             end
-            tp_timer += 1
+            tp_timer1 += 1
             yield(1000)
         until players.get_boss(players.user()) != -1
         local pos = players.get_position(players.user())
@@ -1298,7 +1433,7 @@ local function player(pid)
         end
         SET_ENTITY_VISIBLE(players.user_ped(), true)
         SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " off")
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} off")
     end)
     
     local jobs = griefing:list("Send To Activity")
@@ -1411,7 +1546,7 @@ local function player(pid)
         repeat 
             yield()
         until memory.read_int(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
-        menu.trigger_commands("kill" .. players.get_name(pid))
+        menu.trigger_commands($"kill {players.get_name(pid)}")
         if not IS_PED_DEAD_OR_DYING(ped) then
             repeat
                 hospitalize_count += 1
@@ -1462,7 +1597,7 @@ local function player(pid)
             return
         end
         local monster = joaat("h4_prop_h4_loch_monster")
-        RequestModel(monster)
+        util.request_model(monster)
         obj = entities.create_object(monster, pos)
         SET_ENTITY_COLLISION(obj, false, false)
         ATTACH_ENTITY_TO_ENTITY(obj, vehicle, 0, -0.25, -1.0, 1.0, 0.0, 0.0, -90.0, true, false, false, false, 0, true)
@@ -1472,7 +1607,7 @@ local function player(pid)
         local pos = players.get_position(pid)
         pos.z -= 0.50
         local whopper = joaat("xs_prop_hamburgher_wl")
-        RequestModel(whopper)
+        util.request_model(whopper)
         local hamburger = entities.create_object(whopper, pos)
         entities.set_can_migrate(hamburger, false)
         yield(60000)
@@ -1485,7 +1620,7 @@ local function player(pid)
         pos.z -= 0.50
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local whopper = joaat("xs_prop_hamburgher_wl")
-        RequestModel(whopper)
+        util.request_model(whopper)
         if toggled then
             if IS_PED_IN_ANY_VEHICLE(ped, false) then
                 hamburger = entities.create_object(whopper, pos)
@@ -1526,16 +1661,14 @@ local function player(pid)
 
         local radio_name = station_name[value]
         if IS_PED_IN_ANY_VEHICLE(ped, false) then 
-
             if not ARE_ANY_VEHICLE_SEATS_FREE(vehicle) then
                 toast("Failed to change players radio. :/")
                 return 
-        end
-
+            end
             NETWORK_REQUEST_CONTROL_OF_ENTITY(vehicle)
             if not IS_PED_IN_VEHICLE(players.user_ped(), vehicle, false) then
                 SET_ENTITY_VISIBLE(players.user_ped(), false)
-                menu.trigger_commands("tpveh" .. players.get_name(pid))
+                menu.trigger_commands($"tpveh {players.get_name(pid)}")
                 yield(250)
                 SET_VEH_RADIO_STATION(vehicle, radio_name)
                 yield(750)
@@ -1563,18 +1696,18 @@ local function player(pid)
         local veh_class = GET_VEHICLE_CLASS(vehicle)
         if not players.exists(pid) then util.stop_thread() end
 
-        if not DOES_ENTITY_EXIST(ped) and IS_PED_IN_ANY_VEHICLE(ped, false) then
-            toast(players.get_name(pid) .. "Is too far or isn't in any vehicle. :/")
+        if not DOES_ENTITY_EXIST(ped) or not IS_PED_IN_ANY_VEHICLE(ped, false) then
+            toast($"{players.get_name(pid)} is too far or isn't in any vehicle. :/")
             control_veh.value = false
         util.stop_thread() end
 
         if veh_class == 15 then
-            toast(players.get_name(pid) .. " is in a helicopter. :/")
+            toast($"{players.get_name(pid)} is in a helicopter. :/")
             control_veh.value = false
         util.stop_thread() end
         
         if veh_class == 16 then
-            toast(players.get_name(pid) .. " is in an airplane. :/")
+            toast($"{players.get_name(pid)} is in an airplane. :/")
             control_veh.value = false
         util.stop_thread() end
 
@@ -1617,7 +1750,7 @@ local function player(pid)
             local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
             local pos = players.get_position(pid)
             local jesus = joaat("u_m_m_jesus_01")
-            RequestModel(jesus)
+            util.request_model(jesus)
     
             jesus_ped = entities.create_ped(26, jesus, pos, 0)
             SET_ENTITY_INVINCIBLE(jesus_ped, true)
@@ -1671,7 +1804,7 @@ local function player(pid)
         local pos = players.get_position(pid)
         local heading =  GET_ENTITY_HEADING(ped)
         local khanjali = joaat("khanjali")
-        RequestModel(khanjali)
+        util.request_model(khanjali)
         distance = 2.5
         if IS_PED_STILL(ped) then
             distance = 0.0
@@ -1699,8 +1832,8 @@ local function player(pid)
         local pos = players.get_position(pid)                            
         local hash = joaat("prop_windmill_01")
         local mdl = joaat("rallytruck")
-        RequestModel(hash)
-        RequestModel(mdl)
+        util.request_model(hash)
+        util.request_model(mdl)
         for i = 0, 5 do
             if IS_PED_WALKING(ped) then
                 spawn_pos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0.0, 0.5, 0.0)
@@ -1745,6 +1878,15 @@ local function player(pid)
     end)
 
     local tp_player = main:list("Teleport Player")
+    local interior_tp = tp_player:list("Interior Teleports", {}, lang.get_localised(-748077967))
+    local ceo_tp = tp_player:list("CEO Teleports", {}, lang.get_localised(-748077967))
+    local mission_end_tp = tp_player:list("Mission End Teleports", {}, lang.get_localised(-748077967))
+    for id, name in pairs(tp_locations) do
+        mission_end_tp:action(name, {}, "", function()
+            local handle = NETWORK_HASH_FROM_PLAYER_HANDLE(pid)
+            util.trigger_script_event(1 << pid, {-1604421397, players.user(), id, 4, handle, handle, handle, handle, 1, 1})
+        end)
+    end
     local interior_tps = {
         [70] = "Bunker", -- 70 thru 80 are bunkers
         [81] = "Mobile Operations Center",
@@ -1763,14 +1905,14 @@ local function player(pid)
         [155] = "Agency Office",
     }
 
-    local tp_timer = 0
-    tp_player:action("Cayo Perico", {}, "", function()
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " on") 
+    local tp_timer2 = 0
+    ceo_tp:action("Cayo Perico", {}, "", function()
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} on")
         repeat
-            if tp_timer > 10 then
+            if tp_timer2 > 10 then
                 return
             end
-            tp_timer += 1
+            tp_timer2 += 1
             yield(1000)
         until players.get_boss(players.user()) != -1
         local pos = players.get_position(players.user())
@@ -1784,17 +1926,17 @@ local function player(pid)
         end
         SET_ENTITY_VISIBLE(players.user_ped(), true)
         SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " off")
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} off")
     end)
 
-    local tp_timer = 0
-    tp_player:action("Vespucci Beach", {}, "", function()
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " on") 
+    local tp_timer3 = 0
+    ceo_tp:action("Vespucci Beach", {}, "", function()
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} on") 
         repeat
-            if tp_timer > 10 then
+            if tp_timer3 > 10 then
                 return
             end
-            tp_timer += 1
+            tp_timer3 += 1
             yield(1000)
         until players.get_boss(players.user()) != -1
         local pos = players.get_position(players.user())
@@ -1808,37 +1950,15 @@ local function player(pid)
         end
         SET_ENTITY_VISIBLE(players.user_ped(), true)
         SET_ENTITY_COORDS_NO_OFFSET(players.user_ped(), pos, false, false, false)
-        menu.trigger_commands("ceojoin" .. players.get_name(pid) .. " off")
+        menu.trigger_commands($"ceojoin {players.get_name(pid)} off")
     end)
 
     for id, name in interior_tps do
-        tp_player:action(name, {""}, lang.get_localised(-748077967), function()
+        interior_tp:action(name, {}, "", function()
             if StandUser(pid) then toast(stand_notif) return end
             util.trigger_script_event(1 << pid, {-1638522928, players.user(), id, 1, 0, 1, 1130429716, -1001012850, 1106067788, 0, 0, 1, 2123789977, 1, -1})
         end)
     end
-
-    local spectate_root = menu.ref_by_rel_path(menu.player_root(pid), "Spectate")
-    local spectate = spectate_root:list("Spectate Settings")
-    if menu.get_edition() > 1 then
-        local esp_tgl
-        esp_tgl = spectate:toggle("Enable ESP", {""}, "", function(toggled)
-            if toggled then
-                menu.trigger_command(menu.ref_by_path("World>Inhabitants>Player ESP>Bone ESP>Low Latency Rendering"))
-                menu.trigger_command(menu.ref_by_path("World>Inhabitants>Player ESP>Name ESP>Name ESP>Low Latency Rendering"))
-                menu.trigger_commands("esptags off")
-            else
-                menu.trigger_command(menu.ref_by_path("World>Inhabitants>Player ESP>Bone ESP>Disabled"))
-                menu.trigger_command(menu.ref_by_path("World>Inhabitants>Player ESP>Name ESP>Name ESP>Disabled"))
-            end
-        end)
-    end
-
-    player_toggle_loop(spectate, pid, "Clear Timecycle Modifier", {}, "Will automatically set the timecycle modifier to default when spectating people from an interior so spectating people from places like a facility won't look bad.", function()
-        if GET_TIMECYCLE_MODIFIER_INDEX() != -1 or GET_INTERIOR_FROM_PLAYER(players.user()) != 0 then
-            SET_TIMECYCLE_MODIFIER("DEFAULT")
-        end
-    end)
  
     local misc_player = main:list("Miscellaneous")
     player_toggle_loop(misc_player, pid, "Show Aim Lines", {"aimlines"}, "", function()
@@ -1886,18 +2006,54 @@ local function player(pid)
         end
     end)
 
-    player_toggle_loop(misc_player, pid, "Thin Ice", {"thinice"}, "As the name suggest, the player will be on thin ice. Any attacks towards you will result in them being auto kicked.", function()
+    player_toggle_loop(misc_player, pid, "Thin Ice", {"thinice"}, "As the name suggests, the player will be on thin ice. Any attacks towards you will result in them being auto kicked.", function()
         if players.is_marked_as_attacker(pid) then
-            menu.trigger_commands("kick" .. players.get_name(pid))
+            menu.trigger_commands($"kick {players.get_name(pid)}")
         end
     end)
+
+    player_toggle_loop(misc_player, pid, "Auto Teleport To Vehicle", {"autovehtp"}, "Automatically teleports you into the players vehicle.", function()
+        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
+        local veh_model = players.get_vehicle_model(pid)
+        local seat_count = GET_VEHICLE_MODEL_NUMBER_OF_SEATS(veh_model)
+        if not ARE_ANY_VEHICLE_SEATS_FREE(vehicle) then return end
+        if GET_VEHICLE_PED_IS_USING(players.user_ped()) != vehicle then
+            for i = 0, seat_count -1 do
+                local emptyseat = i
+                for l = 1, 25 do
+                    SET_PED_INTO_VEHICLE(players.user_ped(), vehicle, emptyseat)
+                end
+            end
+        end
+    end)
+    --menu.attach_after(menu.ref_by_rel_path(menu.player_root(pid), "Trolling"),
+    --menu.link(menu.shadow_root(), griefing))
 end
 
 players.on_join(player)
 players.dispatch_on_join()
 
-self:toggle("Disable Death Ragdoll", {"nodeathragdoll"}, "Disables ragdoll upon death and makes you get up after being knocked down instead of just laying there for other people.", function(toggled)
-    SET_PED_CONFIG_FLAG(players.user_ped(), 227, toggled)
+self:toggle_loop("Repair Gun", {"repairgun"}, "Repairs vehicles that you shoot at.", function()
+    local target_hptr = memory.alloc_int()
+    if GET_ENTITY_PLAYER_IS_FREE_AIMING_AT(players.user(), target_hptr) then
+        local target_entity = memory.read_int(target_hptr)
+        if GET_ENTITY_HEALTH(target_entity) == 0 and IS_ENTITY_A_VEHICLE(target_entity) then
+            SET_VEHICLE_FIXED(target_entity)
+        end
+    end
+end)
+
+self:toggle("Disable Radar", {"noradar"}, "", function(toggled)
+    DISPLAY_RADAR(not toggled)
+end)
+
+self:toggle_loop("Disable Death Ragdoll", {"nodeathragdoll"}, "Disables ragdoll upon death and makes you get up after being knocked down instead of just laying there for other people.", function()
+    if not GET_PED_CONFIG_FLAG(players.user_ped(), 227, true) then
+        SET_PED_CONFIG_FLAG(players.user_ped(), 227, true)
+    end
+end, function()
+    SET_PED_CONFIG_FLAG(players.user_ped(), 227, false)
 end)
 
 self:action("Smooth Teleport", {"smoothtp"}, "", function()
@@ -1960,19 +2116,26 @@ noclip_thing = interior_noclip:toggle_loop("Enable", {"interiornoclip"}, "", fun
     local speed_val = menu.ref_by_path("Self>Movement>Levitation>Movement Speed")
     local sprint_val = menu.ref_by_path("Self>Movement>Levitation>Sprint Multiplier")
     if GET_INTERIOR_FROM_PLAYER(players.user()) != 0 then
-        menu.trigger_commands("levitatespeed " .. noclip_speed)
-        menu.trigger_commands("levitatesprintmultiplier " .. levitate_multiplier)
+        menu.trigger_commands($"levitatespeed {noclip_speed}")
+        menu.trigger_commands($"levitatesprintmultiplier {levitate_multiplier}")
     else
         if speed_val != speed then
-            menu.trigger_commands("levitatespeed " .. speed / 100)
+            menu.trigger_commands($"levitatespeed {speed / 100}")
         end
         if sprint_val != sprint then
-            menu.trigger_commands("levitatesprintmultiplier " .. sprint / 100)
+            menu.trigger_commands($"levitatesprintmultiplier {sprint / 100}")
         end
     end
 end, function()
-    menu.trigger_commands("levitatespeed " .. speed / 100)
-    menu.trigger_commands("levitatesprintmultiplier " .. sprint / 100)
+    menu.trigger_commands($"levitatespeed {speed / 100}")
+    menu.trigger_commands($"levitatesprintmultiplier {sprint / 100}")
+end)
+
+
+self:toggle("BST Mode", {"bstmode"}, "BST without the Post FX and sound effects.", function(toggled)
+    SET_PLAYER_WEAPON_DAMAGE_MODIFIER(players.user(), toggled ? 1.44 : 0.72)
+    SET_PLAYER_MELEE_WEAPON_DAMAGE_MODIFIER(players.user(), toggled ? 2.0 : 1.0)
+    SET_PLAYER_MELEE_WEAPON_DEFENSE_MODIFIER(players.user(), toggled ? 0.5 : 1.0)
 end)
 
 self:toggle_loop("Fast Respawn", {"fastrespawn"}, "", function()
@@ -1988,7 +2151,7 @@ end,
 end)
 
 self:toggle_loop("Fast Roll", {"fastroll"}, "", function()
-    STAT_SET_INT(joaat("mp"..util.get_char_slot().."_shooting_ability"), 200, true)
+    STAT_SET_INT(joaat($"mp{util.get_char_slot()}_shooting_ability"), 200, true)
 end)
 
 self:toggle_loop("Non-Hostile Peds", {"friendlyai"}, "Makes NPCs unable to target you.", function()
@@ -2003,16 +2166,93 @@ self:toggle_loop("Auto Accept", {"autoaccept"}, "Auto accepts join screens.", fu
     end
 end)
 
-online:toggle_loop("Draw Orbital Cannon Position", {}, "", function()
+audio:toggle_loop("Test", {""}, "", function()
+    memory.write_int(memory.script_global(9074), 0)
+end)
+
+audio:toggle("Dead Silence", {"deadsilence"}, "Disables footstep sounds.", function(toggled)
+    SET_PED_FOOTSTEPS_EVENTS_ENABLED(players.user_ped(), not toggled)
+end)
+
+audio:toggle_loop("Disable Freemode Music", {"disablefreemodemusic"}, "Disables scripted freemode music caused by missions, gang attacks, etc.", function()
+    if AUDIO_IS_MUSIC_PLAYING() and not NETWORK_IS_ACTIVITY_SESSION() then
+        TRIGGER_MUSIC_EVENT("GLOBAL_KILL_MUSIC")
+    end
+end)
+
+audio:toggle_loop("Disable Ambient Sounds", {"disableambientsounds"}, "Disables background noises such as sirens, distant honks, jackhammers, birds, crickets, etc.", function()
+    if GET_SPAWN_STATE(players.user()) == 0 then
+        STOP_AUDIO_SCENE("CHARACTER_CHANGE_IN_SKY_SCENE")
+    return end
+    if not IS_AUDIO_SCENE_ACTIVE("CHARACTER_CHANGE_IN_SKY_SCENE") then
+        START_AUDIO_SCENE("CHARACTER_CHANGE_IN_SKY_SCENE")
+    end
+end, function()
+    STOP_AUDIO_SCENE("CHARACTER_CHANGE_IN_SKY_SCENE")
+end)
+
+audio:toggle("Disable Distant Sirens", {"disablesirens"}, "", function(toggled)
+    DISTANT_COP_CAR_SIRENS(not toggled)
+end)
+
+audio:toggle_loop("Disable Vehicle Audio", {"disablevehicleaudio"}, "Mutes every vehicles sounds except for yours. (Note: This may drop your fps a slight bit.)", function()
+    for entities.get_all_vehicles_as_handles() as vehicle do
+        if vehicle != entities.get_user_vehicle_as_handle() then
+            FORCE_USE_AUDIO_GAME_OBJECT(vehicle, "")
+        end
+        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
+    end
+end)
+
+audio:toggle_loop("Disable Ped Speech", {"disablepedspeech"}, "Mutes the peds audio.", function()
+    for entities.get_all_peds_as_handles() as ped do
+        if IS_ANY_SPEECH_PLAYING(ped) then
+            STOP_CURRENT_PLAYING_SPEECH(ped)
+        end
+        RELEASE_PED_HANDLE(ped)
+    end
+end)
+
+online:toggle("Block Aim Assist", {}, "Blocks players from being able to lock onto you using aim assist.", function(toggled)
+    SET_PED_CAN_BE_TARGETTED(players.user_ped(), not toggled)
+end)
+
+local reversedMessages = {}
+local reverse_msg
+reverse_msg = online:toggle_loop("Reverse Mock Chat Messages", {}, "", function()
+    if not reverse_msg.value then return end
+    chat.on_message(function(packet_sender, message_sender, text, team_chat)
+        if message_sender != players.user() and not reversedMessages[text] then -- prevent message spam
+            chat.send_message(string.reverse(text), false, true, true)
+            reversedMessages[text] = { timestamp = os.time() }
+        end
+    end)
+end)
+
+local messageTimeout = 5
+util.create_tick_handler(function()
+    for msg, messageData in reversedMessages do
+        if os.time() - messageData.timestamp > messageTimeout then
+            reversedMessages[msg] = nil
+        end
+    end
+end)
+
+
+online:toggle_loop("Draw Orbital Cannon Position", {"blockaimassist"}, "", function()
     for players.list_except() as pid do
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) then
             local cam = players.get_cam_pos(pid)
             local rot, dir =  v3(), v3()
             local ground = false
             repeat
-                ground, cam.z = util.get_ground_z(cam.x, cam.y)
-                yield()
-            until ground
+                ground, cam.z = util.get_ground_z(cam.x, cam.y) 
+                if ground then
+                    break
+                else
+                    yield()
+                end
+            until false
             local cam_dist = v3.distance(cam, players.get_cam_pos(pid))
             DRAW_MARKER(28, cam, rot, dir, 1.0, 1.0, cam_dist, 255, 0, 255, 105, false, false)
         end
@@ -2043,13 +2283,13 @@ end)
 local block_orb
 block_orb = online:toggle_loop( "Block Orbital Cannon", {"blockorb"}, "", function() -- credit to lance, just cleaned it up a bit.
     local mdl = joaat("h4_prop_h4_garage_door_01a")
-    RequestModel(mdl)
+    util.request_model(mdl)
     if orb_obj == nil or not DOES_ENTITY_EXIST(orb_obj) then
         orb_obj = entities.create_object(mdl, v3(335.9, 4833.9, -59.0))
         entities.set_can_migrate(orb_obj, false)
         SET_ENTITY_HEADING(orb_obj, 125.0)
         FREEZE_ENTITY_POSITION(orb_obj, true)
-        SET_ENTITY_NO_COLLISION_ENTITY(orb_obj, players.user_ped(), false)
+        --SET_ENTITY_NO_COLLISION_ENTITY(orb_obj, players.user_ped(), false)
         SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), orb_obj, false) -- have to do this both way for collision to be properly avoided between player ped and the object
     end
     yield(50)
@@ -2067,7 +2307,7 @@ ghost_tgl = ghost:toggle_loop("Always", {"ghostorb"}, "Automatically ghost playe
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) and GET_IS_TASK_ACTIVE(ped, 135) and cam_dist < 400 and cam_dist > 340 then
-            toast(players.get_name(pid) .. " Is targeting you with the orbital cannon")
+            toast($"{players.get_name(pid)} Is targeting you with the orbital cannon")
         end
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) then
             SET_REMOTE_PLAYER_AS_GHOST(pid, true)
@@ -2093,7 +2333,7 @@ tgl = ghost:toggle_loop("While Being Targeted", {}, "Automatically ghost players
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) and GET_IS_TASK_ACTIVE(ped, 135) and cam_dist < 400 and cam_dist > 340 then
-            toast(players.get_name(pid) .. " Is targeting you with the orbital cannon")
+            toast($"{players.get_name(pid)} is targeting you with the orbital cannon")
             SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
             SET_REMOTE_PLAYER_AS_GHOST(pid, false)
@@ -2150,7 +2390,7 @@ online:toggle_loop("Ghost Armed Players", {"ghostarmedplayers"}, "Ghost players 
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 199) or GET_IS_TASK_ACTIVE(ped, 128) 
-        or IS_PLAYER_USING_GUIDED_MISSILE(pid) or IN_PLAYER_IN_RC_TANK(pid) or IN_PLAYER_IN_RC_BANDITO(pid) or IS_PLAYER_FLYING_ANY_DRONE(pid) or IS_PLAYER_USING_MISSILE_TURRET(pid) then
+        or IS_PLAYER_USING_GUIDED_MISSILE(pid) or IS_PLAYER_IN_RC_TANK(pid) or IS_PLAYER_IN_RC_BANDITO(pid) or IS_PLAYER_FLYING_ANY_DRONE(pid) or IS_PLAYER_USING_MISSILE_TURRET(pid) then
             SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
             SET_REMOTE_PLAYER_AS_GHOST(pid, false)
@@ -2172,12 +2412,14 @@ honk = online:toggle_loop("Horny Cars", {"hornycars"}, "", function()
                 yield()
             end
         end
+        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
     end
 end, function()
     for entities.get_all_vehicles_as_handles() as vehicle do
         if IS_VEHICLE_ALARM_ACTIVATED(vehicle) then
             SET_VEHICLE_ALARM(vehicle, false)
         end
+        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
     end
 end)
 
@@ -2206,6 +2448,7 @@ online:toggle_loop("Prevent NPC Vehicle Dragout", {}, "", function()
     local vehicle = entities.get_user_vehicle_as_handle()
     for entities.get_all_peds_as_handles() as ped do
         SET_PED_CONFIG_FLAG(ped, 342, true)
+        RELEASE_PED_HANDLE(ped)
     end
 end)
 
@@ -2214,7 +2457,7 @@ lobby:action("Hijack All Vehicles", {"hijackall"}, "Spawns a ped to take them ou
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = players.get_position(pid)
         if DOES_ENTITY_EXIST(ped) and IS_PED_IN_ANY_VEHICLE(ped, false) then
-            menu.trigger_commands("hijack " .. players.get_name(pid))
+            menu.trigger_commands($"hijack {players.get_name(pid)}")
         end
     end
 end)
@@ -2242,13 +2485,13 @@ end)
 
 lobby:action("Hamburger", {"hamburgerall"}, "Whopper, Whopper, Whopper, Whopper!", function()
     for players.list_except(true) as pid do
-        menu.trigger_commands("hamburger" .. players.get_name(pid))
+        menu.trigger_commands($"hamburger {players.get_name(pid)}")
     end
 end)
 
 lobby:action("Patty Wagon", {"pattywagonall"}, "Turns everyones vehicle into a patty wagon.", function()
     for players.list_except(true) as pid do
-        menu.trigger_commands("pattywagon" .. players.get_name(pid))
+        menu.trigger_commands($"pattywagon {players.get_name(pid)}")
     end
 end)
 
@@ -2256,7 +2499,7 @@ local lochness_ctr = 0
 lobby:action("Lochness Monster Mk2", {"lochnessall"}, "Turns players oppressor mk2's into the lochness monster.", function()
     for players.list_except(true) as pid do
         if players.get_vehicle_model(pid) == joaat("oppressor2") then
-            menu.trigger_commands("lochnessmk2" .. players.get_name(pid))
+            menu.trigger_commands($"lochnessmk2 {players.get_name(pid)}")
             lochness_ctr += 1
         end
     end
@@ -2278,11 +2521,11 @@ horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to so
                     horny_counter = 0
                     return
                 end
-                menu.trigger_commands("kill" .. players.get_name(pid))
+                menu.trigger_commands($"kill {players.get_name(pid)}")
                 yield()
                 horny_counter += 1
             until IS_PED_DEAD_OR_DYING(ped)
-            toast("Killed " .. players.get_name(pid) .. " for being too horny.")
+            toast($"Killed {players.get_name(pid)} for being too horny.")
             horny_counter = 0
         end
     end
@@ -2293,7 +2536,7 @@ horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         if memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 1 then
-            chat.send_message(players.get_name(pid) .. " is horny and about to have sex with a prostitute. Lets make fun of this virgin! HAHA, loser!", false, true, true)
+            chat.send_message($"{players.get_name(pid)} is horny and about to have sex with a prostitute. Lets make fun of this virgin! HAHA, loser!", false, true, true)
             repeat
                 yield()
             until memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 0
@@ -2302,7 +2545,7 @@ horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying
 end)
 
 missions:toggle_loop("Skip Dax Work Cooldown", {}, "", function() -- thx icedoomfist for the stat name <3
-    STAT_SET_INT(joaat("mp"..util.get_char_slot().."_xm22juggaloworkcdtimer"), -1, true)
+    STAT_SET_INT(joaat($"mp{util.get_char_slot()}_xm22juggaloworkcdtimer"), -1, true)
 end)
 
 missions:action("Kill All Peds", {}, "", function()
@@ -2317,7 +2560,7 @@ missions:action("Kill All Peds", {}, "", function()
     if counter == 0 then
         toast("No Peds Found. :/")
     else
-        toast("Killed ".. tostring(counter) .." Peds.")
+        toast($"Killed {tostring(counter)} Peds.")
     end
 end)
 
@@ -2332,7 +2575,7 @@ missions:action("Teleport Pickups To Me", {}, "", function()
     if counter == 0 then
         toast("No Pickups Found. :/")
     else
-        toast("Teleported ".. tostring(counter) .." Pickups.")
+        toast($"Teleported {tostring(counter)} Pickups.")
     end
 end)
 
@@ -2457,6 +2700,84 @@ if menu.get_edition() > 1 then
     end)
 end
 
+local engine_sound = vehicles:list("Change Engine Sound", {}, "Note: Some engine sounds may affect your vehicle acceleration. Vehicle upgrades such as engine or exhause also effect the sound.")
+local vehicle_class = {}
+local ignore_duplicates = {} 
+for util.get_vehicles() as vehicle do
+    local name = util.get_label_text(vehicle.name)
+    local hash = joaat(vehicle.name)
+    local class = GET_VEHICLE_CLASS_FROM_NAME(hash)
+
+    if ignore_class or name == "NULL" or ignore_duplicates[name] or (not IS_THIS_MODEL_A_CAR(hash) and not IS_THIS_MODEL_A_BIKE(hash) and not IS_THIS_MODEL_A_QUADBIKE(hash)) then 
+        continue 
+    end
+    if not vehicle_class[class] then
+        vehicle_class[class] = engine_sound:list(util.get_label_text($"VEH_CLASS_{class}"))
+    end
+    ignore_duplicates[name] = true
+    engine_sound.action(vehicle_class[class], name, {$"engine {name}"}, "", function()
+        yield(100)
+        SET_RADIO_TO_STATION_NAME("OFF") -- the radio kept changing for some reason so this should fix that
+        FORCE_USE_AUDIO_GAME_OBJECT(entities.get_user_vehicle_as_handle(), vehicle.name)
+        yield(100)
+        SET_RADIO_TO_STATION_NAME("OFF") -- sometimes it doesn't turn off
+    end)
+end
+
+local radio = true
+vehicles:toggle_loop("Disable Radio On Vehicle Entry", {""}, "", function()
+    if not IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) then radio = true return end
+    if GET_PLAYER_RADIO_STATION_NAME() != "OFF" and radio then
+        yield(100)
+        SET_RADIO_TO_STATION_NAME("OFF")
+        radio = false
+    end
+end)
+
+local wheelie = vehicles:list("Wheelie")
+local wheelie_val = 0.3
+wheelie:slider_float("Wheelie Power", {"wheeliepower"}, "", 10, 100, 30, 5, function(value)
+    wheelie_val = value / 100
+end)
+
+wheelie:toggle_loop("Enable", {}, "Press Ctrl and W to wheelie.", function()
+    local veh = entities.get_user_vehicle_as_handle()
+    if not veh then return end
+    local CAutomobile = entities.handle_to_pointer(veh)
+    local CHandlingData = memory.read_long(CAutomobile + 0x0918)
+    if IS_THIS_MODEL_A_BIKE(players.get_vehicle_model(players.user())) then return end
+    if util.is_key_down(0x57) and util.is_key_down(0x11) then 
+       memory.write_float(CHandlingData + 0x00EC, -wheelie_val)
+    else
+       memory.write_float(CHandlingData + 0x00EC, 0.5)
+    end
+end)
+
+local clumsiness = vehicles:list("Clumsiness")
+local clumsy_val = 0.3
+clumsiness:slider_float("Clumsiness", {"clumsinessvalue"}, "", 10, 100, 30, 5, function(value)
+    clumsy_val = value / 100
+end)
+
+clumsiness:toggle_loop("Enable", {"vehicleclumsiness"}, "Makes your vehicle easy to roll.", function()
+    local vehicle = entities.get_user_vehicle_as_handle()
+    if vehicle == 0 then return end
+    local CAutomobile = entities.handle_to_pointer(vehicle)
+    local CHandlingData = memory.read_long(CAutomobile + 0x0918)
+    local veh_speed = (GET_ENTITY_SPEED(vehicle)* 2.236936)
+    if util.is_key_down(0x41) or util.is_key_down(0x44) then
+        memory.write_float(CHandlingData + 0x00EC, -clumsy_val)
+    else
+        memory.write_float(CHandlingData + 0x00EC, 0.5)
+    end
+end, function()
+    local vehicle = entities.get_user_vehicle_as_handle()
+    if vehicle == 0 then return end
+    local CAutomobile = entities.handle_to_pointer(vehicle)
+    local CHandlingData = memory.read_long(CAutomobile + 0x0918)
+    memory.write_float(CHandlingData + 0x00EC, 0.5)
+end)
+
 vehicles:toggle_loop("Vehicle Rockets", {""}, "", function()
     local wpn = joaat("VEHICLE_WEAPON_TANK")
     local vehicle = GET_VEHICLE_PED_IS_IN(players.user_ped(), false)
@@ -2502,7 +2823,7 @@ end)
 local deformation = 1.00
 vehicles:slider_float("Deformation", {"deformation"}, "", 0, 10000, 100, 100, function(value)
     deformation = value / 100
-    menu.trigger_commands("vhdeformationmult " .. deformation)
+    menu.trigger_commands($"vhdeformationmult {deformation}")
 end)
 
 local seat_id = -1
@@ -2611,8 +2932,8 @@ funfeatures:action("Broomstick Mk2", {}, "Note: You will be invisible for other 
     local pos = players.get_position(players.user())
     local broomstick = joaat("prop_tool_broom")
     local oppressor = joaat("oppressor2")
-    RequestModel(broomstick)
-    RequestModel(oppressor)
+    util.request_model(broomstick)
+    util.request_model(oppressor)
     obj = entities.create_object(broomstick, pos)
     veh = entities.create_vehicle(oppressor, pos, 0)
     SET_ENTITY_VISIBLE(veh, false)
@@ -2624,8 +2945,8 @@ funfeatures:action("Lochness Monster Mk2", {}, "", function()
     local pos = players.get_position(players.user())
     local monster = joaat("h4_prop_h4_loch_monster")
     local oppressor = joaat("oppressor2")
-    RequestModel(monster)
-    RequestModel(oppressor)
+    util.request_model(monster)
+    util.request_model(oppressor)
     obj = entities.create_object(monster, pos)
     veh = entities.create_vehicle(oppressor, pos, 0)
     SET_ENTITY_COLLISION(obj, false, false)
@@ -2680,7 +3001,7 @@ end)
 funfeatures:toggle_loop("Forcefield", {}, "Attaches a UFO to your ped destroying anything in your path.", function(toggled)
     local mdl = joaat("p_spinning_anus_s")
     local pos = players.get_position(players.user())
-    RequestModel(mdl)
+    util.request_model(mdl)
     if obj == nil or not DOES_ENTITY_EXIST(obj) and not IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
         obj = entities.create_object(mdl, pos)
         SET_ENTITY_VISIBLE(obj, false)
@@ -2731,16 +3052,16 @@ jesus_main:slider_float("Driving Speed", {""}, "", 0, 10000, 2000, 100, function
     speed = value / 100
 end)
 
-local toggled = false
+local jesus_toggled = false
 local jesus_toggle
 jesus_toggle = jesus_main:toggle("Enable", {}, "", function(toggle)
-    toggled = toggle
+    jesus_toggled = toggle
     local pos = players.get_position(players.user())
     local vehicle = entities.get_user_vehicle_as_handle()
     jesus = joaat("u_m_m_jesus_01")
-    RequestModel(jesus)
+    util.request_model(jesus)
 
-    if toggled then
+    if jesus_toggled then
         if not IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) then 
 			toast(lang.get_localised(-474174214))
             menu.set_value(jesus_toggle, false)
@@ -2768,7 +3089,7 @@ jesus_toggle = jesus_main:toggle("Enable", {}, "", function(toggle)
         end
     end
     
-    while toggled do
+    while jesus_toggled do
         local height = GET_ENTITY_HEIGHT_ABOVE_GROUND(vehicle)
         local upright_value = GET_ENTITY_UPRIGHT_VALUE(vehicle)
         if height < 5.0 and upright_value < 0.0 then
@@ -2782,8 +3103,8 @@ funfeatures:toggle("Tesla Autopilot", {}, "Elon Musk.", function(toggled)
     local pos = players.get_position(players.user())
     local tesla_ai = joaat("u_m_y_baygor")
     local tesla = joaat("raiden")
-    RequestModel(tesla_ai)
-    RequestModel(tesla)
+    util.request_model(tesla_ai)
+    util.request_model(tesla)
     if toggled then     
         if IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) then
             menu.trigger_commands("deletevehicle")
@@ -2866,7 +3187,7 @@ local jinx_pet
 jinx_toggle = funfeatures:toggle_loop("Pet Jinx", {}, "", function()
     if not jinx_pet or not DOES_ENTITY_EXIST(jinx_pet) then
         local jinx = joaat("a_c_cat_01")
-        RequestModel(jinx)
+        util.request_model(jinx)
         local pos = players.get_position(players.user())
         jinx_pet = entities.create_ped(28, jinx, pos, 0)
         entities.set_can_migrate(jinx_pet, false)
@@ -2893,35 +3214,36 @@ local time_since_last_move = 0
 local god_detection
 god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone is using godmode.", function()
     local reveal_invis = menu.ref_by_path("Online>Reveal Invisible Players")
-    if reveal_invis.value then
-        toast("[JinxScript Godmode Detection] Please disable reveal invisible players. :)")
+    if reveal_invis.value == true then
+        util.toast("[JinxScript Godmode Detection] Please disable reveal invisible players. :)")
         god_detection.value = false
-        return 
-        end
+    return end
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local height = GET_ENTITY_HEIGHT_ABOVE_GROUND(ped)
         local pos = players.get_position(pid)
-        if not IS_PLAYER_IN_INTERIOR(pid) and not players.is_in_interior(pid) and players.is_godmode(pid) and not players.is_in_interior(pid) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and not IS_PLAYER_RIDING_ROLLER_COASTER(pid) then
-            draw_debug_text(players.get_name(pid) .. " is in godmode")
-            break
+        if not players.is_godmode(pid) then continue end
+        if not players.is_in_interior(pid) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and not IS_PLAYER_IN_INTERIOR(pid) and not IS_PLAYER_RIDING_ROLLER_COASTER(pid) then
+            util.draw_debug_text($"{players.get_name(pid)} is in godmode")
         end
-        if not IS_PLAYER_IN_INTERIOR(pid) and not players.is_in_interior(pid) and players.is_godmode(pid) and not players.is_in_interior(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) == 99 and not IsDetectionPresent(pid, "Godmode") and pos.z > 0.0 then
+
+        if players.is_godmode(pid) and not players.is_in_interior(pid) and IS_ENTITY_VISIBLE(ped) and GET_SPAWN_STATE(pid) != 0 and not IS_PLAYER_IN_INTERIOR(pid) and not IsDetectionPresent(pid, "Godmode") and pos.z > 0.0 then
             local spectate = menu.ref_by_rel_path(menu.player_root(pid), "Spectate>Nuts Method")
-            local currentpos = players.get_position(pid)
-            if not IS_PLAYER_MOVING(pid) and time_since_last_move >= 5 and currentpos.z > 0.0 then
+            if not IS_PLAYER_MOVING(pid) and time_since_last_move >= 5 then
                 time_since_last_move = 0
                 godmode_ctr = 0     
             end
-            if godmode_ctr >= 15 then
-                yield(5000) -- to prevent marking people as godmode whos freemode has died
-                if players.exists(pid) and not IS_PLAYER_IN_INTERIOR(pid) and currentpos.z > 0.0 then
-                    players.add_detection(pid, "Godmode", TOAST_DEFAULT, 100)
+            if NETWORK_IS_PLAYER_FADING(pid) then
+                godmode_ctr = 0
+            end
+            if godmode_ctr >= 10 then
+                util.yield(2500) -- to prevent marking people as godmode whos freemode has died
+                if players.exists(pid) then
+                    players.add_detection(pid, "Godmode", TOAST_ALL, 100)
                     godmode_ctr = 0
                     break
                 end
             end
-            yield(1000)
+            util.yield(1000)
             godmode_ctr +=1
             if not IS_PLAYER_MOVING(pid) then
                 time_since_last_move +=1
@@ -2933,67 +3255,48 @@ god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone
 end)
 
 modder_detections:toggle_loop("Vehicle Godmode", {}, "Detects if someone is using a vehicle that is in godmode.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except(true) as pid do
+        if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if not IS_PED_IN_ANY_VEHICLE(ped) then 
-            continue 
-        end
-        local vehicle_ptr = entities.get_user_vehicle_as_handle()
-        local is_veh_strong = (memory.read_byte(entities.handle_to_pointer(vehicle) + 2339) == 45)
-        if IS_PED_IN_ANY_VEHICLE(ped, false) then
-            local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
-            if not IS_PLAYER_IN_INTERIOR(pid) and (not GET_ENTITY_CAN_BE_DAMAGED(vehicle) or is_veh_strong) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) 
-            and GET_SPAWN_STATE(pid) != 0 and pid == driver then
-                draw_debug_text(players.get_name(driver) ..  " is in vehicle godmode")
-                break
-            end
+        local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
+        if not IS_PLAYER_IN_INTERIOR(pid) and not GET_ENTITY_CAN_BE_DAMAGED(vehicle) and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) 
+        and GET_SPAWN_STATE(pid) != 0 and pid == driver then
+            draw_debug_text($"{players.get_name(driver)} is in vehicle godmode")
+            break
         end
     end 
 end)
 
-modder_detections:toggle_loop("Modded Weapon", {}, "Detects if someone is using a weapon that can not be obtained in online.", function()
+modder_detections:toggle_loop("Teleport", {}, "Detects if a player teleports onto you.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except(true) as pid do
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        for i, hash in modded_weapons do
-            local weapon_hash = joaat(hash)
-            if GET_SELECTED_PED_WEAPON(ped) == weapon_hash and (IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 8) or GET_IS_TASK_ACTIVE(ped, 9)) then
-                draw_debug_text(players.get_name(pid) .. " is using a modded weapon " .. "[Model: " .. hash .. "]")
-                break
-            end
-        end
-    end
-end)
-
-local noclip_ctr = 0
-modder_detections:toggle_loop("Noclip", {}, "Detects if the player is using noclip aka levitation. (Note: Using reveal invisible players will cause false positives!)", function()
-    for players.list_except(true) as pid do 
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        local height = GET_ENTITY_HEIGHT_ABOVE_GROUND(ped)
-        local oldpos = players.get_position(pid)
-        yield(100)
-        local currentpos = players.get_position(pid)
-        local vel = GET_ENTITY_VELOCITY(ped)
-        local tasks = {2, 12, 97, 160, 421} -- checking if no tasks were active seemed to take too much time
-        for tasks as id do 
-            if GET_INTERIOR_FROM_PLAYER(pid) == 0 and GET_SPAWN_STATE(pid) != 0 and not IS_PED_IN_ANY_VEHICLE(ped, false) -- too many false positives occured when players where driving. so fuck them. lol.
-            and not NETWORK_IS_PLAYER_FADING(pid) and IS_ENTITY_VISIBLE(ped) and not IS_PED_CLIMBING(ped) and not GET_IS_TASK_ACTIVE(ped, id) and height > 5.0 and ped_dist <= 375.0 -- higher values were causing false positives  
-            and not IS_ENTITY_IN_AIR(ped) and IS_PLAYER_MOVING(pid) and vel.x == 0.0 and vel.y == 0.0 and vel.z == 0.0 then
-                noclip_ctr += 1
-                yield(750)
-                if not IsDetectionPresent(pid, "Noclip") and noclip_ctr > 3 then
-                    players.add_detection(pid, "Noclip", TOAST_DEFAULT, 100)
-                    noclip_ctr = 0
-                    break
+        util.create_thread(function()
+            local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local veh = GET_VEHICLE_PED_IS_IN(ped) == entities.get_user_vehicle_as_handle()
+            local old_pos = players.get_position(pid)
+            yield(100)
+            local cur_pos = players.get_position(pid)
+            local my_pos = players.get_position(players.user())
+            local distance_between_tp = v3.distance(old_pos, cur_pos)
+            if not IS_PLAYER_IN_INTERIOR(pid) and not veh then
+                if distance_between_tp > 20.0 and v3.distance(cur_pos, my_pos) < 10.0 then
+                    if not IsDetectionPresent(pid, "Teleport") then
+                        players.add_detection(pid, "Teleport", TOAST_ALL, 100)
+                        return
+                    end
                 end
             end
-        end
+        end)
     end
+    yield(100)
 end)
 
 modder_detections:toggle_loop("Super Drive", {}, "Detects if someone is using super drive or modded vehicle speed.", function()
-    for players.list_except() as pid do
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
+    for players.list_except(true) as pid do
+        if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local veh_speed = (GET_ENTITY_SPEED(vehicle)* 2.236936)
@@ -3017,14 +3320,16 @@ modder_detections:toggle_loop("Super Drive", {}, "Detects if someone is using su
                 return
             end
             if not IsDetectionPresent(driver, "Super Drive") then
-                players.add_detection(driver, "Super Drive", TOAST_DEFAULT, 100)
+                players.add_detection(driver, "Super Drive", TOAST_ALL, 100)
                 break
             end
         end
     end
+    yield(250)
 end)
 
 modder_detections:toggle_loop("Thunder Join", {}, "Detects if someone is using thunder join.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except(true) as pid do
         if util.is_session_transition_active() then return end
         local old_sh = players.get_script_host()
@@ -3033,27 +3338,30 @@ modder_detections:toggle_loop("Thunder Join", {}, "Detects if someone is using t
         if old_sh != new_sh then
             if GET_SPAWN_STATE(pid) == 0 and players.get_script_host() == pid then
                 if not IsDetectionPresent(pid, "Thunder Join") then
-                    players.add_detection(pid, "Thunder Join", TOAST_DEFAULT, 100)
-                    toast(players.get_name(pid) .. " just broke the session. :/")
+                    players.add_detection(pid, "Thunder Join", TOAST_ALL, 100)
+                    toast($"{players.get_name(pid)} just broke the session. :/")
                     break
                 end
             end
         end
     end
+    yield(250)
 end)
 
 modder_detections:toggle_loop("Orbital Cannon", {}, "Detects if someone is using a modded orbital cannon.", function()
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) and not GET_IS_TASK_ACTIVE(ped, 135) and GET_SPAWN_STATE(pid) != 0 and not IS_PLAYER_DEAD(pid) and not IsDetectionPresent(pid, "Modded Orbital Cannon") then
-            players.add_detection(pid, "Modded Orbital Cannon", TOAST_DEFAULT, 100)
+            players.add_detection(pid, "Modded Orbital Cannon", TOAST_ALL, 100)
             break
         end
     end
 end)
 
 modder_detections:toggle_loop("Spawned Vehicle", {}, "Detects if someone use driving a spawned vehicle.", function() -- this isnt the same as mikes, calm down, retards. I had this before him.
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except(true) as pid do
+        if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local hash = players.get_vehicle_model(pid)
@@ -3070,10 +3378,10 @@ modder_detections:toggle_loop("Spawned Vehicle", {}, "Detects if someone use dri
             local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
             if players.get_name(driver) != "InvalidPlayer" and not pegasusveh and pid == driver then 
                 if bitset == 1024 then
-                    draw_debug_text(players.get_name(driver) .. " Is likely a 2Take1 User")
+                    draw_debug_text($"{players.get_name(driver)} is likely a 2Take1 User}")
                     break
                 elseif bitset == 8 or plate_text == "46EEK572" then -- thx to mike for telling me about this plate text
-                    draw_debug_text(players.get_name(driver) .. " is using a spawned vehicle " .. "[Model: " .. util.reverse_joaat(players.get_vehicle_model(pid)) .. "]")
+                    draw_debug_text($"{players.get_name(driver)} is using a spawned vehicle [Model: {util.reverse_joaat(players.get_vehicle_model(pid))}]")
                     break
                 end
             end
@@ -3082,7 +3390,9 @@ modder_detections:toggle_loop("Spawned Vehicle", {}, "Detects if someone use dri
 end)
 
 modder_detections:toggle_loop("Modded License Plate", {}, "Detects people with a modded license plate.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except(true) as pid do
+        if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
         local plate_text = GET_VEHICLE_NUMBER_PLATE_TEXT(vehicle)
@@ -3097,38 +3407,14 @@ modder_detections:toggle_loop("Modded License Plate", {}, "Detects people with a
         end
         local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
         if plate_text != nil and players.get_name(driver) != "InvalidPlayer" and not LegitPlatePattern(plate_text) and plyveh == 0 and not pegasusveh and pid == driver then
-            draw_debug_text(players.get_name(driver) .. " has a modded license plate " .. "[" .. plate_text .. "]")
-        end
-    end
-end)
-
-local unreleased_veh_ctr = 0
-modder_detections:toggle_loop("Unreleased Vehicle", {}, "Detects if a player is using a dripfed vehicle.", function()
-    for players.list_except(true) as pid do
-        local modelHash = players.get_vehicle_model(pid)
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        for unreleased_vehicles as veh do
-            if modelHash == joaat(veh) and not IsDetectionPresent(pid, "Unreleased Vehicle") then
-                repeat
-                    if IS_PED_IN_ANY_VEHICLE(ped, false) then -- a check to prevent legit players from triggering it
-                        yield(1000)
-                        unreleased_veh_ctr += 1
-                    else
-                        unreleased_veh_ctr = 0
-                    end
-                    yield()
-                until unreleased_veh_ctr > 15
-                players.add_detection(pid, "Unreleased Vehicle", TOAST_DEFAULT, 100)
-                unreleased_veh_ctr = 0
-                break
-            end
+            draw_debug_text($"{players.get_name(driver)} has a modded license plate [{plate_text}]")
         end
     end
 end)
 
 local lockon = 0
 modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-lockon.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     local block_blaming = menu.ref_by_path("Online>Protections>Block Blaming")
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -3148,7 +3434,7 @@ modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-loc
             yield(1000) -- so using chaff doesnt calse a false pos 
             lockon +=1 
             if lockon >= 5 then
-                players.add_detection(pid, "Anti-Lockon", TOAST_DEFAULT, 75)
+                players.add_detection(pid, "Anti-Lockon", TOAST_ALL, 75)
                 lockon = 0
                 break
             end
@@ -3156,15 +3442,20 @@ modder_detections:toggle_loop("Anti-Lockon", {}, "Detects players using anti-loc
             lockon = 0
         end
     end
+    yield(250)
 end)
 
 local ignored_vehs = {}
 local speed_ctr = 0
 modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who have modified their engine power or top speed.", function()
+    if NETWORK_IS_ACTIVITY_SESSION() then return end
     for players.list_except() as pid do
+        if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_IN(ped)
         local veh_model = players.get_vehicle_model(pid)
+        local veh_brand = NullCheck(util.get_label_text(GET_MAKE_NAME_FROM_VEHICLE_MODEL(veh_model)))
+        local veh_mdl = util.get_label_text(GET_DISPLAY_NAME_FROM_VEHICLE_MODEL(veh_model))
         local veh_class = GET_VEHICLE_CLASS(vehicle)
         local est_speed = GET_VEHICLE_ESTIMATED_MAX_SPEED(vehicle)
         local est_model_speed = GET_VEHICLE_MODEL_ESTIMATED_MAX_SPEED(players.get_vehicle_model(pid))
@@ -3183,37 +3474,113 @@ modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who 
             ignored_vehs[vehicle] = false
             return
         end
-        if IS_PED_IN_ANY_VEHICLE(ped, false) and not IsDetectionPresent(pid, "Modified Vehicle Speed") then
+
+        local veh_name = veh_mdl
+        if veh_brand ~= "" then
+            veh_name = veh_brand .. " " .. veh_name
+        end
+        if not IsDetectionPresent(pid, "Modified Vehicle Speed") then
             if est_model_speed > 1.0 and not ignored and est_speed > (est_model_speed + 6) and veh_accel > (mdl_accel * 1.3) and pid == driver then
                 repeat
                     speed_ctr += 1
                     yield(100)
-                until speed_ctr > 10 -- for some reason the game doesnt properly calculate speed for a while. this delay seems to be good
-                players.add_detection(pid, "Modified Vehicle Speed", TOAST_DEFAULT, 75)
-                --toast("[Debug Shit]" .. "\nEntity Owner: " .. players.get_name(driver) .. "\nVehicle Model: " .. util.reverse_joaat(veh_model) .. "\nVehicle Class: " .. class .. "\nEstimated Speed: " .. ROUND(est_speed * 2.236936) .. " MPH" .. "\nEstimated Model Speed: " .. ROUND(est_model_speed * 2.236936) .. " MPH" .. "\nVehicle Acceleration: " .. veh_accel .. "\nModel Acceleration: " .. mdl_accel)
+                until speed_ctr >= 15 -- for some reason the game doesnt properly calculate speed for a while. this delay seems to be good
+                toast($"[Detection Info] \nEntity Owner: {players.get_name(driver)} \nModel: {veh_name} \nClass: {class} \nGame Estimated Speed: {ROUND(est_model_speed * 2.236936)} MPH \nCurrent Estimated Speed: {ROUND((est_speed * 2.236936) * 1.2)} MPH")
+                players.add_detection(pid, "Modified Vehicle Speed", TOAST_ALL, 75)
                 speed_ctr = 0
                 break
-            else
-                speed_ctr = 0
             end
         end
+    end
+    yield(250)
+end)
+
+modder_detections:toggle_loop("Constructed Vehicle", {}, "Detects players using constructed/modified json vehicles.", function()
+    for players.list_except() as pid do
+        util.create_thread(function()
+            if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then return end
+            local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local veh = GET_VEHICLE_PED_IS_IN(ped, false)
+            local veh_model = players.get_vehicle_model(pid)
+            local name = GET_DISPLAY_NAME_FROM_VEHICLE_MODEL
+            local brand = GET_MAKE_NAME_FROM_VEHICLE_MODEL
+            local mdls = {veh_mdl, veh_ent_mdl}
+            local ignore_classes = {10, 11, 19, 20, 21}
+            for entities.get_all_vehicles_as_handles() as ent do
+                local ent_model = entities.get_model_hash(ent)
+                local ents = {veh, ent}
+                local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(veh, -1))
+                for ents as v do
+                    if IS_VEHICLE_ATTACHED_TO_TRAILER(v) or IS_VEHICLE_ATTACHED_TO_CARGOBOB(v) then return end
+                    for ignore_classes as class do
+                        if GET_VEHICLE_CLASS(v) == class then return end
+                    end
+                end
+                if IS_ENTITY_ATTACHED_TO_ENTITY(ent, veh) then
+                    local veh_mdl = util.get_label_text(name(veh_model))
+                    local ent_mdl = util.get_label_text(name(ent_model))
+                    local veh_brand = NullCheck(util.get_label_text(brand(veh_model)))
+                    local ent_brand = NullCheck(util.get_label_text(brand(ent_model)))
+                    
+                    local veh_name = veh_mdl
+                    if veh_brand ~= "" then
+                        veh_name = veh_brand .. " " .. veh_name
+                    end
+
+                    local ent_name = ent_mdl
+                    if ent_brand ~= "" then
+                       ent_name = ent_brand .. " " .. ent_name
+                    end
+
+                    if veh_name == "NULL" or ent_name == "NULL" or veh_name == ent_name then return end
+                    if not IsDetectionPresent(driver, $"Constructed Vehicle ({veh_name} / {ent_name})") then
+                        players.add_detection(driver, $"Constructed Vehicle ({veh_name} / {ent_name})", TOAST_ALL, 50)
+                        break
+                    end
+                end
+                RELEASE_SCRIPT_GUID_FROM_ENTITY(ent)
+            end
+        end)
+        yield(100)
     end
 end)
 
-normal_detections:toggle_loop("Teleport", {}, "Detects how far a player teleports. (Note: just because they teleported doesn't mean they're modding)", function()
-    for players.list_except(true) as pid do
-        local old_pos = players.get_position(pid)
-        yield(50)
-        local cur_pos = players.get_position(pid)
-        local distance_between_tp = v3.distance(old_pos, cur_pos)
-        if not IS_PLAYER_IN_INTERIOR(pid) and GET_SPAWN_STATE(pid) != 0 and players.exists(pid) then
-            yield(100)
-            if distance_between_tp > 300.0 then
-                toast(players.get_name(pid) .. " teleported " .. ROUND(distance_between_tp) .. " meters")
-                break
+modder_detections:toggle_loop("Modded Vehicle Upgrade", {}, "Detects players who have modded their own or someone elses vehicles outside of a shop.", function()
+    for players.list_except() as pid do
+        util.create_thread(function()
+            if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then return end
+            local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
+            local veh = GET_VEHICLE_PED_IS_IN(ped)
+            local veh_ptr = entities.handle_to_pointer(veh)
+            local pos = players.get_position(pid)
+            local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(veh, -1))
+            if not IS_PED_IN_ANY_VEHICLE(ped, false) then return end
+            local prev_vehicle_mods = {}
+            local current_vehicle_mods = {}
+            for i = 0, 49 do
+                prev_vehicle_mods[i] = GET_VEHICLE_MOD(veh, i)
             end
-        end
+            yield(100)
+            for i = 0, 49 do
+                current_vehicle_mods[i] = GET_VEHICLE_MOD(veh, i)
+            end
+            for i = 0, 49 do
+                if prev_vehicle_mods[i] ~= current_vehicle_mods[i] and not IS_PLAYER_IN_INTERIOR(pid) and IS_ENTITY_VISIBLE(veh) and pos.z > 0.0 then
+                    if entities.get_owner(veh_ptr) == pid then
+                        if not IsDetectionPresent(pid, "Modded Vehicle Upgrade") then
+                            players.add_detection(pid, "Modded Vehicle Upgrade", TOAST_ALL, 100)
+                            break
+                        end
+                    else
+                        if not IsDetectionPresent(entities.get_owner(veh_ptr), "Modded Vehicle Upgrade (Vehicle Takeover)") then
+                            players.add_detection(entities.get_owner(veh_ptr), "Modded Vehicle Upgrade (Vehicle Takeover)", TOAST_ALL, 100)
+                        end
+                    end
+                end
+            end
+        end)
     end
+    yield(50)
 end)
 
 normal_detections:toggle_loop("Spectate", {}, "Detects if someone is spectating you.", function()
@@ -3224,20 +3591,21 @@ normal_detections:toggle_loop("Spectate", {}, "Detects if someone is spectating 
         if cam_dist < 20.0 and not IS_PED_DEAD_OR_DYING(ped) and not NETWORK_IS_PLAYER_FADING(pid) and pid != players.user() or players.get_spectate_target(pid) == players.user() then
             yield(1000)
             if ped_dist > 35.0 or players.get_spectate_target(pid) == players.user() then
-                if not IS_PLAYER_IN_INTERIOR(pid) and players.get_name(pid) != "UndiscoveredPlayer"  and not IS_PED_DEAD_OR_DYING(ped) then
-                    toast(players.get_name(pid) .. " is watching you")
+                if not IS_PLAYER_IN_INTERIOR(pid) and players.get_name(pid) != "UndiscoveredPlayer" and not IS_PED_DEAD_OR_DYING(ped) then
+                    toast($"{players.get_name(pid)} is watching you")
                     break
                 end
             end
         end
     end
+    yield(250)
 end)
 
 normal_detections:toggle_loop("Orbital Cannon", {}, "Detects if someone is using an orbital cannon.", function()
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         if IS_PLAYER_USING_ORBITAL_CANNON(pid) and GET_IS_TASK_ACTIVE(ped, 135) then
-            draw_debug_text(players.get_name(pid) .. " is at the orbital cannon")
+            draw_debug_text($"{players.get_name(pid)} is at the orbital cannon")
         end
     end
 end)
@@ -3245,7 +3613,7 @@ end)
 normal_detections:toggle_loop("Voice Chat", {}, "Detects who is talking in game chat.", function()
     for players.list_except() as pid do
         if NETWORK_IS_PLAYER_TALKING(pid) then
-            draw_debug_text(players.get_name(pid) .. " is talking")
+            draw_debug_text($"{players.get_name(pid)} is talking")
         end
     end 
 end)
@@ -3256,7 +3624,7 @@ protections:toggle_loop("Anti-Beast", {}, "Prevents you from being turned into t
         local beast = memory.read_int(memory.script_local("am_hunt_the_Beast", 3469)) -- credit to ayim for telling me to check the beast id with user id
         if beast != -1 and beast == players.user() then
             if util.spoof_script("am_hunt_the_Beast", TERMINATE_THIS_THREAD) then
-                toast("Prevented a freemode activity (Hunt The Beast), likely started by " .. players.get_name(host))
+                toast($"Prevented a freemode activity (Hunt The Beast), likely started by {players.get_name(host)}")
             end
         end
     end
@@ -3292,7 +3660,7 @@ anticage:toggle_loop("Enable Anti-Cage", {"anticage"}, "", function()
         local id = NETWORK_GET_NETWORK_ID_FROM_ENTITY(obj_handle)
         SET_GAMEPLAY_CAM_IGNORE_ENTITY_COLLISION_THIS_UPDATE(obj_handle)
         for my_ents as data do
-            if v3.distance(players.get_position(players.user()), GET_ENTITY_COORDS(obj_handle)) <= radius and not IS_PLAYER_IN_INTERIOR(pid) then
+            if v3.distance(players.get_position(players.user()), GET_ENTITY_COORDS(obj_handle)) <= radius then
                 for doors as door do
                     if entities.get_model_hash(obj_ptr) != joaat(door) then
                         continue
@@ -3309,7 +3677,7 @@ anticage:toggle_loop("Enable Anti-Cage", {"anticage"}, "", function()
                     entities.delete(obj_handle)
                 end
                 if data != 0 and IS_ENTITY_TOUCHING_ENTITY(data, obj_handle) then
-                    toast("Blocked possible cage from " .. players.get_name(owner))
+                    toast($"Blocked possible cage from {players.get_name(owner)}")
                 end
             end
         end
@@ -3330,7 +3698,7 @@ anti_mugger:toggle_loop("Myself", {}, "Prevents you from being mugged.", functio
             and NETWORK_REQUEST_CONTROL_OF_NETWORK_ID(memory.read_int(ped_netId))) then
                 local mugger = NET_TO_PED(memory.read_int(ped_netId))
                 entities.delete(mugger)
-                toast("Blocked mugger from " .. players.get_name(memory.read_int(sender)))
+                toast($"Blocked mugger from {players.get_name(memory.read_int(sender))}")
             end
         end)
     end
@@ -3348,7 +3716,7 @@ anti_mugger:toggle_loop("Someone Else", {}, "Prevents others from being mugged."
             and NETWORK_REQUEST_CONTROL_OF_NETWORK_ID(memory.read_int(ped_netId)) then
                 local mugger = NET_TO_PED(memory.read_int(ped_netId))
                 entities.delete(mugger)
-                toast("Blocked mugger sent by " .. players.get_name(memory.read_int(sender)) .. " to " .. players.get_name(memory.read_int(target)))
+                toast($"Blocked mugger sent by {players.get_name(memory.read_int(sender))} to {players.get_name(memory.read_int(target))}")
             end
         end)
     end
@@ -3365,14 +3733,14 @@ block_spec_syncs = protections:toggle_loop("Block Spectator Syncs", {"blockspect
             if ped_dist > 35.0 and not IS_PED_DEAD_OR_DYING(ped) then
                 local outgoingSyncs = menu.ref_by_rel_path(menu.player_root(pid), "Outgoing Syncs>Block")
                 outgoingSyncs.value = true
-                pos = players.get_position(players.user())
+                local pos = players.get_position(players.user())
                 if v3.distance(pos, players.get_cam_pos(pid)) < 20.0 then
                     repeat 
                         yield()
                     until v3.distance(pos, players.get_cam_pos(pid)) > 120.0 
                     outgoingSyncs.value = false
                     if players.get_name(pid) != "UndiscoveredPlayer" then
-                        toast(players.get_name(pid) .. " has stopped watching you")
+                        toast($"{players.get_name(pid)} has stopped watching you")
                     end
                 end
             end
@@ -3391,23 +3759,24 @@ protections:toggle_loop("Block Ped Hijack", {}, "Detects people that try to ped 
     local vehicle = entities.get_user_vehicle_as_handle()
     for entities.get_all_peds_as_handles() as ped do
         local owner = entities.get_owner(ped)
-        if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped) == vehicle and owner != players.user() then
-            toast("Prevented a Vehicle Takeover (Ped Hijack), likely caused by " .. players.get_name(owner))
+        if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped) == vehicle and owner != players.user() and IS_PED_IN_VEHICLE(players.user_ped(), vehicle, false) then
+            toast($"Prevented a Vehicle Takeover (Ped Hijack), likely caused by {players.get_name(owner)}")
             if not IsDetectionPresent(owner, "Vehicle Hijack") then
-                players.add_detection(owner, "Vehicle Hijack", TOAST_DEFAULT, 100)
+                players.add_detection(owner, "Vehicle Hijack", TOAST_ALL, 100)
                 break
             end
             entities.delete(ped)
             repeat
-                SET_PED_INTO_VEHICLE(ped, vehicle, -1)
+                SET_PED_INTO_VEHICLE(players.user_ped(), vehicle, -1)
                 yield()
-            until GET_SEAT_PED_IS_IN(ped) == -1
+            until GET_SEAT_PED_IS_IN(players.user_ped()) == -1
         end
+        RELEASE_PED_HANDLE(ped)
     end
 end)
 
 protections:list_action("Clear All...", {}, "", {"Peds", "Vehicles", "Objects", "Pickups", "Projectiles", "Sounds"}, function(index, name)
-    toast("Clearing "..name:lower().."...")
+    toast($"Clearing {name:lower()}...")
     local counter = 0
     switch index do
         case 1:
@@ -3454,7 +3823,7 @@ protections:list_action("Clear All...", {}, "", {"Peds", "Vehicles", "Objects", 
             end
         break
     end
-    toast("Cleared "..tostring(counter).." "..name:lower()..".")
+    toast($"Cleared {tostring(counter)} {name:lower()}.")
 end)
 
 protections:action("Clear Area", {"cleanse"}, "", function()
@@ -3466,7 +3835,7 @@ protections:action("Clear Area", {"cleanse"}, "", function()
             yield()
         end
     end
-    toast("Cleared " .. cleanse_entitycount .. " Peds")
+    toast($"Cleared {cleanse_entitycount} Peds")
     cleanse_entitycount = 0
     for entities.get_all_vehicles_as_handles() as vehicle do
         if vehicle != GET_VEHICLE_PED_IS_IN(players.user_ped(), false) and DECOR_GET_INT(vehicle, "Player_Vehicle") == 0 and NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
@@ -3475,28 +3844,27 @@ protections:action("Clear Area", {"cleanse"}, "", function()
             yield()
         end
     end
-    toast("Cleared ".. cleanse_entitycount .." Vehicles")
+    toast($"Cleared {cleanse_entitycount} Vehicles")
     cleanse_entitycount = 0
     for entities.get_all_objects_as_handles() as object do
         entities.delete(object)
         cleanse_entitycount += 1
         yield()
     end
-    toast("Cleared " .. cleanse_entitycount .. " Objects")
+    toast($"Cleared {cleanse_entitycount} Objects")
     cleanse_entitycount = 0
     for entities.get_all_pickups_as_handles() as pickup do
         entities.delete(pickup)
         cleanse_entitycount += 1
         yield()
     end
-    toast("Cleared " .. cleanse_entitycount .. " Pickups")
+    toast($"Cleared {cleanse_entitycount} Pickups")
     local pos = players.get_position(players.user())
     CLEAR_AREA_OF_PROJECTILES(pos, 400.0, 0)
     toast("Cleared All Projectiles")
 end)
 
 menu.my_root():hyperlink("Join The Discord", "https://discord.gg/hjs5S93kQv")
-local credits = misc:list("Credits", {}, "")
 local jinx = credits:list("Jinx", {}, "")
 jinx:hyperlink("Tiktok", "https://www.tiktok.com/@bigfootjinx")
 jinx:hyperlink("Twitter", "https://twitter.com/bigfootjinx")

@@ -161,7 +161,6 @@ local function DeletePed(ped)
     repeat
         if del_ctr > 250 then
             del_ctr = 0
-            toast("failed to delete ped")
             return
         end
         GetControlOfEntity(ped)
@@ -169,7 +168,6 @@ local function DeletePed(ped)
         del_ctr += 1
         yield()
     until ped == nil or not DOES_ENTITY_EXIST(ped)
-    toast("successfully deleted ped")
 end
 
 local function DOES_VEHICLE_HAVE_IMANI_TECH(vehicle_model)
@@ -443,7 +441,7 @@ local tp_locations = {
     [58] = "Grapeseed Airfield",
     [59] = "Paleto Bay Ammunation",
     [60] = "LSIA (Top Level)",
-    [66] = "Obersvatory",
+    [66] = "Observatory",
     [68] = "Casino",
     [72] = "Casino Roof",
     [87] = "Martin Madrazos House",
@@ -2214,15 +2212,16 @@ online:toggle("Block Aim Assist", {}, "Blocks players from being able to lock on
 end)
 
 local reversedMessages = {}
-local reverse_msg
-reverse_msg = online:toggle_loop("Reverse Mock Chat Messages", {}, "", function()
-    if not reverse_msg.value then return end
-    chat.on_message(function(packet_sender, message_sender, text, team_chat)
-        if message_sender != players.user() and not reversedMessages[text] then -- prevent message spam
-            chat.send_message(string.reverse(text), false, true, true)
-            reversedMessages[text] = { timestamp = os.time() }
-        end
-    end)
+local reverse_msg = false
+chat.on_message(function(packet_sender, message_sender, text, team_chat)
+    if not reversedMessages[text] and reverse_msg then -- prevent message spam
+        chat.send_message(string.reverse(text), false, true, true)
+        reversedMessages[text] = { timestamp = os.time() }
+    end
+end)
+
+online:toggle("Reverse Mock Chat Messages", {}, "", function(toggled)
+    reverse_msg = toggled
 end)
 
 local messageTimeout = 5
@@ -3473,7 +3472,7 @@ modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who 
 
         local veh_name = veh_mdl
         if veh_brand ~= "" then
-            veh_name = veh_brand .. " " .. veh_name
+            veh_name = $"{veh_brand} {veh_name}"
         end
         if not IsDetectionPresent(pid, "Modified Vehicle Speed") then
             if est_model_speed > 1.0 and not ignored and est_speed > (est_model_speed + 6) and veh_accel > (mdl_accel * 1.3) and pid == driver then
@@ -3520,12 +3519,12 @@ modder_detections:toggle_loop("Constructed Vehicle", {}, "Detects players using 
                     
                     local veh_name = veh_mdl
                     if veh_brand ~= "" then
-                        veh_name = veh_brand .. " " .. veh_name
+                        veh_name = $"{veh_brand} {veh_name}"
                     end
 
                     local ent_name = ent_mdl
                     if ent_brand ~= "" then
-                       ent_name = ent_brand .. " " .. ent_name
+                        ent_name = $"{ent_brand} {ent_name}"
                     end
 
                     if veh_name == "NULL" or ent_name == "NULL" or veh_name == ent_name then return end

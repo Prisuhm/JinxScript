@@ -2166,10 +2166,6 @@ self:toggle_loop("Auto Accept", {"autoaccept"}, "Auto accepts join screens.", fu
     end
 end)
 
-audio:toggle_loop("Test", {""}, "", function()
-    memory.write_int(memory.script_global(9074), 0)
-end)
-
 audio:toggle("Dead Silence", {"deadsilence"}, "Disables footstep sounds.", function(toggled)
     SET_PED_FOOTSTEPS_EVENTS_ENABLED(players.user_ped(), not toggled)
 end)

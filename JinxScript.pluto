@@ -191,12 +191,11 @@ local function DOES_VEHICLE_HAVE_IMANI_TECH(vehicle_model)
     return false
 end
 
-local function RELEASE_PED_HANDLE(ped)
-    if ped ~= players.user_ped() and ped != spawned_ped then
-        RELEASE_SCRIPT_GUID_FROM_ENTITY(ped)
+local function RELEASE_VEH_HANDLE(vehicle)
+    if vehicle ~= entities.get_user_vehicle_as_handle() then
+        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
     end
 end
-
 
 local function NullCheck(string)
     if string == "NULL" or string == nil then
@@ -573,22 +572,6 @@ local function player(pid)
         TASK_FOLLOW_TO_OFFSET_OF_ENTITY(jinx_pet_plyr, ped, 0, -0.3, 0, 7.0, -1, 1.5, true)
     end, function()
         entities.delete(jinx_pet_plyr)
-    end)
-
-    local tp 
-    tp = player_toggle_loop(friendly, pid, "Give Teleport Ability", {}, "Chat command is !waypoint. Player must be in a vehicle.", function()
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if not tp.value then return end
-        chat.on_message(function(packet_sender, message_sender, text, team_chat)
-            if string.contains(text, "!waypoint") and IS_PED_IN_VEHICLE(ped, vehicle, false) then  
-                if players.get_name(message_sender) == players.get_name(pid) and IS_PED_IN_ANY_VEHICLE(ped, false) then
-                    menu.trigger_commands($"wptp {players.get_name(pid)}")
-                else
-                    toast(lang.get_localised(1067523721):gsub("{}", players.get_name(pid)))
-                end
-            end
-        end)
     end)
   
     friendly:toggle_loop("Give Vehicle Rockets", {""}, "", function()
@@ -1352,7 +1335,7 @@ local function player(pid)
             ADD_EXPLOSION(GET_ENTITY_COORDS(attacker), 82, 10000.0, true, false, 1.0, false)
             yield(1000)
             entities.delete(attacker)
-        elseif DOES_ENTITY_EXIST(attacker) and IS_PED_DEAD_OR_DYING(attacker) then
+        elseif DOES_ENTITY_EXIST(attacker) and IS_PLAYER_DEAD(attacker) then
             entities.delete(attacker)
         else
             toast("You already have an active attacker. :/")
@@ -1526,10 +1509,11 @@ local function player(pid)
         if height < 5.0 and height > 0.1 then
             SET_VEHICLE_ON_GROUND_PROPERLY(vehicle)
         end
-        if vehicle != 0 and not IS_PED_DEAD_OR_DYING(ped) then
+        if vehicle != 0 and not IS_PLAYER_DEAD(ped) then
             APPLY_FORCE_TO_ENTITY(vehicle, 5, 0.0, 0.0, 500.0, 0, 0, 0, 0, true, false, true, false, true)
         end
     end)
+
     local hospitalize_count = 0
     local hospitalize_notif = true
     griefing:action("Hospitalize", {"hospitalize"}, "", function()
@@ -1545,7 +1529,7 @@ local function player(pid)
             yield()
         until memory.read_int(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
         menu.trigger_commands($"kill {players.get_name(pid)}")
-        if not IS_PED_DEAD_OR_DYING(ped) then
+        if not IS_PLAYER_DEAD(ped) then
             repeat
                 hospitalize_count += 1
                 if hospitalize_count >= 300 then
@@ -1555,12 +1539,12 @@ local function player(pid)
                     return
                 end
                 yield()
-            until IS_PED_DEAD_OR_DYING(ped)
+            until IS_PLAYER_DEAD(ped)
         end
-        if IS_PED_DEAD_OR_DYING(ped) then
+        if IS_PLAYER_DEAD(ped) then
             repeat
                 yield()
-            until not IS_PED_DEAD_OR_DYING(ped)
+            until not IS_PLAYER_DEAD(ped)
             ClearBit(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
             hospitalize_count = 0
         end
@@ -1763,10 +1747,10 @@ local function player(pid)
             TASK_COMBAT_PED(jesus_ped, ped, 0, 16)
             
             while toggled do
-                if IS_PED_DEAD_OR_DYING(ped) then
+                if IS_PLAYER_DEAD(ped) then
                     repeat
                         yield()
-                    until not IS_PED_DEAD_OR_DYING(ped)
+                    until not IS_PLAYER_DEAD(ped)
                     local new_pos = players.get_position(pid)
                     new_pos.y += 2
                     new_pos.z += 1 -- jesus kept sliding for some reason, doing this to prevent that.
@@ -1829,9 +1813,7 @@ local function player(pid)
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local pos = players.get_position(pid)                            
         local hash = joaat("prop_windmill_01")
-        local mdl = joaat("rallytruck")
         util.request_model(hash)
-        util.request_model(mdl)
         for i = 0, 5 do
             if IS_PED_WALKING(ped) then
                 spawn_pos = GET_OFFSET_FROM_ENTITY_IN_WORLD_COORDS(ped, 0.0, 0.5, 0.0)
@@ -1848,6 +1830,7 @@ local function player(pid)
             entities.delete(obj)
         end
     end)
+    
     local remove_gm
     remove_gm = player_toggle_loop(antigodmode, pid, "Remove Player Godmode", {}, lang.get_localised(-748077967), function()
         if StandUser(pid) then
@@ -1868,7 +1851,7 @@ local function player(pid)
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_IN(ped, false)
         GetControlOfEntity(vehicle)
-        if IS_PED_IN_ANY_VEHICLE(ped, false) and not IS_PED_DEAD_OR_DYING(ped) then
+        if IS_PED_IN_ANY_VEHICLE(ped, false) and not IS_PLAYER_DEAD(ped) then
             SET_ENTITY_CAN_BE_DAMAGED(vehicle, true)
             SET_ENTITY_INVINCIBLE(vehicle, false)
             SET_ENTITY_PROOFS(vehicle, false, false, false, false, false, 0, 0, false)
@@ -1999,7 +1982,7 @@ local function player(pid)
 
     player_toggle_loop(misc_player, pid, "Vehicle Rocket Aimbot", {"vehicleaimbot"}, "allows you to aimbot players using the weapons on your ", function()
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if not IS_PED_DEAD_OR_DYING(ped) and IS_CONTROL_PRESSED(0, 70) then
+        if not IS_PLAYER_DEAD(ped) and IS_CONTROL_PRESSED(0, 70) then
             SET_VEHICLE_SHOOT_AT_TARGET(players.user_ped(), ped, players.get_position(pid))
         end
     end)
@@ -2158,7 +2141,8 @@ end)
 
 self:toggle_loop("Auto Accept", {"autoaccept"}, "Auto accepts join screens.", function() -- credits to soulreaper for sending me this :D
     local message_hash = GET_WARNING_SCREEN_MESSAGE_HASH()
-    if message_hash == 15890625 or message_hash == -587688989 then
+    local paused = IS_PAUSE_MENU_ACTIVE()
+    if message_hash == 15890625 or message_hash == -587688989 and not paused then
         SET_CONTROL_VALUE_NEXT_FRAME(2, 201, 1.0)
         yield(50)
     end
@@ -2194,7 +2178,7 @@ audio:toggle_loop("Disable Vehicle Audio", {"disablevehicleaudio"}, "Mutes every
         if vehicle != entities.get_user_vehicle_as_handle() then
             FORCE_USE_AUDIO_GAME_OBJECT(vehicle, "")
         end
-        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
+        RELEASE_VEH_HANDLE(vehicle)
     end
 end)
 
@@ -2203,7 +2187,6 @@ audio:toggle_loop("Disable Ped Speech", {"disablepedspeech"}, "Mutes the peds au
         if IS_ANY_SPEECH_PLAYING(ped) then
             STOP_CURRENT_PLAYING_SPEECH(ped)
         end
-        RELEASE_PED_HANDLE(ped)
     end
 end)
 
@@ -2216,7 +2199,7 @@ local reverse_msg = false
 chat.on_message(function(packet_sender, message_sender, text, team_chat)
     if not reversedMessages[text] and reverse_msg then -- prevent message spam
         chat.send_message(string.reverse(text), false, true, true)
-        reversedMessages[text] = { timestamp = os.time() }
+        reversedMessages[text] = {timestamp = os.time()}
     end
 end)
 
@@ -2323,11 +2306,11 @@ tgl = ghost:toggle_loop("While Being Targeted", {}, "Automatically ghost players
     if ghost_tgl.value then
         tgl.value = false
         return 
-        end
+     end
     for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
-        if IS_PLAYER_USING_ORBITAL_CANNON(pid) and GET_IS_TASK_ACTIVE(ped, 135) and cam_dist < 400 and cam_dist > 340 then
+        if IS_PLAYER_USING_ORBITAL_CANNON(pid) and cam_dist < 400 and cam_dist > 340 then
             toast($"{players.get_name(pid)} is targeting you with the orbital cannon")
             SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
@@ -2407,14 +2390,14 @@ honk = online:toggle_loop("Horny Cars", {"hornycars"}, "", function()
                 yield()
             end
         end
-        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
+        RELEASE_VEH_HANDLE(vehicle)
     end
 end, function()
     for entities.get_all_vehicles_as_handles() as vehicle do
         if IS_VEHICLE_ALARM_ACTIVATED(vehicle) then
             SET_VEHICLE_ALARM(vehicle, false)
         end
-        RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
+        RELEASE_VEH_HANDLE(vehicle)
     end
 end)
 
@@ -2440,10 +2423,9 @@ online:toggle_loop("Access Locked Vehicles", {"accesslockedvehicles"}, "Allows y
 end)
 
 online:toggle_loop("Prevent NPC Vehicle Dragout", {}, "", function()
-    local vehicle = entities.get_user_vehicle_as_handle()
+    if not IS_PED_IN_ANY_VEHICLE(players.user_ped(), false) then return end
     for entities.get_all_peds_as_handles() as ped do
         SET_PED_CONFIG_FLAG(ped, 342, true)
-        RELEASE_PED_HANDLE(ped)
     end
 end)
 
@@ -2519,7 +2501,7 @@ horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to so
                 menu.trigger_commands($"kill {players.get_name(pid)}")
                 yield()
                 horny_counter += 1
-            until IS_PED_DEAD_OR_DYING(ped)
+            until IS_PLAYER_DEAD(ped)
             toast($"Killed {players.get_name(pid)} for being too horny.")
             horny_counter = 0
         end
@@ -2695,6 +2677,18 @@ if menu.get_edition() > 1 then
     end)
 end
 
+vehicles:toggle_loop("Anti-Lag", {"antilag"}, "Only works when vehicle is still. Doesn't network with other players.", function()
+    local veh = entities.handle_to_pointer(entities.get_user_vehicle_as_handle())
+    if veh == 0 then return end
+    local gear = entities.get_current_gear(veh)
+    local rpm = entities.get_rpm(veh)
+    if util.is_key_down(0x20) and util.is_key_down(0x57) then
+        entities.set_rpm(veh, 0.9)
+        yield(math.random(100, 200))
+        entities.set_rpm(veh, 0.0)
+    end
+end)
+
 local engine_sound = vehicles:list("Change Engine Sound", {}, "Note: Some engine sounds may affect your vehicle acceleration. Vehicle upgrades such as engine or exhause also effect the sound.")
 local vehicle_class = {}
 local ignore_duplicates = {} 
@@ -2859,7 +2853,7 @@ vehicles:toggle_loop("Vehicle Rocket Aimbot", {"vehicleaimbotall"}, "allows you 
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        if not IS_PED_DEAD_OR_DYING(ped) and IS_CONTROL_PRESSED(0, 70) and ped_dist < 300.0 and not players.is_in_interior(pid) then
+        if not IS_PLAYER_DEAD(ped) and IS_CONTROL_PRESSED(0, 70) and ped_dist < 300.0 and not players.is_in_interior(pid) then
             SET_VEHICLE_SHOOT_AT_TARGET(players.user_ped(), ped, players.get_position(pid))
         end
     end
@@ -2893,7 +2887,7 @@ vehicles:toggle_loop("Spinbot", {"spinbot"}, "", function()
     if height < 5.0 and height > 0.1 then
         SET_VEHICLE_ON_GROUND_PROPERLY(vehicle)
     end
-    if vehicle != 0 and not IS_PED_DEAD_OR_DYING(players.user_ped()) and NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
+    if vehicle != 0 and not IS_PLAYER_DEAD(players.user_ped()) and NETWORK_HAS_CONTROL_OF_ENTITY(vehicle) then
         APPLY_FORCE_TO_ENTITY(vehicle, 5, 0.0, 0.0, 150.0, 0, 0, 0, 0, true, false, true, false, true)
     end
 end)
@@ -3209,7 +3203,7 @@ local time_since_last_move = 0
 local god_detection
 god_detection = modder_detections:toggle_loop("Godmode", {}, "Detects if someone is using godmode.", function()
     local reveal_invis = menu.ref_by_path("Online>Reveal Invisible Players")
-    if reveal_invis.value == true then
+    if reveal_invis.value then
         util.toast("[JinxScript Godmode Detection] Please disable reveal invisible players. :)")
         god_detection.value = false
     return end
@@ -3373,7 +3367,7 @@ modder_detections:toggle_loop("Spawned Vehicle", {}, "Detects if someone use dri
             local driver = NETWORK_GET_PLAYER_INDEX_FROM_PED(GET_PED_IN_VEHICLE_SEAT(vehicle, -1))
             if players.get_name(driver) != "InvalidPlayer" and not pegasusveh and pid == driver then 
                 if bitset == 1024 then
-                    draw_debug_text($"{players.get_name(driver)} is likely a 2Take1 User}")
+                    draw_debug_text($"{players.get_name(driver)} is likely a 2Take1 User")
                     break
                 elseif bitset == 8 or plate_text == "46EEK572" then -- thx to mike for telling me about this plate text
                     draw_debug_text($"{players.get_name(driver)} is using a spawned vehicle [Model: {util.reverse_joaat(players.get_vehicle_model(pid))}]")
@@ -3444,7 +3438,7 @@ local ignored_vehs = {}
 local speed_ctr = 0
 modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who have modified their engine power or top speed.", function()
     if NETWORK_IS_ACTIVITY_SESSION() then return end
-    for players.list_except() as pid do
+    for players.list_except(true) as pid do
         if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then continue end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_IN(ped)
@@ -3491,7 +3485,7 @@ modder_detections:toggle_loop("Modified Vehicle Speed", {}, "Detects people who 
 end)
 
 modder_detections:toggle_loop("Constructed Vehicle", {}, "Detects players using constructed/modified json vehicles.", function()
-    for players.list_except() as pid do
+    for players.list_except(true) as pid do
         util.create_thread(function()
             if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then return end
             local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -3533,7 +3527,7 @@ modder_detections:toggle_loop("Constructed Vehicle", {}, "Detects players using 
                         break
                     end
                 end
-                RELEASE_SCRIPT_GUID_FROM_ENTITY(ent)
+                RELEASE_VEH_HANDLE(ent)
             end
         end)
         yield(100)
@@ -3541,7 +3535,7 @@ modder_detections:toggle_loop("Constructed Vehicle", {}, "Detects players using 
 end)
 
 modder_detections:toggle_loop("Modded Vehicle Upgrade", {}, "Detects players who have modded their own or someone elses vehicles outside of a shop.", function()
-    for players.list_except() as pid do
+    for players.list_except(true) as pid do
         util.create_thread(function()
             if not IS_PED_IN_ANY_VEHICLE(GET_PLAYER_PED_SCRIPT_INDEX(pid)) then return end
             local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
@@ -3578,18 +3572,43 @@ modder_detections:toggle_loop("Modded Vehicle Upgrade", {}, "Detects players who
     yield(50)
 end)
 
+modder_detections:toggle_loop("Modded Script Host Migration", {}, "", function()
+    local data = memory.alloc(56 * 8)
+    local SCRIPT_EVENT_QUEUE_AI = 0
+    local SCRIPT_EVENT_QUEUE_ERRORS = 2
+    local EVENT_NETWORK_HOST_MIGRATION = 180
+    for queue = SCRIPT_EVENT_QUEUE_AI, SCRIPT_EVENT_QUEUE_ERRORS do
+        for index = 0, GET_NUMBER_OF_EVENTS(queue) - 1 do
+            local event = GET_EVENT_AT_INDEX(queue, index)
+            if event == EVENT_NETWORK_HOST_MIGRATION then
+                if not GET_EVENT_DATA(queue, index, data, 2) then
+                    break
+                end
+                if memory.read_int(data) == GET_ID_OF_THIS_THREAD() then
+                    local modded_sh = memory.read_int(data + 8)
+                    yield(500)
+                    local new_sh = players.get_script_host()
+                    if new_sh != modded_sh and modded_sh != players.user() then
+                        if not IsDetectionPresent(modded_sh, "Modded Script Host Migration") then
+                            players.add_detection(modded_sh, "Modded Script Host Migration", TOAST_ALL, 100)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
 normal_detections:toggle_loop("Spectate", {}, "Detects if someone is spectating you.", function()
-    for players.list_except(true) as pid do
+    for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
-        if cam_dist < 20.0 and not IS_PED_DEAD_OR_DYING(ped) and not NETWORK_IS_PLAYER_FADING(pid) and pid != players.user() or players.get_spectate_target(pid) == players.user() then
+        if cam_dist < 20.0 and not IS_PLAYER_DEAD(ped) and not NETWORK_IS_PLAYER_FADING(pid) and pid != players.user() or players.get_spectate_target(pid) == players.user() then
             yield(1000)
-            if ped_dist > 35.0 or players.get_spectate_target(pid) == players.user() then
-                if not IS_PLAYER_IN_INTERIOR(pid) and players.get_name(pid) != "UndiscoveredPlayer" and not IS_PED_DEAD_OR_DYING(ped) then
-                    toast($"{players.get_name(pid)} is watching you")
-                    break
-                end
+            if ped_dist > 35.0 and not IS_PLAYER_IN_INTERIOR(pid) and players.get_name(pid) != "UndiscoveredPlayer" then
+                toast($"{players.get_name(pid)} is watching you")
+                break
             end
         end
     end
@@ -3606,7 +3625,7 @@ normal_detections:toggle_loop("Orbital Cannon", {}, "Detects if someone is using
 end)
 
 normal_detections:toggle_loop("Voice Chat", {}, "Detects who is talking in game chat.", function()
-    for players.list_except() as pid do
+    for players.list_except(true) as pid do
         if NETWORK_IS_PLAYER_TALKING(pid) then
             draw_debug_text($"{players.get_name(pid)} is talking")
         end
@@ -3719,20 +3738,20 @@ end)
 
 local block_spec_syncs
 block_spec_syncs = protections:toggle_loop("Block Spectator Syncs", {"blockspectatorsyncs"}, "Block all syncs with people who spectate you.", function()
-    for players.list_except(false, true) as pid do
+    for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local cam_dist = v3.distance(players.get_position(players.user()), players.get_cam_pos(pid))
         local ped_dist = v3.distance(players.get_position(players.user()), players.get_position(pid))
         if cam_dist < 20.0 then
             yield(1000)
-            if ped_dist > 35.0 and not IS_PED_DEAD_OR_DYING(ped) then
+            if ped_dist > 35.0 then
                 local outgoingSyncs = menu.ref_by_rel_path(menu.player_root(pid), "Outgoing Syncs>Block")
                 outgoingSyncs.value = true
                 local pos = players.get_position(players.user())
                 if v3.distance(pos, players.get_cam_pos(pid)) < 20.0 then
                     repeat 
                         yield()
-                    until v3.distance(pos, players.get_cam_pos(pid)) > 120.0 
+                    until v3.distance(pos, players.get_cam_pos(pid)) > 200.0 
                     outgoingSyncs.value = false
                     if players.get_name(pid) != "UndiscoveredPlayer" then
                         toast($"{players.get_name(pid)} has stopped watching you")
@@ -3752,9 +3771,10 @@ end)
 
 protections:toggle_loop("Block Ped Hijack", {}, "Detects people that try to ped hijack your vehicle.", function()
     local vehicle = entities.get_user_vehicle_as_handle()
+    if not IS_PED_IN_VEHICLE(players.user_ped(), vehicle, false) then return end
     for entities.get_all_peds_as_handles() as ped do
         local owner = entities.get_owner(ped)
-        if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped) == vehicle and owner != players.user() and IS_PED_IN_VEHICLE(players.user_ped(), vehicle, false) then
+        if not IS_PED_A_PLAYER(ped) and GET_IS_TASK_ACTIVE(ped, 160) and GET_VEHICLE_PED_IS_TRYING_TO_ENTER(ped) == vehicle and owner != players.user() then
             toast($"Prevented a Vehicle Takeover (Ped Hijack), likely caused by {players.get_name(owner)}")
             if not IsDetectionPresent(owner, "Vehicle Hijack") then
                 players.add_detection(owner, "Vehicle Hijack", TOAST_ALL, 100)
@@ -3766,7 +3786,6 @@ protections:toggle_loop("Block Ped Hijack", {}, "Detects people that try to ped 
                 yield()
             until GET_SEAT_PED_IS_IN(players.user_ped()) == -1
         end
-        RELEASE_PED_HANDLE(ped)
     end
 end)
 

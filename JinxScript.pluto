@@ -1,6 +1,4 @@
 util.require_natives("2944a", "g-uno")
-local fm_vehs = require("legit_vehs")
-local scripts = require("legit_scripts")
 local joaat, toast, yield, draw_debug_text = util.joaat, util.toast, util.yield, util.draw_debug_text
 local function player_toggle_loop(root, pid, menu_name, command_names, help_text, callback, callback_off)
     return menu.toggle_loop(root, menu_name, command_names, help_text, function()
@@ -559,7 +557,6 @@ local transaction_errors = {
 }
 
 local scripts = {
-    "freemode",
     "valentineRpReward2",
     "main_persistent",
     "cellphone_controller",
@@ -3336,12 +3333,6 @@ modder_detections:toggle_loop("Spawned Vehicle", {}, "Detects if someone use dri
         local bitset = DECOR_GET_INT(vehicle, "MPBitset")
         local plyveh = DECOR_GET_INT(vehicle, "Player_Vehicle")
         local pegasusveh = DECOR_GET_BOOL(vehicle, "CreatedByPegasus")
-        
-        for fm_vehs as veh do
-            if hash == joaat(veh) then
-                ignored[vehicle] = true
-            end
-        end
         
         local script = GET_ENTITY_SCRIPT(vehicle)
         if script == nil then continue end

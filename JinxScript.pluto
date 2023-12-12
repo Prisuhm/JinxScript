@@ -23,43 +23,20 @@ local function ClearBit(addr: number, bit: number)
 end
 
 local function IS_PLAYER_USING_ORBITAL_CANNON(pid)
-    return BitTest(memory.read_int(memory.script_global((2657704 + (pid * 463 + 1) + 424))), 0) -- Global_2657704[PLAYER::PLAYER_ID() /*463*/].f_424
+    return BitTest(memory.read_int(memory.script_global((2657921 + (pid * 463 + 1) + 424))), 0) -- Global_2657921[PLAYER::PLAYER_ID() /*463*/].f_424
 end
 
-local function IS_PLAYER_FLYING_ANY_DRONE(pid)
-   return BitTest(memory.read_int(memory.script_global(1853988 + (pid * 867 + 1) + 267 + 366)), 26) -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_267.f_366, 26)
-end
-
-local function IS_PLAYER_USING_GUIDED_MISSILE(pid)
-    return (memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 321 + 10)) != -1 and IS_PLAYER_FLYING_ANY_DRONE(pid)) -- Global_2657704[PLAYER::PLAYER_ID() /*463*/].f_321.f_10
-end
-
-local function IS_PLAYER_USING_MISSILE_TURRET(pid)
-    return BitTest(memory.read_int(memory.script_global(1853988 + 1 + (pid * 867) + 267 + 480)), 25) -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_267.f_480), 25)
-end
-
-local function IS_PLAYER_IN_RC_BANDITO(pid)
-    return BitTest(memory.read_int(memory.script_global(1853988 + (pid * 867 + 1) + 267 + 366)), 29)  -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_267.f_366, 29)
-end
-
-local function IS_PLAYER_IN_RC_TANK(pid)
-    return BitTest(memory.read_int(memory.script_global(1853988 + (pid * 867 + 1) + 267 + 429 + 2)), 16) -- Global_1853988[bParam0 /*867*/].f_267.f_429.f_2
-end
-
-local function IS_PLAYER_IN_REMOTE_VEHICLE(pid)
-    return IS_PLAYER_FLYING_ANY_DRONE(pid) or IS_PLAYER_USING_GUIDED_MISSILE(pid) or IS_PLAYER_IN_RC_BANDITO(pid) or IS_PLAYER_IN_RC_TANK(pid)
-end
 
 local function IS_PLAYER_RIDING_ROLLER_COASTER(pid)
-    return BitTest(memory.read_int(memory.script_global(1853988 + 1 + (pid * 867) + 863)), 15) -- Global_1853988[PLAYER::PLAYER_ID() /*867*/].f_863), 15)
+    return BitTest(memory.read_int(memory.script_global(1845263 + 1 + (pid * 877) + 873)), 15) -- Global_1845263[PLAYER::PLAYER_ID() /*877*/].f_873), 15)
 end
 
 local function GET_SPAWN_STATE(pid)
-    return memory.read_int(memory.script_global(((2657704 + 1) + (pid * 463)) + 232)) -- Global_2657704[PLAYER::PLAYER_ID() /*463*/].f_232
+    return memory.read_int(memory.script_global(((2657921 + 1) + (pid * 463)) + 232)) -- Global_2657921[PLAYER::PLAYER_ID() /*463*/].f_232
 end
 
 local function GET_INTERIOR_FROM_PLAYER(pid)
-    return memory.read_int(memory.script_global(((2657704 + 1) + (pid * 463)) + 245)) -- Global_2657704[bVar0 /*463*/].f_245
+    return memory.read_int(memory.script_global(((2657921 + 1) + (pid * 463)) + 245)) -- Global_2657921[bVar0 /*463*/].f_245)
 end
 
 local function IS_PLAYER_IN_INTERIOR(pid)
@@ -1417,7 +1394,7 @@ local function player(pid)
 
     griefing:action("Send To Online Intro", {"intro"}, "Sends player to the GTA Online intro.", function()
         if StandUser(pid) then toast(stand_notif) util.stop_thread() end
-        local int = memory.read_int(memory.script_global(1895156 + 1 + (pid * 609) + 511)) --Global_1895156[PLAYER::PLAYER_ID() /*609*/].f_511;
+        local int = memory.read_int(memory.script_global(1886967 + 1 + (pid * 609) + 511)) --Global_1886967[PLAYER::PLAYER_ID() /*609*/].f_511;
         util.trigger_script_event(1 << pid, {-366707054, players.user(), 20, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
         util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
      end)
@@ -1455,7 +1432,7 @@ local function player(pid)
     for id, name in activities do
        jobs:action(name, {}, "Forces the player into an activity.", function()
            if StandUser(pid) then toast(stand_notif) return end
-           local int = memory.read_int(memory.script_global(1895156 + 1 + (pid * 609) + 511))
+           local int = memory.read_int(memory.script_global(1886967 + 1 + (pid * 609) + 511))
            util.trigger_script_event(1 << pid, {-366707054, players.user(), id, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
            util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
        end)
@@ -1463,7 +1440,7 @@ local function player(pid)
     
     griefing:action("Force Into 1v1", {"1v1"}, "Forces them into a 1v1.", function()
        if StandUser(pid) then toast(stand_notif) return end
-       local int = memory.read_int(memory.script_global(1895156 + 1 + (pid * 609) + 511))
+       local int = memory.read_int(memory.script_global(1886967 + 1 + (pid * 609) + 511))
        util.trigger_script_event(1 << pid, {-366707054, players.user(), 197, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, int})
        util.trigger_script_event(1 << pid, {1757622014, players.user(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
     end)
@@ -1563,17 +1540,17 @@ local function player(pid)
             end
         end
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        SetBit(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
+        SetBit(memory.script_global(2657921 + 1 + (players.user() * 463) + 424), 0)
         repeat 
             yield()
-        until memory.read_int(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
+        until memory.read_int(memory.script_global(2657921 + 1 + (players.user() * 463) + 424), 0)
         menu.trigger_commands($"kill {players.get_name(pid)}")
         if not IS_PLAYER_DEAD(ped) then
             repeat
                 hospitalize_count += 1
                 if hospitalize_count >= 300 then
                     toast("Failed to hospitalize player. :/")
-                    ClearBit(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
+                    ClearBit(memory.script_global(2657921 + 1 + (players.user() * 463) + 424), 0)
                     hospitalize_count = 0
                     return
                 end
@@ -1584,7 +1561,7 @@ local function player(pid)
             repeat
                 yield()
             until not IS_PLAYER_DEAD(ped)
-            ClearBit(memory.script_global(2657704 + 1 + (players.user() * 463) + 424), 0)
+            ClearBit(memory.script_global(2657921 + 1 + (players.user() * 463) + 424), 0)
             hospitalize_count = 0
         end
     end)
@@ -2060,13 +2037,13 @@ self:toggle("BST Mode", {"bstmode"}, "BST without the Post FX and sound effects.
 end)
 
 self:toggle_loop("Fast Respawn", {"fastrespawn"}, "", function()
-    local gwobaw = memory.script_global(2672524 + 1685 + 756) -- Global_2672524.f_1685.f_756
+    local gwobaw = memory.script_global(2672741 + 1689 + 756) -- Global_2672741.f_1689.f_756
     if IS_PED_DEAD_OR_DYING(players.user_ped()) then
         ANIMPOSTFX_STOP_ALL()
         memory.write_int(gwobaw, memory.read_int(gwobaw) | (1 << 1))
     end
 end, function()
-    local gwobaw = memory.script_global(2672524 + 1685 + 756)
+    local gwobaw = memory.script_global(2672741 + 1685 + 756)
     memory.write_int(gwobaw, memory.read_int(gwobaw) & ~(1 << 1)) 
 end)
 
@@ -2302,8 +2279,7 @@ end)
 online:toggle_loop("Ghost Armed Players", {"ghostarmedplayers"}, "Ghost players that have an sort of weapon out.", function()
     for players.list_except(true) as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
-        if IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 199) or GET_IS_TASK_ACTIVE(ped, 128) 
-        or IS_PLAYER_USING_GUIDED_MISSILE(pid) or IS_PLAYER_IN_RC_TANK(pid) or IS_PLAYER_IN_RC_BANDITO(pid) or IS_PLAYER_FLYING_ANY_DRONE(pid) or IS_PLAYER_USING_MISSILE_TURRET(pid) then
+        if IS_PED_ARMED(ped, 7) or GET_IS_TASK_ACTIVE(ped, 199) or GET_IS_TASK_ACTIVE(ped, 128) or players.is_using_rc_vehicle(pid) then
             SET_REMOTE_PLAYER_AS_GHOST(pid, true)
         else
             SET_REMOTE_PLAYER_AS_GHOST(pid, false)
@@ -2425,7 +2401,7 @@ horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to so
     for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 1 then -- Global_2657704[PLAYER::PLAYER_ID() /*463*/].f_428
+        if memory.read_int(memory.script_global(2657921 + 1 + (pid * 463) + 428)) == 1 then -- Global_2657921[PLAYER::PLAYER_ID() /*463*/].f_428
             repeat
                 if horny_counter > 250 then
                     horny_counter = 0
@@ -2445,11 +2421,11 @@ horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying
     for players.list_except() as pid do
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(pid)
         local vehicle = GET_VEHICLE_PED_IS_USING(ped)
-        if memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 1 then
+        if memory.read_int(memory.script_global(2657921 + 1 + (pid * 463) + 428)) == 1 then
             chat.send_message($"{players.get_name(pid)} is horny and about to have sex with a prostitute. Lets make fun of this virgin! HAHA, loser!", false, true, true)
             repeat
                 yield()
-            until memory.read_int(memory.script_global(2657704 + 1 + (pid * 463) + 428)) == 0
+            until memory.read_int(memory.script_global(2657921 + 1 + (pid * 463) + 428)) == 0
         end
     end
 end)

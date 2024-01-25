@@ -1,3 +1,4 @@
+-- credit to sapphire
 util.require_natives("3095a", "g")
 pluto_use "0.8.1"
 native_invoker.accept_bools_as_ints(true)
@@ -417,7 +418,7 @@ local function requestClipset(clipset)
 	end
 end
 
-local function nullCheck(text_string)
+local function nullCheck(text_string) -- this was made by prism
 	return (text_string == "NULL" or text_string == nil) ? "" : text_string
 end
 

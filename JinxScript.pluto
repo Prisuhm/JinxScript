@@ -422,15 +422,11 @@ local function nullCheck(text_string)
 end
 
 local function getTeamID(playerID)
-	if not isNetPlayerOk(playerID) or util.is_session_transition_active() then
-		return
-	end
+	if not isNetPlayerOk(playerID) then return end
 	local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 	local pPed = entities.handle_to_pointer(ped)
-	if pPed == 0 then 
-		return 
-	end 
 	local net_obj = memory.read_long(pPed + 0xD0)
+	if net_obj == 0 then return end
 	local teamID = memory.read_byte(net_obj + 0x469)
 	if net_obj != 0 and teamID != 6 then
 		return teamID
@@ -442,6 +438,7 @@ local function getInstanceID(playerID)
 	local pPed = entities.handle_to_pointer(ped)
 	if not isNetPlayerOk(playerID) or ped == 0 then return end 
 	local net_obj = memory.read_long(pPed + 0xD0)
+	if net_obj == 0 then return end
 	local instanceID = memory.read_byte(net_obj + 0x46A)
 	if net_obj != 0 and instanceID != 64 then
 		return instanceID

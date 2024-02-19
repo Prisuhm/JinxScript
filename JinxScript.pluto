@@ -1231,14 +1231,9 @@ end, function()
 end)
 
 audio:toggle_loop("Disable Vehicle Alarms", {"disablevehiclealarms"}, "Disables the alarms that go off when stealing a car.", function()
-	for entities.get_all_vehicles_as_pointers() as vehPtr do
-		local vehicle = entities.pointer_to_handle(vehPtr)
-		if IS_VEHICLE_ALARM_ACTIVATED(vehicle) then
-			SET_VEHICLE_ALARM(vehicle, false)
-		end
-		if vehicle ~= entities.get_user_vehicle_as_handle() then
-			RELEASE_SCRIPT_GUID_FROM_ENTITY(vehicle)
-		end
+	local vehicle = GET_VEHICLE_PED_IS_TRYING_TO_ENTER(players.user_ped())
+	if IS_VEHICLE_ALARM_ACTIVATED(vehicle) then
+		SET_VEHICLE_ALARM(vehicle, false)
 	end
 end)	
 
@@ -3282,8 +3277,7 @@ protections:toggle_loop("Block Ped Hijack", {}, "Blocks people that try to ped h
 	end
 end)
 
-local blockModdedEntities = protections:list("Block Modded Entities", {}, "Note: These features may impact game performance or cause issues.")
-blockModdedEntities:toggle_loop("Block Modded Peds", {"blockmoddedpeds"}, "Blocks peds that aren't spawned legitimately which will protect you from quite a lot of stuff such as crashes and trolling features.", function()
+protections:toggle_loop("Block Modded Peds", {"blockmoddedpeds"}, "Blocks peds that aren't spawned legitimately which will protect you from quite a lot of stuff such as crashes and trolling features.", function()
 	if not isNetPlayerOk(players.user()) or isPlayerInInterior(players.user()) then return end
 	for entities.get_all_peds_as_handles() as ped do
 		local script = GET_ENTITY_SCRIPT(ped, 0)
@@ -3299,7 +3293,7 @@ blockModdedEntities:toggle_loop("Block Modded Peds", {"blockmoddedpeds"}, "Block
 	end
 end)
 
-blockModdedEntities:toggle_loop("Block Modded Vehicles", {"blockmoddedvehicles"}, "Blocks vehicles that aren't spawned legitimately which will protect you from quite a lot of stuff such as trolling features.", function()
+protections:toggle_loop("Block Modded Vehicles", {"blockmoddedvehicles"}, "Blocks vehicles that aren't spawned legitimately which will protect you from quite a lot of stuff such as trolling features.", function()
 	if not isNetPlayerOk(players.user()) then return end
 	for entities.get_all_vehicles_as_handles() as vehicle do
 		local script = GET_ENTITY_SCRIPT(vehicle, 0)
@@ -3322,21 +3316,6 @@ blockModdedEntities:toggle_loop("Block Modded Vehicles", {"blockmoddedvehicles"}
 	end
 end)
 
-blockModdedEntities:toggle_loop("Block Modded Objects", {"blockmoddedobjects"}, "Blocks objects that aren't spawned legitimately which will protect you from quite a lot of stuff such as cages and other trolling features.", function()
-	if not isNetPlayerOk(players.user()) then return end
-	for entities.get_all_objects_as_handles() as object do
-		local script = GET_ENTITY_SCRIPT(object, 0)
-		local owner = entities.get_owner(object)
-		if (table.contains(scripts, script) or (IS_ENTITY_ATTACHED_TO_ANY_VEHICLE(object) and not IS_ENTITY_A_MISSION_ENTITY(object))) and owner != players.user() and owner != -1 then
-			deleteEntityLocally(object)
-			if IS_DEBUG_BUILD then
-				if GET_ENTITY_MODEL(object) != 0 then
-					toast($"[Debug Info] Modded Object Deleted\nCreated By: {script}\nObject Model: {reverse_joaat(GET_ENTITY_MODEL(object))}\nOwner: {players.get_name(owner)}")
-				end
-			end
-		end
-	end
-end)
 
 local ninjaJump = funfeatures:list("Ninja Jump")
 local flipsPerSecond = 1.0

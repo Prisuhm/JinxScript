@@ -10,9 +10,9 @@ if (game_version := menu.get_version().game) != supported_game_version then
 	util.toast($"This script was made for {supported_game_version}. The current game version is {game_version}.\nPlease note that some features or even the script may not work as intended.")
 end
 
-local CWeaponDamageEventTrigger = memory.rip(memory.scan("GTA5.exe", "E8 ? ? ? ? 44 8B 65 80 41 FF C7") + 1)
-local ppCNetworkObjectMgr__sm_Instance = memory.rip(memory.scan("GTA5.exe", "48 8B 0D ? ? ? ? 45 33 C0 E8 ? ? ? ? 48 8B F8") + 3) -- credit to sapphire
-local allowDuckingAddr = memory.read_long(memory.read_long(memory.rip(memory.scan("GTA5.exe", "01 48 8B 05 ? ? ? ? 48 8B 48 18") + 4)) + 0x18) -- this too lol
+local CWeaponDamageEventTrigger = memory.rip(memory.scan("E8 ? ? ? ? 44 8B 65 80 41 FF C7") + 1)
+local ppCNetworkObjectMgr__sm_Instance = memory.rip(memory.scan("48 8B 0D ? ? ? ? 45 33 C0 E8 ? ? ? ? 48 8B F8") + 3) -- credit to sapphire
+local allowDuckingAddr = memory.read_long(memory.read_long(memory.rip(memory.scan("01 48 8B 05 ? ? ? ? 48 8B 48 18") + 4)) + 0x18) -- this too lol
 
 local invisibility = menu.ref_by_path("Self>Appearance>Invisibility")
 
@@ -4337,7 +4337,7 @@ local function player(playerID)
 		local pPed =  entities.handle_to_pointer(ped)
 		local pedPtr = entities.handle_to_pointer(players.user_ped())
 		if IS_PLAYER_DEAD(playerID) then return end
-		if not DOES_ENTITY_EXIST(ped) then
+		if IS_REMOTE_PLAYER_IN_NON_CLONED_VEHICLE(playerID)then
             toast($"{players.get_name(playerID)}'s ped has not been cloned yet. :/")
             return
         end
@@ -4664,9 +4664,8 @@ local function player(playerID)
 	end)
 
 	antigodmode:action("Kill", {"killgod", "modkill"}, lang.get_localised(-748077967), function()
-        local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 		if IS_PLAYER_DEAD(playerID) then return end
-		if not DOES_ENTITY_EXIST(ped) then
+		if IS_REMOTE_PLAYER_IN_NON_CLONED_VEHICLE(playerID)then
             toast($"{players.get_name(playerID)}'s ped has not been cloned yet. :/")
             return
         end
@@ -4684,7 +4683,7 @@ local function player(playerID)
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 		local vehicle = GET_VEHICLE_PED_IS_USING(ped)
 		if IS_PLAYER_DEAD(playerID) then return end
-		if not DOES_ENTITY_EXIST(ped) then
+		if IS_REMOTE_PLAYER_IN_NON_CLONED_VEHICLE(playerID)then
             toast($"{players.get_name(playerID)}'s ped has not been cloned yet. :/")
             return
         end
@@ -4733,10 +4732,6 @@ local function player(playerID)
 	antigodmode:action("Hospitalize", {"hospitalizegod"}, $"Fakes an orbital strike and teleports them to the hospital. {lang.get_localised(-748077967)}", function()
         local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 		if IS_PLAYER_DEAD(playerID) then return end
-		if not DOES_ENTITY_EXIST(ped) then
-            toast($"{players.get_name(playerID)}'s ped has not been cloned yet. :/")
-            return
-        end
 
         if not isPlayerGodmode(playerID) then 
             toast($"{players.get_name(playerID)} is not in godmode or is using anti-detections. :/")

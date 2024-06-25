@@ -8,7 +8,7 @@ native_invoker.accept_bools_as_ints(true)
 local isDebugMode = false
 local joaat, toast, yield, draw_debug_text, reverse_joaat = util.joaat, util.toast, util.yield, util.draw_debug_text, util.reverse_joaat
 
-local supported_game_version <const> = "1.69-3258"
+local supported_game_version <const> = "1.68-3179"
 if (game_version := menu.get_version().game) != supported_game_version then
 	util.toast($"This script was made for {supported_game_version}. The current game version is {game_version}.\nPlease note that some features or even the script may not work as intended.")
 end
@@ -2861,8 +2861,8 @@ end)
 
 antibeast:toggle_loop("Someone Else", {}, "Prevents other players from being turned into the beast.", function()
 	if GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat("am_hunt_the_Beast")) > 0 then
-		local beast = memory.read_int(memory.script_local("am_hunt_the_Beast", 608))
-		local gameState = memory.script_local("am_hunt_the_Beast", 603)
+		local beast = memory.read_int(memory.script_local("am_hunt_the_Beast", 604 + 1 + 7))
+		local gameState = memory.script_local("am_hunt_the_Beast", 604 + 1)
 		local amLauncherHost = NETWORK_GET_HOST_OF_SCRIPT("am_launcher", -1, 0)
 		local huntTheBeastHost = NETWORK_GET_HOST_OF_SCRIPT("am_hunt_the_Beast", -1, 0)
 		local timer = util.current_time_millis() + 5000

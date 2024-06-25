@@ -14,7 +14,7 @@ if (game_version := menu.get_version().game) != supported_game_version then
 end
 
 local sigscanStartTime = util.current_time_millis()
-local CWeaponDamageEventTrigger = memory.rip(memory.scan("E8 ? ? ? ? 44 8B 65 80 41 FF C7") + 1)
+local CWeaponDamageEventTrigger = memory.rip(memory.scan("E8 ? ? ? ? 44 8B 7D 80") + 1)
 local ppCNetworkObjectMgr__sm_Instance = memory.rip(memory.scan("48 8B 0D ? ? ? ? 45 33 C0 E8 ? ? ? ? 48 8B F8") + 3) -- credit to sapphire
 local allowDuckingAddr = memory.read_long(memory.read_long(memory.rip(memory.scan("01 48 8B 05 ? ? ? ? 48 8B 48 18") + 4)) + 0x18) -- this too lol
 local sigscanEndTime = util.current_time_millis() - sigscanStartTime
@@ -286,7 +286,7 @@ function isPlayerRidingRollerCoaster(playerID)
 end
 
 function isPlayerSolicitingProstitute(playerID)
-	return memory.read_int(memory.script_global(GlobalplayerBD + 1 + (playerID * 465) + 428)) != 0 -- Global_2657921[PLAYER::PLAYER_ID() /*465*/].f_428
+	return memory.read_int(memory.script_global(GlobalplayerBD + 1 + (playerID * 465) + 430)) != 0 -- Global_2657921[PLAYER::PLAYER_ID() /*465*/].f_430
 end
 
 function isPlayerUsingBallisticEquipment(playerID)

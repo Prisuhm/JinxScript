@@ -8,7 +8,7 @@ native_invoker.accept_bools_as_ints(true)
 local isDebugMode = false
 local joaat, toast, yield, draw_debug_text, reverse_joaat = util.joaat, util.toast, util.yield, util.draw_debug_text, util.reverse_joaat
 
-local supported_game_version <const> = "1.69-3258"
+local supported_game_version <const> = "1.69-3274"
 if (game_version := menu.get_version().game) != supported_game_version then
 	util.toast($"This script was made for {supported_game_version}. The current game version is {game_version}.\nPlease note that some features or even the script may not work as intended.")
 end
@@ -114,6 +114,7 @@ enum eDamageFlags begin
 	DF_HealthDamageOnly					= 4194304,
 	DF_DamageFromBentBullet				= 8388608
 end
+
 
 enum VEHICLE_CLASS begin
 	VC_COMPACT = 0,
@@ -1279,10 +1280,10 @@ end, function()
 end)
 
 audio:toggle_loop("Disable Nearby Vehicle Radios", {"disablenearbyvehicleradios"}, "Mutes the radio audio of nearby cars.", function()
-	if PED.IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
-		AUDIO.START_AUDIO_SCENE("MIC1_RADIO_DISABLE")
+	if IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
+		START_AUDIO_SCENE("MIC1_RADIO_DISABLE")
 	else
-		AUDIO.STOP_AUDIO_SCENE("MIC1_RADIO_DISABLE")
+		STOP_AUDIO_SCENE("MIC1_RADIO_DISABLE")
 	end
 end, function()
 	STOP_AUDIO_SCENE("MIC1_RADIO_DISABLE")
@@ -1491,18 +1492,22 @@ moneySpoofing:slider("Cash In Total", {"totalbalance"}, "", -2147483647, 2147483
 end)
 
 moneySpoofing:toggle_loop("Spoof Wallet Balance", {}, "", function()
-	local iTotalCash = memory.script_global(GlobalplayerBD_FM + 1 + (players.user() * 883) + 206 + 3) -- Global_1845281[PLAYER::PLAYER_ID() /*883*/].f_206.f_3
-	if memory.read_int(iTotalCash) != walletBalance then
-		memory.write_int(iTotalCash, walletBalance)
-		return
+	if NETWORK_IS_SESSION_STARTED() then
+		local iTotalCash = memory.script_global(GlobalplayerBD_FM + 1 + (players.user() * 883) + 206 + 3) -- Global_1845281[PLAYER::PLAYER_ID() /*883*/].f_206.f_3
+		if memory.read_int(iTotalCash) != walletBalance then
+			memory.write_int(iTotalCash, walletBalance)
+			return
+		end
 	end
 end)
 
 moneySpoofing:toggle_loop("Spoof Total Cash Balance", {}, "", function()
-	local iEarnings = memory.script_global(GlobalplayerBD_FM + 1 + (players.user() * 883) + 205 + 56) -- Global_1845281[PLAYER::PLAYER_ID() /*883*/].f_205.f_56
-	if memory.read_int(iEarnings) != totalBalance then
-		memory.write_int(iEarnings, totalBalance)
-		return
+	if NETWORK_IS_SESSION_STARTED() then
+		local iEarnings = memory.script_global(GlobalplayerBD_FM + 1 + (players.user() * 883) + 205 + 56) -- Global_1845281[PLAYER::PLAYER_ID() /*883*/].f_205.f_56
+		if memory.read_int(iEarnings) != totalBalance then
+			memory.write_int(iEarnings, totalBalance)
+			return
+		end
 	end
 end)
 
@@ -1526,7 +1531,9 @@ overrideHudColor:list_select("Color", {}, "", colors, chatColor, function(color)
 end)
 
 overrideHudColor:toggle_loop("Change HUD Color", {}, "", function()
-	SET_CUSTOM_MP_HUD_COLOR(hudColor)
+	if NETWORK_IS_SESSION_STARTED() then
+		SET_CUSTOM_MP_HUD_COLOR(hudColor)
+	end
 end)
 
 online:toggle_loop("HUD Transition States", {}, "Displays the current transition state in the bottom right corner.", function()
@@ -2162,7 +2169,7 @@ weapons:toggle_loop("Lock On To Players", {}, "Allows you to lock on to players 
 	for players.list_except(true) as playerID do
 		local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 		ADD_PLAYER_TARGETABLE_ENTITY(players.user(), ped)
-		SET_ENTITY_IS_TARGET_PRIORITY(ped, false, 400.0)    
+		SET_ENTITY_IS_TARGET_PRIORITY(ped, true, 400.0)    
 	end
 end, function()
 	for players.list_except(true) as playerID do
@@ -2451,6 +2458,7 @@ vehicles:toggle_loop("Vehicle Rockets", {"vehiclerockets"}, "Press Left Mouse to
 end)
 
 vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for players trying to enter the vehicle when access is set to no-one.", function()
+	if entities.get_user_vehicle_as_handle() == 0 then return end
 	for players.list_except(true) as playerID do
 		local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
 		local pPed =  entities.handle_to_pointer(ped)
@@ -2464,6 +2472,7 @@ vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for play
 				yield(1000)
 			end
 		end
+		yield()
 	end
 end)
 

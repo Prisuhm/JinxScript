@@ -882,6 +882,7 @@ util.create_tick_handler(function()
     if not menu.get_value(menu.ref_by_path("Self>Immortality")) and not isPlayerInInterior(players.user()) then
         SET_ENTITY_PROOFS(local_player, proofs.bullet.on, proofs.fire.on, proofs.explosion.on, proofs.collision.on, proofs.melee.on, proofs.steam.on, false, proofs.steam.on)
     end
+	yield(500)
 end)
 
 local stealthLevitation
@@ -898,6 +899,7 @@ stealthLevitation = self:toggle_loop("Stealth Levitation", {"stealthlevitation"}
 	else
 		return
 	end
+	yield(1000)
 end, function()
 	invisibility:setState("Disabled") -- so invisibility doesnt stay on if the script or feature is toggled off while levitating
 	vehInvisibility:setState("Disabled")
@@ -912,14 +914,19 @@ menu.add_value_replacement(thrustSlider, 0, "Default")
 
 thrust:toggle_loop("Override Thrust", {"parachutethrust"}, "Overrides the speed you thrust at while parachuting.", function()
 	SET_PARACHUTE_TASK_THRUST(players.user_ped(), thrustSpeed)
+	yield(1000)
 end)
 
-self:toggle("Prevent Auto Seat Shuffle", {}, "Prevents auto shuffling over to drivers seat if it becomes free.", function(toggled)
-	SET_PED_CONFIG_FLAG(players.user_ped(), 184, toggled)
+self:toggle_loop("Prevent Auto Seat Shuffle", {}, "Prevents auto shuffling over to drivers seat if it becomes free.", function(toggled)
+	SET_PED_CONFIG_FLAG(players.user_ped(), 184, true)
+	yield(1000)
+end, function()
+	SET_PED_CONFIG_FLAG(players.user_ped(), 184, false)
 end)
 
 self:toggle_loop("Instantly Get Up After Ragdoll", {}, "", function()
 	SET_PED_CONFIG_FLAG(players.user_ped(), 227, IS_PLAYER_PLAYING(players.user()))
+	yield(1000)
 end)
 
 self:toggle("Disable Radar", {"noradar"}, "", function(toggled)
@@ -930,6 +937,7 @@ self:toggle_loop("BST Mode", {"bstmode"}, "BST without the Post FX and sound eff
 	SET_PLAYER_WEAPON_DAMAGE_MODIFIER(players.user(), toggled ? 1.44 : 0.72)
 	SET_PLAYER_MELEE_WEAPON_DAMAGE_MODIFIER(players.user(), toggled ? 2.0 : 1.0)
 	SET_PLAYER_MELEE_WEAPON_DEFENSE_MODIFIER(players.user(), toggled ? 0.5 : 1.0)
+	yield(1000)
 end)
 
 self:toggle("Fast Roll", {"fastroll"}, "", function(toggled)
@@ -966,17 +974,19 @@ menu.add_value_replacement(copHearingRangeSlider, 6000, "Default")
 
 copPerception:toggle_loop("Override Cop Perception", {}, "", function()
 	SET_COP_PERCEPTION_OVERRIDES(copSeeingRange, 5.0, copHearingRange, -90.0, 90.0, 60.0, -1.0)
+	yield(1000)
 end)
 
 world:toggle_loop("Non-Hostile Peds", {"friendlyai"}, "Makes NPCs unable to target you.", function()
 	SET_PED_RESET_FLAG(players.user_ped(), 124, true)
+	yield(1000)
 end)
 
 world:toggle("Ped Riot Mode", {}, "", function(toggled)
 	SET_RIOT_MODE_ENABLED(toggled)
 end)
 
-world:toggle_loop("Disable Post FX", {"disablepostfx"}, "", function() 
+world:toggle_loop("Disable Post FX", {"disablepostfx"}, "", function()
 	ANIMPOSTFX_STOP_ALL()
 end)
 
@@ -1155,6 +1165,7 @@ end)
 audio:toggle_loop("Disable Footstep Sounds", {"disablefootsteps"}, "Disables footstep sounds.", function()
 	SET_PED_CLOTH_EVENTS_ENABLED(players.user_ped(), false)
 	SET_PED_FOOTSTEPS_EVENTS_ENABLED(players.user_ped(), false)
+	yield(1000)
 end, function()
 	SET_PED_CLOTH_EVENTS_ENABLED(players.user_ped(), true)
 	SET_PED_FOOTSTEPS_EVENTS_ENABLED(players.user_ped(), true)
@@ -1164,14 +1175,13 @@ audio:toggle_loop("Disable Wasted Sound", {"disablewastedsound"}, "", function()
 	if memory.read_int(memory.script_global(2707679)) == 0 then -- AUDIO::PLAY_SOUND_FRONTEND(-1, "Wasted", "POWER_PLAY_General_Soundset", true);
 		memory.write_int(memory.script_global(2707679), 1)
 	end
+	yield(1000)
 end, function()
 	memory.write_int(memory.script_global(2707679), 0)
 end)
 
-audio:toggle_loop("Disable Police Scanner", {"disablepolicescanner"}, "Disables the police scanner.", function()
-	SET_AUDIO_FLAG("PoliceScannerDisabled", true)
-end, function()
-	SET_AUDIO_FLAG("PoliceScannerDisabled", false)
+audio:toggle("Disable Police Scanner", {"disablepolicescanner"}, "Disables the police scanner.", function(toggled)
+	SET_AUDIO_FLAG("PoliceScannerDisabled", toggled)
 end)
 
 audio:toggle_loop("Disable Ped Screams", {"disablepedscreams"}, "Mutes the peds screams.", function()
@@ -1213,6 +1223,7 @@ audio:toggle_loop("Disable Scripted Music", {"disablefreemodemusic"}, "Disables 
 	if AUDIO_IS_MUSIC_PLAYING() and not NETWORK_IS_ACTIVITY_SESSION() then
 		TRIGGER_MUSIC_EVENT("GLOBAL_KILL_MUSIC")
 	end
+	yield(500)
 end)
 
 audio:toggle_loop("Disable Ambient Sounds", {"disableambientsounds"}, "Disables background noises such as sirens, distant honks, jackhammers, birds, crickets, etc.", function()
@@ -1220,6 +1231,7 @@ audio:toggle_loop("Disable Ambient Sounds", {"disableambientsounds"}, "Disables 
 	if not IS_AUDIO_SCENE_ACTIVE("CHARACTER_CHANGE_IN_SKY_SCENE") then
 		START_AUDIO_SCENE("CHARACTER_CHANGE_IN_SKY_SCENE")
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENE("CHARACTER_CHANGE_IN_SKY_SCENE")
 end)
@@ -1251,6 +1263,7 @@ disableRadioEmittersList:toggle_loop("Indoors", {"disableradioemitters"}, "Disab
 			START_AUDIO_SCENE("DLC_MPHEIST_TRANSITION_TO_APT_FADE_IN_RADIO_SCENE") -- MP_POSITIONED_RADIO_MUTE_SCENE didnt want to work in story mode
 		end
 	end
+	yield(250)
 end, function()
 	STOP_AUDIO_SCENE("DLC_MPHEIST_TRANSITION_TO_APT_FADE_IN_RADIO_SCENE")
 end)
@@ -1262,6 +1275,7 @@ disableRadioEmittersList:toggle_loop("Outdoors", {"disableradioemitters"}, "Disa
 			START_AUDIO_SCENE("DLC_MPHEIST_TRANSITION_TO_APT_FADE_IN_RADIO_SCENE")
 		end
 	end
+	yield(250)
 end, function()
 	STOP_AUDIO_SCENE("DLC_MPHEIST_TRANSITION_TO_APT_FADE_IN_RADIO_SCENE")
 end)
@@ -1275,16 +1289,18 @@ audio:toggle_loop("Disable Vehicle Audio", {"disablevehicleaudio"}, "Mutes all v
 	if not IS_AUDIO_SCENE_ACTIVE("MP_CAR_MOD_SHOP") then
 		START_AUDIO_SCENE("MP_CAR_MOD_SHOP")
 	end
+	yield(250)
 end, function()
 	STOP_AUDIO_SCENE("MP_CAR_MOD_SHOP")
 end)
 
 audio:toggle_loop("Disable Nearby Vehicle Radios", {"disablenearbyvehicleradios"}, "Mutes the radio audio of nearby cars.", function()
-	if IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
+	if not IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
 		START_AUDIO_SCENE("MIC1_RADIO_DISABLE")
 	else
 		STOP_AUDIO_SCENE("MIC1_RADIO_DISABLE")
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENE("MIC1_RADIO_DISABLE")
 end)
@@ -1293,6 +1309,7 @@ audio:toggle_loop("Disable Radio", {"disableradio"}, "Disables the radio audio."
 	if not IS_AUDIO_SCENE_ACTIVE("CAR_MOD_RADIO_MUTE_SCENE") then
 		START_AUDIO_SCENE("CAR_MOD_RADIO_MUTE_SCENE")
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENE("CAR_MOD_RADIO_MUTE_SCENE")
 end)
@@ -1303,6 +1320,7 @@ audio:toggle_loop("Disable Vehicle Alarms", {"disablevehiclealarms"}, "Disables 
 	if IS_VEHICLE_ALARM_ACTIVATED(vehicle) then
 		SET_VEHICLE_ALARM(vehicle, false)
 	end
+	yield()
 end)	
 
 audio:toggle_loop("Disable Vehicle Horn On Ped Death", {"disablehornondeath"}, "Disables the horn that sometimes goes off when a ped dies in their car.", function()
@@ -1310,6 +1328,7 @@ audio:toggle_loop("Disable Vehicle Horn On Ped Death", {"disablehornondeath"}, "
 		SET_PED_CONFIG_FLAG(ped, 46, true)
 		yield(100)
 	end
+	yield(100)
 end, function()
 	for entities.get_all_peds_as_handles() as ped do 
 		SET_PED_CONFIG_FLAG(ped, 46, false)
@@ -1324,6 +1343,7 @@ disableWeatherNoiseList:toggle_loop("Disable Wind Noises", {"disablewind"}, "", 
 	if not IS_AUDIO_SCENE_ACTIVE("PROLOGUE_MUTE_SPRINKLERS") then
 		START_AUDIO_SCENE("PROLOGUE_MUTE_SPRINKLERS")
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENES()
 end)
@@ -1335,6 +1355,7 @@ disableWeatherNoiseList:toggle_loop("Disable Rain Noises", {"disablerain"}, "", 
 			START_AUDIO_SCENE("PROLOGUE_MUTE_SPRINKLERS")
 		end
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENES()
 end)
@@ -1346,12 +1367,14 @@ disableWeatherNoiseList:toggle_loop("Disable Thunder Weather Noises", {"disablet
 			START_AUDIO_SCENE("PROLOGUE_MUTE_SPRINKLERS")
 		end
 	end
+	yield(1000)
 end, function()
 	STOP_AUDIO_SCENES()
 end)
 
 audio:toggle_loop("Disable Frontend Audio", {"disablefrontendaudio"}, 'Disables stuff such as the notification sounds when a freemode event starts, your phone, etc.\n(Note: If you want to hear the menu sounds then press O and select "Correlate State With: Stand Being Open")', function()
 	GET_SOUND_ID()
+	yield(100)
 end, function()
 	for i = 0, 99 do
 		RELEASE_SOUND_ID(i)
@@ -1372,6 +1395,7 @@ enhancements:toggle_loop("Disable Vehicle Impound", {}, "Important Note: This wi
 		yield(2500)
 		entities.delete(randomPed)
 	end
+	yield(1000)
 end)
 
 enhancements:toggle_loop("Disable Clothing Store Animations", {"disableclothesanimations"}, "Disables the annoying animations your ped will play when trying on clothes.", function()
@@ -1382,17 +1406,21 @@ enhancements:toggle_loop("Disable Clothing Store Animations", {"disableclothesan
 			end
 		end
 	end
+	yield(1000)
 end)
 
 enhancements:toggle_loop("Disable Help Text", {}, "", function() 
 	HIDE_HELP_TEXT_THIS_FRAME()
+	yield()
 end)
 
 enhancements:toggle_loop("Disable NPC Vehicle Dragout", {}, "Prevents angry pedestrians from running up to your vehicle and pulling you out.", function()
 	if not IS_PED_IN_ANY_VEHICLE(players.user_ped()) then return end
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_CONFIG_FLAG(ped, 342, true)
+		yield()
 	end
+	yield(1000)
 end)
 
 enhancements:toggle_loop("Safe Shopping", {"safeshopping"}, "Puts you into a locked session within your session while shopping to ensure a safe shopping experience. Other players will not be able to see that you are in a shop.", function()
@@ -1403,6 +1431,7 @@ enhancements:toggle_loop("Safe Shopping", {"safeshopping"}, "Puts you into a loc
 		end
 	    NETWORK_END_TUTORIAL_SESSION()
 	end	
+	yield(1000)
 end, function()
     NETWORK_END_TUTORIAL_SESSION()
 end)
@@ -1427,6 +1456,7 @@ spoofing:toggle_loop("Spoof Juggernaut Blip", {"juggernaut"}, "Changes your blip
 	if memory.read_int(isPlayerUsingBallisticEquipment(players.user())) == 0 then
 		memory.write_int(isPlayerUsingBallisticEquipment(players.user()), minigunHash)
 	end
+	yield(1000)
 end, function()
 	memory.write_int(isPlayerUsingBallisticEquipment(players.user()), 0)
 end)
@@ -1450,6 +1480,7 @@ end)
 spoofBlip:toggle_loop("Spoof Blip Coords", {}, "Note: This will cause issues with the minimap not showing your current location.", function()
 	memory.write_int(blipInteriorID(players.user()), 1)
 	v3.set(blipInteriorPos(players.user()), blipX, blipY, blipZ)
+	yield(1000)
 end, function()
 	memory.write_int(blipInteriorID(players.user()), -1)
 	v3.set(blipInteriorPos(players.user()), players.get_position(players.user()))
@@ -1466,6 +1497,7 @@ menu.add_value_replacement(spoofApartmentID, -1, "Default")
 spoofApartment:toggle_loop("Spoof Apartment ID", {}, "", function()
 	if not isNetPlayerOk(players.user(), true, true) then return end
 	memory.write_int(getPlayerProperty(players.user()), isNetPlayerOk(players.user(), true, true) ? apartmentID : -1)
+	yield(1000)
 end, function() 
 	memory.write_int(getPlayerProperty(players.user()), -1) -- this will be improved at a later date, its fine for now.
 end)
@@ -1478,6 +1510,7 @@ end)
 
 spoofBitset:toggle_loop("Spoof Vehicle Bitset", {}, "", function()
 	DECOR_SET_INT(entities.get_user_vehicle_as_handle(), "MPBitset", vehBitset)
+	yield(1000)
 end)
 
 local moneySpoofing = spoofing:list("Money Spoofing", {}, "")
@@ -1499,6 +1532,7 @@ moneySpoofing:toggle_loop("Spoof Wallet Balance", {}, "", function()
 			return
 		end
 	end
+	yield(100)
 end)
 
 moneySpoofing:toggle_loop("Spoof Total Cash Balance", {}, "", function()
@@ -1509,6 +1543,7 @@ moneySpoofing:toggle_loop("Spoof Total Cash Balance", {}, "", function()
 			return
 		end
 	end
+	yield(100)
 end)
 
 local overrideChatColor = online:list("Change Nametag Color", {}, "Changes the color of your nametag in chat. Only you can see this.")
@@ -1519,6 +1554,7 @@ end)
 
 overrideChatColor:toggle_loop("Change Nametag Color", {}, "", function()
 	OVERRIDE_MP_TEXT_CHAT_COLOR(1, chatColor)
+	yield(1000)
 end, function()
 	OVERRIDE_MP_TEXT_CHAT_COLOR(0, chatColor)
 end)
@@ -1531,9 +1567,8 @@ overrideHudColor:list_select("Color", {}, "", colors, chatColor, function(color)
 end)
 
 overrideHudColor:toggle_loop("Change HUD Color", {}, "", function()
-	if NETWORK_IS_SESSION_STARTED() then
-		SET_CUSTOM_MP_HUD_COLOR(hudColor)
-	end
+	SET_CUSTOM_MP_HUD_COLOR(hudColor)
+	yield(1000)
 end)
 
 online:toggle_loop("HUD Transition States", {}, "Displays the current transition state in the bottom right corner.", function()
@@ -1544,6 +1579,7 @@ online:toggle_loop("HUD Transition States", {}, "Displays the current transition
 	else
 		BUSYSPINNER_OFF()
 	end
+	yield(1000)
 end, function()
 	BUSYSPINNER_OFF()
 end)
@@ -1568,6 +1604,7 @@ auto_accept:toggle_loop("Join Messages", {}, "", function()
 			yield()
 		end
 	end
+	yield()
 end)
 
 auto_accept:toggle_loop("Transaction Errors", {}, "", function() 
@@ -1579,6 +1616,7 @@ auto_accept:toggle_loop("Transaction Errors", {}, "", function()
 			yield()
 		end
 	end
+	yield()
 end)
 
 online:toggle("Block Aim Assist", {}, "Blocks players from being able to lock onto you with fists, aim assist, etc.", function(toggled)
@@ -1595,6 +1633,7 @@ online:toggle_loop("Auto Claim Bounties", {"autoclaimbounties"}, "Automatically 
 		until bounty == nil
 		toast("Bounty has been auto-claimed. :D")
 	end
+	yield(1000)
 end)
 
 online:toggle_loop("Access Locked Vehicles", {"accesslockedvehicles"}, "Allows you to access players vehicles that have their vehicle access set to no-one.", function()
@@ -1606,6 +1645,7 @@ online:toggle_loop("Access Locked Vehicles", {"accesslockedvehicles"}, "Allows y
 		SET_VEHICLE_EXCLUSIVE_DRIVER(vehicle, 0, 0)
 	end 
 	SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, players.user(), false)
+	yield(100)
 end)
 
 local tutorial_session_list = lobby:list("Tutorial Session", {}, "Creates a session within your session where you will not recieve other players syncs, and they will not recieve yours. (Note: some stand features may not work when using this.)")
@@ -1656,19 +1696,21 @@ tutorial_session:slider("Instance ID", {"instanceid"}, "", 0, 63, 0, 1, function
 end)
 
 local tutorialSession
-tutorialSession = tutorial_session:toggle_loop("Enter Tutorial Session", {}, "", function()
-	if lockedTutorialSession.value then 
-		toast("You can not enable these simultaneously. :/") 
-		tutorialSession.value = false
-		return 
+tutorialSession = tutorial_session:toggle("Enter Tutorial Session", {}, "", function(toggled)
+	if toggled then
+		if lockedTutorialSession.value then 
+			toast("You can not enable these simultaneously. :/") 
+			tutorialSession.value = false
+			return 
+		end
+		local teamID = team
+		NETWORK_ALLOW_GANG_TO_JOIN_TUTORIAL_SESSION(teamID, instance_id)
+		while teamID == team do
+			yield()
+		end
+	else
+		NETWORK_END_TUTORIAL_SESSION()
 	end
-	local teamID = team
-	NETWORK_ALLOW_GANG_TO_JOIN_TUTORIAL_SESSION(teamID, instance_id)
-	while teamID == team do
-		yield()
-	end
-end, function()
-	NETWORK_END_TUTORIAL_SESSION()
 end)
 
 local orbital = lobby:list("Orbital Cannon")
@@ -1758,7 +1800,7 @@ orbital:toggle_loop("Block Orbital Cannon", {"blockorb"}, "", function()
 		SET_ENTITY_NO_COLLISION_ENTITY(players.user_ped(), orbObj, false)
 		SET_ENTITY_ROTATION(orbSign, -25.0, 0.0, 125.0, 2, true)
 	end
-	yield(50)
+	yield(100)
 end, function()
 	if orbObj != nil then
 		entities.delete(orbObj)
@@ -1787,6 +1829,7 @@ annoy_tgl = annoy:toggle_loop("Enable", {}, "", function()
 			SET_REMOTE_PLAYER_AS_GHOST(playerID, false)
 		end
 	end
+	yield(100)
 end)
 
 local ghostOrb = orbital:list("Ghost Orbital Cannon Users")
@@ -1928,6 +1971,7 @@ lobby:toggle_loop("Lock All Vehicles", {"lockall"}, "", function()
 			SET_VEHICLE_DOORS_LOCKED_FOR_PLAYER(vehicle, playerID, true)
 		end
 	end
+	yield(100)
 end)
 
 lobby:toggle_loop("Annoy Weaponized Vehicle Users", {"annoy"}, "", function()
@@ -1938,6 +1982,7 @@ lobby:toggle_loop("Annoy Weaponized Vehicle Users", {"annoy"}, "", function()
 			SET_VEHICLE_HOMING_LOCKEDONTO_STATE(vehicle, 1)
 		end
 	end
+	yield(500)
 end)
 
 local horny = lobby:list("Anti-Horny")
@@ -1962,6 +2007,7 @@ horny:toggle_loop("Punish", {}, "Will punish horny players that are trying to so
 			timer = util.current_time_millis() + 2500
 		end
 	end
+	yield(500)
 end)
 
 horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying to solicit a prostitute by making fun of them in chat.", function()
@@ -1975,6 +2021,7 @@ horny:toggle_loop("Humiliate", {}, "Will humiliate horny players that are trying
 			until not isPlayerSolicitingProstitute(playerID)
 		end
 	end
+	yield(500)
 end)
 
 local reversed_messages = {}
@@ -1997,6 +2044,7 @@ util.create_tick_handler(function()
 			reversed_messages[msg] = nil
 		end
 	end
+	yield(100)
 end)
 
 missions:action("Kill All Enemies", {}, "", function()
@@ -2036,6 +2084,7 @@ pedSeeingRange:toggle_loop("Override Ped Seeing Range", {}, "", function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_SEEING_RANGE(ped, seeingRange)
 	end
+	yield(100)
 end, function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_SEEING_RANGE(ped, 60.0)
@@ -2052,6 +2101,7 @@ pedHearingRange:toggle_loop("Override Ped Hearing Range", {}, "", function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_HEARING_RANGE(ped, hearingRange)
 	end
+	yield(100)
 end, function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_HEARING_RANGE(ped, 60.0)
@@ -2068,6 +2118,7 @@ pedIdRange:toggle_loop("Override Ped ID Range", {}, "", function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_ID_RANGE(ped, idRange)
 	end
+	yield(100)
 end, function()
 	for entities.get_all_peds_as_handles() as ped do
 		SET_PED_ID_RANGE(ped, 20.0)
@@ -2119,10 +2170,12 @@ end)
 
 weapons:toggle_loop("Infinite Lockon Range", {}, "Sets your players lockon range with homing missles and auto aim to the max.", function()
 	SET_PLAYER_LOCKON_RANGE_OVERRIDE(players.user(), 99999999.0)
+	yield(1000)
 end)
 
 weapons:toggle_loop("Increase Weapon Range", {}, "Extends weapon range to 250m.", function()
 	SET_PED_RESET_FLAG(players.user_ped(), 95, GET_MAX_RANGE_OF_CURRENT_PED_WEAPON(players.user_ped()) < 250.0)
+	yield(1000)
 end)
 
 local overrideBulletProjectile = false
@@ -2157,6 +2210,7 @@ util.create_tick_handler(function()
 		end
 		yield()
 	end
+	yield(500)
 end)
 
 weapons:toggle_loop("Fast Hands", {"fasthands"}, "Swaps your weapons faster.", function()
@@ -2204,6 +2258,7 @@ nitrous:toggle_loop("Disable On Key Release", {}, "Disables nitrous when you let
 	if IS_CONTROL_JUST_RELEASED(0, 71) and IS_NITROUS_ACTIVE(vehicle) then
 		SET_OVERRIDE_NITROUS_LEVEL(vehicle, false, durationMod, powerMod, rechargeMod, false) -- SET_NITROUS_IS_ACTIVE didnt wanna work here cus gay
 	end
+	yield()
 end)
 
 nitrous:toggle_loop("Disable In Air", {}, "", function(toggled)
@@ -2211,6 +2266,7 @@ nitrous:toggle_loop("Disable In Air", {}, "", function(toggled)
 	if IS_ENTITY_IN_AIR(vehicle) then
 		SET_OVERRIDE_NITROUS_LEVEL(vehicle, false, durationMod, powerMod, rechargeMod, false) -- SET_NITROUS_IS_ACTIVE didnt wanna work here cus gay
 	end
+	yield()
 end)
 
 
@@ -2250,6 +2306,7 @@ nitrousTgl = nitrous:toggle_loop("Enable Nitrous", {"nitrous"}, "Default Nitrous
 			return
 		end
 	end
+	yield()
 end, function()
 	SET_OVERRIDE_NITROUS_LEVEL(entities.get_user_vehicle_as_handle(), false, 0.0, 0.0, 0.0, false)
 	clearedNitrous = false
@@ -2268,6 +2325,7 @@ redline = flamethrowerTune:toggle_loop("On Redline", {}, "", function()
 	local vehHandle = entities.get_user_vehicle_as_handle()
 	if vehPtr == 0 then return end
 	SET_NITROUS_IS_ACTIVE(vehHandle, entities.get_rpm(vehPtr) == 1.0 and entities.get_current_gear(vehPtr) == 1)
+	yield()
 end)
 
 local downshift
@@ -2291,6 +2349,7 @@ downshift = flamethrowerTune:toggle_loop("On Downshift", {}, "", function()
 			yield()
 		end
 	end
+	yield()
 end)
 
 local upshift
@@ -2314,6 +2373,7 @@ upshift = flamethrowerTune:toggle_loop("On Upshift", {}, "", function()
 			yield()
 		end
 	end
+	yield()
 end)
 
 local accelerating
@@ -2326,6 +2386,7 @@ accelrating = flamethrowerTune:toggle_loop("While Accelerating", {}, "", functio
 	loadPtfxAsset("veh_xs_vehicle_mods")
 	local vehicle = entities.get_user_vehicle_as_handle()
 	SET_NITROUS_IS_ACTIVE(vehicle, IS_CONTROL_PRESSED(0, 71))
+	yield()
 end)
 
 local alwaysOn
@@ -2365,6 +2426,7 @@ antilag:toggle_loop("Anti-Lag", {"antilag"}, "Rev your engine to use. Only works
 		yield(random ? math.random(100, antilagDelay) : antilagDelay)
 		entities.set_rpm(veh, 0.1)
 	end
+	yield()
 end)
 
 local wheelie = vehicles:list("Wheelie")
@@ -2382,6 +2444,7 @@ wheelie:toggle_loop("Enable", {}, "Press Ctrl and W to wheelie.", function()
 	end
 	local CHandlingData = entities.vehicle_get_handling(CAutomobile)
 	memory.write_float(CHandlingData + 0x00EC, IS_CONTROL_PRESSED(0, 71) and IS_CONTROL_PRESSED(0, 280) ? -wheelie_val : 0.5)
+	yield()
 end)
 
 local clumsiness = vehicles:list("Clumsiness", {}, "Makes your vehicle easy to roll.")
@@ -2399,6 +2462,7 @@ clumsiness:toggle_loop("Enable", {"vehicleclumsiness"}, "", function()
 	end
 	local CHandlingData = entities.vehicle_get_handling(CAutomobile)
 	memory.write_float(CHandlingData + 0x00EC, IS_CONTROL_PRESSED(0, 266) or IS_CONTROL_PRESSED(0, 267) ? -clumsy_val : 0.5)
+	yield()
 end, function()
 	local CAutomobile = entities.get_user_vehicle_as_pointer()
 	if CAutomobile == 0 then return end
@@ -2441,6 +2505,7 @@ vehicles:toggle_loop("Disable Radio On Vehicle Entry", {}, "", function()
 			yield()
 		until not IS_PED_IN_ANY_VEHICLE(players.user_ped()) or curVehicle != vehicle
 	end
+	yield(100)
 end)
 
 vehicles:toggle_loop("Vehicle Rockets", {"vehiclerockets"}, "Press Left Mouse to fire", function()
@@ -2455,6 +2520,7 @@ vehicles:toggle_loop("Vehicle Rockets", {"vehiclerockets"}, "Press Left Mouse to
 		SHOOT_SINGLE_BULLET_BETWEEN_COORDS(leftStart, leftEnd, 0, true, wpn, players.user_ped(), true, false, 5.0)
 		SHOOT_SINGLE_BULLET_BETWEEN_COORDS(rightStart, rightEnd, 0, true, wpn, players.user_ped(), true, false, 5.0)
 	end
+	yield()
 end)
 
 vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for players trying to enter the vehicle when access is set to no-one.", function()
@@ -2472,8 +2538,8 @@ vehicles:toggle_loop("Stun Lock", {}, "Mimics the ruiner 2000 stun lock for play
 				yield(1000)
 			end
 		end
-		yield()
 	end
+	yield()
 end)
 
 local veh_jump = vehicles:list("Vehicle Jump")
@@ -2490,6 +2556,7 @@ veh_jump:toggle_loop("Enable", {"vehiclejump"}, "Press spacebar to jump.", funct
 			yield()
 		until not IS_ENTITY_IN_AIR(vehicle)
 	end
+	yield()
 end)
 
 vehicles:toggle("Toggle Interior Light", {}, "", function(toggled)
@@ -2505,11 +2572,13 @@ end)
 vehicles:toggle_loop("Auto Unlock Doors", {}, "", function()
 	local vehicle = GET_VEHICLE_PED_IS_TRYING_TO_ENTER(players.user_ped())
 	SET_VEHICLE_DOORS_LOCKED(vehicle,  1)
+	yield(100)
 end)
 
 vehicles:toggle_loop("Skip Hotwire", {}, "", function()
 	local vehicle = GET_VEHICLE_PED_IS_TRYING_TO_ENTER(players.user_ped())
 	SET_VEHICLE_NEEDS_TO_BE_HOTWIRED(vehicle, false)
+	yield(100)
 end)
 
 vehicles:toggle_loop("Fast Enter/Exit", {"fastvehicleenter"}, "Enter vehicles faster.", function()
@@ -2525,6 +2594,7 @@ vehicles:toggle_loop("Disable Godmode On Exit", {}, "", function()
 			SET_ENTITY_CAN_BE_DAMAGED(vehicle, true)
 		end
 	end
+	yield()
 end)
 
 vehicles:toggle_loop("Vehicle Rocket Aimbot", {"vehicleaimbotall"}, "", function()
@@ -2535,6 +2605,7 @@ vehicles:toggle_loop("Vehicle Rocket Aimbot", {"vehicleaimbotall"}, "", function
 			SET_VEHICLE_SHOOT_AT_TARGET(players.user_ped(), ped, players.get_position(playerID))
 		end
 	end
+	yield()
 end)
 
 local godmode_detection = false
@@ -2861,6 +2932,7 @@ normal_detections:toggle_loop("Bullshark Testosterone", {}, "Notifies you if a p
 			end
 		end
 	end
+	yield(250)
 end)
 
 local antibeast = protections:list("Anti-Beast", {}, "Prevent the Hunt The Beast activity for yourself and others")
@@ -2972,6 +3044,7 @@ anti_mugger:toggle_loop("Myself", {}, "Prevents you from being mugged.", functio
 			end
 		end)
 	end
+	yield(100)
 end)
 
 anti_mugger:toggle_loop("Someone Else", {}, "Prevents others from being mugged.", function()
@@ -2990,6 +3063,7 @@ anti_mugger:toggle_loop("Someone Else", {}, "Prevents others from being mugged."
 			end
 		end)
 	end
+	yield(100)
 end)
 
 protections:toggle_loop("Block Ped Hijack", {}, "Blocks people that try to ped hijack your vehicle.", function()
@@ -3012,10 +3086,12 @@ protections:toggle_loop("Block Ped Hijack", {}, "Blocks people that try to ped h
 			end
 		end
 	end
+	yield(100)
 end)
 
 protections:toggle_loop("Block Electric Damage", {}, "Blocks electric damage from stunguns or electrical objects.", function()
 	SET_PED_CONFIG_FLAG(players.user_ped(), 461, true)
+	yield(1000)
 end, function()
 	SET_PED_CONFIG_FLAG(players.user_ped(), 461, false)
 end)
@@ -3193,7 +3269,8 @@ epicBall:slider("Field Of View", {"ballfov"}, "", 50, 130, 70, 1, function(value
 end)
 
 epicBall:toggle_loop("Disable Camera Shake", {}, "", function()
-	STOP_GAMEPLAY_CAM_SHAKING(true)
+	STOP_GAMEPLAY_CAM_SHAKING(ballToggle:get_value())
+	yield(100)
 end)
 
 ballVisibilitySlider = epicBall:slider("Ball Visibility", {"ballinvisibility"}, "", 0, 1, 0, 1, function(value) -- I dont like list selects for stuff like this, cry about it.

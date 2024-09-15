@@ -13,12 +13,42 @@ if (game_version := menu.get_version().game) != supported_game_version then
 	util.toast($"This script was made for {supported_game_version}. The current game version is {game_version}.\nPlease note that some features or even the script may not work as intended.")
 end
 
+local sigCount = 0
+local sigScanFailed = false
+local failedScans = {}
+function scanForAddress(patternName, pattern, add)
+	local startTime = util.current_time_millis()
+	local scan = memory.scan(pattern)
+	local sigscanEndTime = util.current_time_millis() - startTime
+
+	if scan and scan ~= 0 then
+		if add then
+			local rip = memory.rip(scan + add)
+			if rip and rip ~= 0 then
+				sigCount = sigCount + 1
+				util.log($"[JinxScript.pluto] Found '{patternName}'")
+				return rip
+			end
+		else
+			sigCount = sigCount + 1
+			util.log($"[JinxScript.pluto] Found '{patternName}'")
+			return scan
+		end
+	end
+
+	util.log($"[JinxScript Error] Failed to find pattern '{patternName}'")
+	failedScans[patternName] = true
+	return false
+end
+
 local sigscanStartTime = util.current_time_millis()
-local CWeaponDamageEventTrigger = memory.rip(memory.scan("E8 ? ? ? ? 44 8B 7D 80") + 1)
-local ppCNetworkObjectMgr__sm_Instance = memory.rip(memory.scan("48 8B 0D ? ? ? ? 45 33 C0 E8 ? ? ? ? 48 8B F8") + 3) -- credit to sapphire
-local allowDuckingAddr = memory.read_long(memory.read_long(memory.rip(memory.scan("01 48 8B 05 ? ? ? ? 48 8B 48 18") + 4)) + 0x18) -- this too lol
+local CWeaponDamageEventTrigger = scanForAddress("WDET", "E8 ? ? ? ? 44 8B 7D 80", 1)
+local ppCNetworkObjectMgr__sm_Instance = scanForAddress("NOMI", "48 8B 0D ? ? ? ? 45 33 C0 E8 ? ? ? ? 48 8B F8", 3) -- credit to sapphire
+local CGameConfig = memory.read_long(memory.read_long(scanForAddress("GC", "48 8B 05 ? ? ? ? 33 DB 8B FA", 3)) + 0x18)
+local ModifyControlsIfDucked = scanForAddress("MCID", "E8 ? ? ? ? F6 87 D8 00 00 00 07", 1)
+local CWeaponComponentSuppressor = scanForAddress("WCS", "48 85 D2 0F 84 ? ? ? ? 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 80 7A 28 04")
 local sigscanEndTime = util.current_time_millis() - sigscanStartTime
-util.log($"[JinxScript.pluto] Scanned 3 signatures in {sigscanEndTime}ms")
+util.log($"[JinxScript.pluto] {sigCount} signatures scanned in {sigscanEndTime}ms")
 
 local invisibility = menu.ref_by_path("Self>Appearance>Invisibility")
 local levitation = menu.ref_by_path("Self>Movement>Levitation>Levitation")
@@ -861,7 +891,7 @@ players.on_leave(handle_player_list)
 players.dispatch_on_join()
 
 if not SCRIPT_SILENT_START then
-	toast($"Hello, {players.get_name(players.user())}!\nWelcome To JinxScript!\nOfficial Discord: https://discord.gg/hjs5S93kQv")
+	toast($"Hello, {SC_ACCOUNT_INFO_GET_NICKNAME()}!\nWelcome To JinxScript!\nOfficial Discord: https://discord.gg/hjs5S93kQv")
 end
 
 playerHealth = self:slider("Set Player Health", {"playerhealth"}, "", 160, 2147483647, 328, 1, function(health)
@@ -944,15 +974,35 @@ self:toggle("Fast Roll", {"fastroll"}, "", function(toggled)
 	menu.ref_by_path("Self>No Combat Roll Cooldown").value = toggled
 end)
 
-self:toggle_loop("Enable Ducking", {}, "Makes your ped duck instead of entering stealth movement. Press Ctrl to use.", function()
-	memory.write_int(allowDuckingAddr + 0x4DC, 1)
-	if GET_PED_STEALTH_MOVEMENT(players.user_ped()) then
-		TASK_TOGGLE_DUCK(players.user_ped(), IS_PED_DUCKING(players.user_ped()) ? TOGGLE_DUCK_OFF : TOGGLE_DUCK_ON)
+self:toggle_loop("Allow Crouched Movement", {}, "Makes your ped crouch instead of entering stealth movement. Press Ctrl to use.", function()
+	afsop1g = true
+	requestClipset("move_ped_crouched")
+	requestClipset("move_ped_crouched_strafing")
+	memory.write_int(CGameConfig + 0x4DC, 1)
+	if IS_CONTROL_JUST_RELEASED(0, 36) and not levitation.value and not IS_PED_IN_ANY_VEHICLE(players.user_ped()) then
+		TASK_TOGGLE_DUCK(players.user_ped(), IS_PED_DUCKING(players.user_ped()) and 1 or 0)
 		SET_PED_STEALTH_MOVEMENT(players.user_ped(), false, 0)
+		yield()
+		yield()
+		SET_PED_MOVEMENT_CLIPSET(players.user_ped(), "move_ped_crouched", 0.5)
+		SET_PED_STRAFE_CLIPSET(players.user_ped(), "move_ped_crouched_strafing")
+		repeat
+			if IS_PED_USING_ACTION_MODE(players.user_ped()) then
+				SET_PED_USING_ACTION_MODE(players.user_ped(), false, -1, "DEFAULT_ACTION")
+			end
+			yield()
+		until IS_CONTROL_JUST_RELEASED(0, 36) or levitation.value or (GET_CAM_VIEW_MODE_FOR_CONTEXT(0) == 4  and GET_SELECTED_PED_WEAPON(players.user_ped()) == joaat("weapon_unarmed"))
+		TASK_TOGGLE_DUCK(players.user_ped(), 0)
+		RESET_PED_MOVEMENT_CLIPSET(players.user_ped(), 0.5)
+		RESET_PED_STRAFE_CLIPSET(players.user_ped())
+		yield()
+		yield()
 	end
 end, function()
-	TASK_TOGGLE_DUCK(players.user_ped(), TOGGLE_DUCK_OFF)
-	memory.write_int(allowDuckingAddr + 0x4DC, 0)
+	memory.write_int(CGameConfig + 0x4DC, 0)
+	TASK_TOGGLE_DUCK(players.user_ped(), 0)
+	RESET_PED_MOVEMENT_CLIPSET(players.user_ped(), 0.30)
+	RESET_PED_STRAFE_CLIPSET(players.user_ped())
 end)
 
 self:action("Clear Ped Tasks", {"clearpedtasks", "cleartasks"}, "Clears your players current tasks.", function()
@@ -979,11 +1029,17 @@ end)
 
 world:toggle_loop("Non-Hostile Peds", {"friendlyai"}, "Makes NPCs unable to target you.", function()
 	SET_PED_RESET_FLAG(players.user_ped(), 124, true)
+	SET_EVERYONE_IGNORE_PLAYER(players.user(), true)
 	yield(1000)
 end)
 
 world:toggle("Ped Riot Mode", {}, "", function(toggled)
 	SET_RIOT_MODE_ENABLED(toggled)
+end)
+
+world:toggle("Enable Christmas Trees", {"enablexmastrees"}, "Enables Christmas trees in your apartment.", function(toggle)
+	memory.write_int(memory.script_global(262145 + 9436), toggled ? 0 : 1) -- Global_262145.f_9436
+	memory.write_int(memory.script_global(262145 + 9437), toggled ? 0 : 1) -- Global_262145.f_9437
 end)
 
 world:toggle_loop("Disable Post FX", {"disablepostfx"}, "", function()
@@ -1379,6 +1435,10 @@ end, function()
 	for i = 0, 99 do
 		RELEASE_SOUND_ID(i)
 	end
+end)
+
+audio:toggle("Disable Police Scanner", {}, "Mutes the police scanner.", function(toggled)
+	SET_AUDIO_FLAG("PoliceScannerDisabled", toggled)
 end)
 
 local enhancements = online:list("Enhancements")
@@ -2219,12 +2279,19 @@ weapons:toggle_loop("Fast Hands", {"fasthands"}, "Swaps your weapons faster.", f
 	end
 end)
 
-weapons:toggle_loop("Lock On To Players", {}, "Allows you to lock on to players with the homing launcher.", function()
+weapons:toggle_loop("Lock Onto Players", {}, "Allows you to lock onto players with the homing launcher.", function()
 	for players.list_except(true) as playerID do
+		local pos = players.get_position(playerID)
+		local myPos = players.get_position(players.user())
 		local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
-		ADD_PLAYER_TARGETABLE_ENTITY(players.user(), ped)
-		SET_ENTITY_IS_TARGET_PRIORITY(ped, true, 400.0)    
+		if v3.distance(pos, myPos) < 400.0 then
+			ADD_PLAYER_TARGETABLE_ENTITY(players.user(), ped)
+			SET_ENTITY_IS_TARGET_PRIORITY(ped, true, 400.0)
+		else
+			REMOVE_PLAYER_TARGETABLE_ENTITY(players.user(), ped)
+		end
 	end
+	yield(100)
 end, function()
 	for players.list_except(true) as playerID do
 		local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
@@ -2508,6 +2575,33 @@ vehicles:toggle_loop("Disable Radio On Vehicle Entry", {}, "", function()
 	yield(100)
 end)
 
+keepSuppressorOn = vehicles:toggle("Keep Supressor On In Vehicles", {}, "Keeps your supressor on your weapons while in a vehicle.", function(toggled)
+	if failedScans["WCS"] then
+		toast("This function is already hooked in a menu you are co-loading. :/")
+		keepSuppressorOn.value = false
+		return
+	end
+	memory.write_byte(CWeaponComponentSuppressor, toggled ? 0xC3 : 0x48)
+end)
+
+autoduck = vehicles:toggle_loop("Auto Duck In Vehicles", {"autoduck"}, "Automatically ducks while in a vehicle.", function()
+	while IS_PED_IN_ANY_VEHICLE(players.user_ped()) and autoduck.value do
+		if memory.read_byte(ModifyControlsIfDucked) == 0x48 then
+			memory.write_byte(ModifyControlsIfDucked, 0xC3)
+		end
+		SET_CONTROL_VALUE_NEXT_FRAME(0, 73, 1.0)
+		yield()
+	end
+	memory.write_byte(ModifyControlsIfDucked, 0x48)
+	yield()
+end, function()
+	memory.write_byte(ModifyControlsIfDucked, 0x48)
+end)
+
+vehicles:toggle("Disable Vehicle Duck Swerving", {}, "The game will automatically apply a tune that messes with your handling when ducked in a vehicle, this will disable that.", function(toggled)
+	memory.write_byte(ModifyControlsIfDucked, toggled ? 0xC3 : 0x48)
+end)
+
 vehicles:toggle_loop("Vehicle Rockets", {"vehiclerockets"}, "Press Left Mouse to fire", function()
 	local wpn = joaat("vehicle_weapon_tank")
 	local vehicle = entities.get_user_vehicle_as_handle()
@@ -2579,6 +2673,25 @@ vehicles:toggle_loop("Skip Hotwire", {}, "", function()
 	local vehicle = GET_VEHICLE_PED_IS_TRYING_TO_ENTER(players.user_ped())
 	SET_VEHICLE_NEEDS_TO_BE_HOTWIRED(vehicle, false)
 	yield(100)
+end)
+
+vehicles:toggle_loop("Keyless Entry", {"keylessentry"}, "Automatically turns on your vehicles engine when you are near it.", function()
+	local vehicle = entities.get_user_vehicle_as_handle()
+	local pos = players.get_position(players.user())
+	local vehPos = GET_ENTITY_COORDS(vehicle)
+	if vehicle ~= 0 then
+		keylessDistance = IS_THIS_MODEL_A_PLANE(joaat(vehicle)) ? 15.0 : 7.0
+		if GET_IS_TASK_ACTIVE(players.user_ped(), 2) and v3.distance(pos, vehPos) < keylessDistance then
+			repeat
+				pos = players.get_position(players.user())
+				vehPos = GET_ENTITY_COORDS(vehicle)
+				yield()
+			until v3.distance(pos, vehPos) > keylessDistance
+		end
+		if v3.distance(pos, vehPos) < keylessDistance  and not GET_IS_VEHICLE_ENGINE_RUNNING(vehicle) then
+			SET_VEHICLE_ENGINE_ON(vehicle, true, vehicle ~= entities.get_user_vehicle_as_handle(), true)
+		end
+	end
 end)
 
 vehicles:toggle_loop("Fast Enter/Exit", {"fastvehicleenter"}, "Enter vehicles faster.", function()
@@ -3029,7 +3142,7 @@ end)
 
 local anti_mugger = protections:list("Block Muggers", {}, "Prevent muggers for yourself and others")
 anti_mugger:toggle_loop("Myself", {}, "Prevents you from being mugged.", function()
-	if NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) then
+	if NETWORK_IS_SCRIPT_ACTIVE("am_gang_call", 0, true, 0) and NETWORK_IS_SESSION_STARTED() then
 		local pedNetId = memory.read_int(memory.script_local("am_gang_call", 62 + 10 + 1))
 		local sender = memory.read_int(memory.script_local("am_gang_call", 286))
 		local target = memory.read_int(memory.script_local("am_gang_call", 287))
@@ -4447,6 +4560,14 @@ local function player(playerID)
 		end
 	end)
 
+	griefing:action("Punch Player", {"punch"}, "Punches the selected player.", function()
+		local ped = GET_PLAYER_PED_SCRIPT_INDEX(playerID)
+		local pPed =  entities.handle_to_pointer(ped)
+		local pedPtr = entities.handle_to_pointer(players.user_ped())
+		if pPed == 0 or pedPtr == 0 then return end
+		util.call_foreign_function(CWeaponDamageEventTrigger, pedPtr, pPed, pPed + 0x90, 0, 1, joaat("weapon_unarmed"), 0.0, 0, 0, DF_MeleeDamage | DF_IgnoreRemoteDistCheck, math.random(1, 1000), 0, 0, 0, 0, 0, 0, 0.0)
+	end)
+
 	griefing:action("Kill Interior Player", {"interiorkill"}, "Note: this does not work for some interiors such as apartments.", function()
 		if memory.read_int(getPlayerProperty(playerID)) != -1 then 
 			toast("This won't work for apartments. :/")
@@ -5020,6 +5141,9 @@ local function player(playerID)
 	end)
 end
 local featureCreateEndTime = util.current_time_millis() - featureCreateStartTime
-util.log($"[JinxScript.pluto] Features created in {featureCreateEndTime}ms")
+util.log($"[JinxScript.pluto] 334 Features created in {featureCreateEndTime}ms")
 players.add_command_hook(player)
 util.log($"[JinxScript.pluto] Script loaded in {(nativeFetchEndTime + sigscanEndTime + featureCreateEndTime)}ms")
+util.log($"[JinxScript.pluto] Welcome to JinxScript, {SC_ACCOUNT_INFO_GET_NICKNAME()}")
+util.log($"[JinxScript.pluto] Discord: https://discord.gg/hjs5S93kQv")
+util.log($"[JinxScript.pluto] Website: https://jinxscript.dev")

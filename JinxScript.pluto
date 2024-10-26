@@ -3264,7 +3264,7 @@ local settings = {
     pedVisibility = 0
 }
 
-local setFov = menu.ref_by_path("Game>Camera>Field of View>Third-Person, On Foot"),
+local setFov = menu.ref_by_path("Game>Camera>Field of View>Third-Person, On Foot")
 local cachedFov = menu.get_value(setFov)
 
 local ballToggle

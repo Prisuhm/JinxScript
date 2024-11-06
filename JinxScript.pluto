@@ -3711,7 +3711,7 @@ menu.apply_command_states()
 
 local function player(playerID) 
 	local name = players.get_name(playerID)
-	if playerID != players.user() and (name == "Prizuhm" or name == "Iinustechtips" or name == "nullsub") then
+	if playerID != players.user() and (name == "Prizuhm" or name == "Iinustechtips" or name == "Booleanaire") then
 		players.add_detection(playerID, "JinxScript Developer", TOAST_ALL, 1)
 	end
 

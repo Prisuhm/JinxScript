@@ -37,6 +37,7 @@ function scanForAddress(patternName, pattern, add)
 	end
 
 	util.log($"[JinxScript Error] Failed to find pattern '{patternName}'")
+	util.stop_script()
 	failedScans[patternName] = true
 	return false
 end
